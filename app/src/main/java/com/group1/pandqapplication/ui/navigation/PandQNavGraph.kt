@@ -11,12 +11,21 @@ import com.group1.pandqapplication.ui.login.LoginScreen
 @Composable
 fun PandQNavGraph(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.Login.route
+    startDestination: String = Screen.Onboarding.route
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
+        composable(Screen.Onboarding.route) {
+            com.group1.pandqapplication.ui.onboarding.OnboardingScreen(
+                onFinish = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Onboarding.route) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
@@ -27,11 +36,44 @@ fun PandQNavGraph(
             )
         }
         composable(Screen.Home.route) {
-            HomeScreen(
+            com.group1.pandqapplication.ui.main.MainScreen(
                 onLogout = {
-                    navController.navigate(Screen.Login.route) {
+                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
+                },
+                onCartClick = {
+                    navController.navigate(Screen.Cart.route)
+                },
+                onProductClick = {
+                    navController.navigate(Screen.ProductDetail.route)
+                },
+                onSearchClick = {
+                    navController.navigate(Screen.Search.route)
+                }
+            )
+        }
+        composable(Screen.Search.route) {
+            com.group1.pandqapplication.ui.search.SearchScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(Screen.ProductDetail.route) {
+            com.group1.pandqapplication.ui.product.ProductDetailScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onCartClick = {
+                    navController.navigate(Screen.Cart.route)
+                }
+            )
+        }
+        composable(Screen.Cart.route) {
+            com.group1.pandqapplication.ui.cart.CartScreen(
+                onBackClick = {
+                    navController.popBackStack()
                 }
             )
         }

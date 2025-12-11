@@ -23,4 +23,22 @@ class AuthRepositoryImpl @Inject constructor(
             }
         awaitClose { }
     }
+
+    override suspend fun register(email: String, password: String): Flow<Result<Boolean>> = callbackFlow {
+        trySend(Result.Loading)
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    trySend(Result.Success(true))
+                } else {
+                    trySend(Result.Error(task.exception?.message ?: "Registration failed"))
+                }
+                close()
+            }
+        awaitClose { }
+    }
+
+    override fun isUserLoggedIn(): Boolean {
+        return auth.currentUser != null
+    }
 }

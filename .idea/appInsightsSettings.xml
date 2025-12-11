@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.group1.pandqapplication" />
+                  <option name="mobileSdkAppId" value="1:163212375706:android:2458a59822829af06c9123" />
+                  <option name="projectId" value="pandq-mobile" />
+                  <option name="projectNumber" value="163212375706" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

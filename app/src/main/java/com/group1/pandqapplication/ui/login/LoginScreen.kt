@@ -1,33 +1,57 @@
 package com.group1.pandqapplication.ui.login
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -38,10 +62,13 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    
-    // UI Local State for input fields
+    val primaryColor = Color(0xFFec3713)
+
+    // Sub-states
+    var isLoginTab by remember { mutableStateOf(true) } // true for Login, false for Register
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
@@ -57,59 +84,214 @@ fun LoginScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color(0xFFF8F6F6) // background-light
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentAlignment = Alignment.Center
+                .padding(paddingValues)
         ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator()
-            } else {
-                Column(
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(32.dp))
+                // Welcome Text
+                Text(
+                    text = "Chào mừng bạn",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0F172A) // slate-900
+                )
+                Text(
+                    text = "Đăng nhập hoặc tạo tài khoản để bắt đầu.",
+                    fontSize = 16.sp,
+                    color = Color(0xFF475569) // slate-600
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Tabs
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    // Login Tab
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { isLoginTab = true }
+                            .padding(bottom = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Đăng nhập",
+                            fontWeight = FontWeight.Bold,
+                            color = if (isLoginTab) Color(0xFF0F172A) else Color(0xFF64748B)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(3.dp)
+                                .background(if (isLoginTab) primaryColor else Color.Transparent)
+                        )
+                    }
+                    // Register Tab
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { isLoginTab = false }
+                            .padding(bottom = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Đăng ký",
+                            fontWeight = FontWeight.Bold,
+                            color = if (!isLoginTab) Color(0xFF0F172A) else Color(0xFF64748B)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(3.dp)
+                                .background(if (!isLoginTab) primaryColor else Color.Transparent)
+                        )
+                    }
+                }
+                HorizontalDivider(color = Color(0xFFE2E8F0)) // slate-200
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Form
+                // Email
+                Text("Email / Tên đăng nhập", fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    placeholder = { Text("Nhập email của bạn") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = primaryColor,
+                        unfocusedBorderColor = Color(0xFFCBD5E1), // slate-300
+                        focusedContainerColor = Color(0xFFF1F5F9), // slate-100
+                        unfocusedContainerColor = Color(0xFFF1F5F9)
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Password
+                Text("Mật khẩu", fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    placeholder = { Text("Nhập mật khẩu của bạn") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                contentDescription = "Toggle password visibility"
+                            )
+                        }
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = primaryColor,
+                        unfocusedBorderColor = Color(0xFFCBD5E1),
+                        focusedContainerColor = Color(0xFFF1F5F9),
+                        unfocusedContainerColor = Color(0xFFF1F5F9)
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                )
+                
+                if (isLoginTab) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                        TextButton(onClick = { /* TODO: Forgot Password */ }) {
+                            Text("Quên mật khẩu?", color = primaryColor, fontSize = 14.sp)
+                        }
+                    }
+                } else {
+                    Spacer(modifier = Modifier.height(24.dp)) // Extra space if no "Forgot Password"
+                }
+
+                // CTA Button
+                Button(
+                    onClick = {
+                        if (isLoginTab) {
+                            viewModel.login(email, password)
+                        } else {
+                            viewModel.register(email, password)
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                        .height(56.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
                 ) {
-                    Text(
-                        text = "Login",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(32.dp))
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                    } else {
+                        Text(if (isLoginTab) "Đăng nhập" else "Đăng ký", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
 
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                // Or Divider
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE2E8F0))
+                    Text("Hoặc", modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFF64748B), fontSize = 14.sp)
+                    HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE2E8F0))
+                }
+                Spacer(modifier = Modifier.height(24.dp))
 
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Password") },
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Button(
-                        onClick = { viewModel.login(email, password) },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = email.isNotBlank() && password.isNotBlank()
-                    ) {
-                        Text("Sign In")
+                // Social Logins (Mock)
+                OutlinedButton(
+                    onClick = { /* TODO: Google Login */ },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF0F172A), containerColor = Color.White)
+                ) {
+                    // Use a placeholder icon or text since we don't have assets included in this raw text
+                    Text("Đăng nhập với Google", fontWeight = FontWeight.Medium)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = { /* TODO: Facebook Login */ },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF0F172A), containerColor = Color.White)
+                ) {
+                     Text("Đăng nhập với Facebook", fontWeight = FontWeight.Medium)
+                }
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                // Footer
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    TextButton(onClick = onLoginSuccess) {
+                         Text("Tiếp tục với tư cách khách", color = primaryColor, fontWeight = FontWeight.Medium)
                     }
                 }
             }
         }
     }
+}
+
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+@Composable
+fun LoginScreenPreview() {
+    LoginScreen(
+        onLoginSuccess = {}
+    )
 }
