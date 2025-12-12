@@ -59,7 +59,8 @@ import com.group1.pandqapplication.ui.theme.CheckoutTextSecondaryLight
 
 @Composable
 fun CheckoutScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onEditAddressClick: () -> Unit = {}
 ) {
     val isDarkTheme = false // Toggle for testing
     
@@ -209,7 +210,8 @@ fun CheckoutScreen(
                             text = "Thay đổi",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = CheckoutPrimary
+                            color = CheckoutPrimary,
+                            modifier = Modifier.clickable { onEditAddressClick() }
                         )
                     }
                 }

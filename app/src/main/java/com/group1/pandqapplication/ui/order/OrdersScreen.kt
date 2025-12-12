@@ -39,7 +39,9 @@ data class Order(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrdersScreen() {
+fun OrdersScreen(
+    onOrderClick: () -> Unit = {}
+) {
     val backgroundColor = Color(0xFFF8F6F6)
     val primaryColor = Color(0xFFec3713)
 
@@ -197,7 +199,7 @@ fun OrdersScreen() {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 filteredOrders.forEach { order ->
-                    OrderItem(order)
+                    OrderItem(order = order, onClick = onOrderClick)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -206,12 +208,12 @@ fun OrdersScreen() {
 }
 
 @Composable
-fun OrderItem(order: Order) {
+fun OrderItem(order: Order, onClick: () -> Unit) {
     Surface(
         color = Color.White,
         shape = RoundedCornerShape(12.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E7EB)),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

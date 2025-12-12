@@ -39,7 +39,8 @@ data class CartItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onCheckoutClick: () -> Unit
 ) {
     val primaryColor = Color(0xFFec3713)
     val backgroundColor = Color(0xFFF8F6F6)
@@ -124,7 +125,7 @@ fun CartScreen(
                    }
                    Spacer(modifier = Modifier.height(16.dp))
                    Button(
-                       onClick = { /* TODO: Checkout */ },
+                       onClick = onCheckoutClick,
                        modifier = Modifier.fillMaxWidth().height(50.dp),
                        shape = RoundedCornerShape(8.dp),
                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
@@ -250,5 +251,5 @@ fun formatCurrency(amount: Long): String {
 @Preview
 @Composable
 fun CartScreenPreview() {
-    CartScreen(onBackClick = {})
+    CartScreen({},{})
 }

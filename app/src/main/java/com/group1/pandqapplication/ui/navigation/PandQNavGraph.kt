@@ -7,6 +7,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.group1.pandqapplication.ui.home.HomeScreen
 import com.group1.pandqapplication.ui.login.LoginScreen
+import com.group1.pandqapplication.ui.checkout.CheckoutScreen
+import com.group1.pandqapplication.ui.ordertracking.OrderTrackingScreen
+import com.group1.pandqapplication.ui.shipping.ShippingAddressScreen
 
 @Composable
 fun PandQNavGraph(
@@ -61,6 +64,9 @@ fun PandQNavGraph(
                 },
                 onSearchClick = {
                     navController.navigate(Screen.Search.route)
+                },
+                onOrderClick = {
+                    navController.navigate(Screen.OrderTracking.route)
                 }
             )
         }
@@ -83,6 +89,33 @@ fun PandQNavGraph(
         }
         composable(Screen.Cart.route) {
             com.group1.pandqapplication.ui.cart.CartScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onCheckoutClick = {
+                    navController.navigate(Screen.Checkout.route)
+                }
+            )
+        }
+        composable(Screen.Checkout.route) {
+            CheckoutScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onEditAddressClick = {
+                    navController.navigate(Screen.ShippingAddress.route)
+                }
+            )
+        }
+        composable(Screen.OrderTracking.route) {
+            OrderTrackingScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(Screen.ShippingAddress.route) {
+            ShippingAddressScreen(
                 onBackClick = {
                     navController.popBackStack()
                 }
