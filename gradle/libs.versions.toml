@@ -19,6 +19,7 @@ navigationCompose = "2.8.4"
 lifecycleViewModelCompose="2.8.7"
 googleServices = "4.4.2"
 firebaseBom = "33.7.0"
+realm = "2.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -60,6 +61,12 @@ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coi
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
+# Realm
+realm-base = { group = "io.realm.kotlin", name = "library-base", version.ref = "realm" }
+
+# DataStore
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version = "1.1.1" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
@@ -67,3 +74,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+realm-kotlin = { id = "io.realm.kotlin", version.ref = "realm" }

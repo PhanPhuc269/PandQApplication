@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.border
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +47,7 @@ data class SearchProduct(
     val isLowStock: Boolean = false
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     onBackClick: () -> Unit
@@ -54,6 +56,23 @@ fun SearchScreen(
     val primaryColor = Color(0xFFec3713)
 
     var searchQuery by remember { mutableStateOf("Samsung Smartphones") }
+    var showFilterSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    if (showFilterSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showFilterSheet = false },
+            sheetState = sheetState,
+            containerColor = Color.White,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            FilterBottomSheetContent(
+                onApply = { showFilterSheet = false },
+                onReset = { },
+                primaryColor = primaryColor
+            )
+        }
+    }
 
     // Mock Data from HTML
     val products = listOf(
@@ -124,7 +143,7 @@ fun SearchScreen(
                     // Filter Button
                     Box(modifier = Modifier.size(44.dp)) {
                          IconButton(
-                            onClick = {},
+                            onClick = { showFilterSheet = true },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clip(RoundedCornerShape(12.dp))
@@ -360,4 +379,190 @@ fun ProductGridItem(product: SearchProduct, primaryColor: Color) {
 @Composable
 fun SearchScreenPreview() {
     SearchScreen(onBackClick = {})
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterBottomSheetContent(
+    onApply: () -> Unit,
+    onReset: () -> Unit,
+    primaryColor: Color
+) {
+    var priceRange by remember { mutableStateOf(0f..5000f) }
+    var selectedBrands by remember { mutableStateOf(setOf("Apple")) }
+    var selectedRatingOption by remember { mutableIntStateOf(1) } // 1: 4.0+, 2: 3.0+, 3: Any
+    var inStock by remember { mutableStateOf(true) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 24.dp)
+    ) {
+        // Header
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Filters", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111827))
+            Text(
+                "Reset",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = primaryColor,
+                modifier = Modifier.clickable {
+                    priceRange = 0f..5000f
+                    selectedBrands = emptySet()
+                    selectedRatingOption = 3
+                    inStock = false
+                    onReset()
+                }
+            )
+        }
+
+        // Price Range
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Price Range", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF374151))
+            Text("$${priceRange.start.toInt()} - $${priceRange.endInclusive.toInt()}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = primaryColor)
+        }
+
+        // Range Slider Customization to look like the design
+        // Since standard RangeSlider thumb is simple, we use it as is but with colors
+        RangeSlider(
+            value = priceRange,
+            onValueChange = { priceRange = it },
+            valueRange = 0f..5000f,
+            colors = SliderDefaults.colors(
+                thumbColor = Color.White,
+                activeTrackColor = primaryColor,
+                inactiveTrackColor = Color(0xFFE5E7EB),
+                activeTickColor = Color.Transparent,
+                inactiveTickColor = Color.Transparent
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            // Min
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .background(Color(0xFFF9FAFB), RoundedCornerShape(8.dp))
+                    .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Min", fontSize = 12.sp, color = Color(0xFF6B7280))
+                Spacer(Modifier.width(8.dp))
+                Text("$ ${priceRange.start.toInt()}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF111827))
+            }
+            // Max
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .background(Color(0xFFF9FAFB), RoundedCornerShape(8.dp))
+                    .border(1.dp, Color(0xFFE5E7EB), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Max", fontSize = 12.sp, color = Color(0xFF6B7280))
+                Spacer(Modifier.width(8.dp))
+                Text("$ ${priceRange.endInclusive.toInt()}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF111827))
+            }
+        }
+
+        // Brands
+        Text("Brand", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF374151), modifier = Modifier.padding(top = 16.dp, bottom = 12.dp))
+        val brands = listOf("Apple", "Samsung", "Sony", "LG")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            brands.forEach { brand ->
+                val isSelected = selectedBrands.contains(brand)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(1.dp, if (isSelected) primaryColor else Color(0xFFE5E7EB), RoundedCornerShape(8.dp))
+                        .background(if (isSelected) primaryColor.copy(alpha = 0.1f) else Color.Transparent)
+                        .clickable {
+                            if (isSelected) selectedBrands = selectedBrands - brand
+                            else selectedBrands = selectedBrands + brand
+                        }
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Text(brand, fontSize = 14.sp, color = if (isSelected) primaryColor else Color(0xFF4B5563))
+                }
+            }
+        }
+
+        // Rating
+        Text("Rating", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF374151), modifier = Modifier.padding(top = 24.dp, bottom = 12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+            val ratingOptions = listOf(
+                Triple(1, "4.0", true),
+                Triple(2, "3.0", true),
+                Triple(3, "Any", true)
+            )
+            ratingOptions.forEach { (id, label, hasStar) ->
+                val isSelected = selectedRatingOption == id
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(1.dp, if (isSelected) primaryColor else Color(0xFFE5E7EB), RoundedCornerShape(12.dp))
+                        .background(if (isSelected) primaryColor.copy(alpha = 0.1f) else Color.Transparent)
+                        .clickable { selectedRatingOption = id }
+                        .padding(vertical = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(label, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = if (isSelected) primaryColor else Color(0xFF4B5563))
+                        if (hasStar && id != 3) {
+                            Icon(Icons.Filled.Star, contentDescription = null, tint = if (isSelected) primaryColor else Color(0xFFFACC15), modifier = Modifier.size(14.dp).padding(start = 2.dp))
+                        } else if (id == 3) {
+                             Icon(Icons.Filled.Star, contentDescription = null, tint = if (isSelected) primaryColor else Color(0xFF9CA3AF), modifier = Modifier.size(14.dp).padding(start = 2.dp))
+                        }
+                    }
+                    if (id != 3) {
+                        Text("& Up", fontSize = 10.sp, color = if (isSelected) primaryColor else Color(0xFF9CA3AF))
+                    }
+                }
+            }
+        }
+
+        // Stock Switch
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 32.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("In Stock Only", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF374151))
+            Switch(
+                checked = inStock,
+                onCheckedChange = { inStock = it },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = primaryColor,
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = Color(0xFFE5E7EB),
+                    uncheckedBorderColor = Color.Transparent
+                )
+            )
+        }
+
+        // Apply Button
+        Button(
+            onClick = onApply,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
+            shape = RoundedCornerShape(12.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+        ) {
+            Text("Apply Filters (124)", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+    }
 }

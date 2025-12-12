@@ -40,4 +40,10 @@ object NetworkModule {
     fun provideApiService(retrofit: Retrofit): com.group1.pandqapplication.data.remote.ApiService {
         return retrofit.create(com.group1.pandqapplication.data.remote.ApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideAppApiService(retrofit: Retrofit): com.group1.pandqapplication.data.remote.AppApiService {
+        return retrofit.create(com.group1.pandqapplication.data.remote.AppApiService::class.java)
+    }
 }

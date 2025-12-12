@@ -11,12 +11,23 @@ import com.group1.pandqapplication.ui.login.LoginScreen
 @Composable
 fun PandQNavGraph(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.Onboarding.route
+    startDestination: String = Screen.Onboarding.route,
+    destinationAfterSplash: String = Screen.Onboarding.route
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
+        composable(Screen.Splash.route) {
+            com.group1.pandqapplication.ui.splash.SplashScreen(
+                navController = navController,
+                onInitializationComplete = {
+                    navController.navigate(destinationAfterSplash) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
         composable(Screen.Onboarding.route) {
             com.group1.pandqapplication.ui.onboarding.OnboardingScreen(
                 onFinish = {

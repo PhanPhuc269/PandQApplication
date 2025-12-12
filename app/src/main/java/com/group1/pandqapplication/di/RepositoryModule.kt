@@ -23,4 +23,10 @@ abstract class RepositoryModule {
     abstract fun bindAuthRepository(
         authRepositoryImpl: com.group1.pandqapplication.data.repository.AuthRepositoryImpl
     ): com.group1.pandqapplication.data.repository.AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAppRepository(
+        appRepositoryImpl: com.group1.pandqapplication.data.repository.AppRepositoryImpl
+    ): com.group1.pandqapplication.data.repository.AppRepository
 }
