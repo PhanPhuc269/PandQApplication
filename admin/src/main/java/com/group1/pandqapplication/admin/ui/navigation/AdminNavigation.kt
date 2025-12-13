@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material.icons.filled.Login
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class AdminScreen(val route: String, val title: String, val icon: ImageVector) {
@@ -35,4 +36,5 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object SalesAnalysis : AdminScreen("sales_analysis", "Sales Analysis", Icons.Default.BarChart)
     object CustomerList : AdminScreen("customer_list", "Customer List", Icons.Default.ManageAccounts)
     object ShippingManagement : AdminScreen("shipping_management", "Shipping Management", Icons.Default.LocalShipping)
+    object Login : AdminScreen("login", "Login", Icons.Default.Login)
 }

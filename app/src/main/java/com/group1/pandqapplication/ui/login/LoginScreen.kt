@@ -1,5 +1,8 @@
 package com.group1.pandqapplication.ui.login
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,10 +44,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -54,6 +59,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.group1.pandqapplication.R
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
@@ -63,12 +73,41 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val primaryColor = Color(0xFFec3713)
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     // Sub-states
     var isLoginTab by remember { mutableStateOf(true) } // true for Login, false for Register
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    // Google Sign-In
+    val googleSignInClient = remember {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso)
+    }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                account.idToken?.let { idToken ->
+                    viewModel.signInWithGoogle(idToken)
+                }
+            } catch (e: ApiException) {
+                scope.launch {
+                    snackbarHostState.showSnackbar("Google Sign-In thất bại: ${e.message}")
+                }
+            }
+        }
+    }
 
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) {
@@ -250,9 +289,9 @@ fun LoginScreen(
                 }
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Social Logins (Mock)
+                // Social Logins
                 OutlinedButton(
-                    onClick = { /* TODO: Google Login */ },
+                    onClick = { googleSignInLauncher.launch(googleSignInClient.signInIntent) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -260,7 +299,13 @@ fun LoginScreen(
                     border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF0F172A), containerColor = Color.White)
                 ) {
-                    // Use a placeholder icon or text since we don't have assets included in this raw text
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_google),
+                        contentDescription = "Google",
+                        modifier = Modifier.size(24.dp),
+                        tint = Color.Unspecified // Preserve original colors
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text("Đăng nhập với Google", fontWeight = FontWeight.Medium)
                 }
                 Spacer(modifier = Modifier.height(16.dp))

@@ -72,6 +72,14 @@ class LoginViewModel @Inject constructor(
         }
     }
 
+    fun signInWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            authRepository.signInWithGoogle(idToken).collect { result ->
+                processResult(result)
+            }
+        }
+    }
+
     fun onErrorMessageShown() {
         _uiState.update { it.copy(errorMessage = null) }
     }
