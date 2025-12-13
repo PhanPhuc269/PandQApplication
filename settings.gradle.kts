@@ -21,4 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "PandQ Application"
 include(":app")
+include(":admin")
+include(":shared")
  

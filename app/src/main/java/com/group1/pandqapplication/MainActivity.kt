@@ -11,22 +11,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import com.group1.pandqapplication.ui.common.NetworkErrorScreen
-import com.group1.pandqapplication.util.ConnectivityObserver
+
+import com.group1.pandqapplication.shared.ui.theme.PandQApplicationTheme
+import com.group1.pandqapplication.shared.util.ConnectivityObserver
 import com.group1.pandqapplication.ui.navigation.PandQNavGraph
-import com.group1.pandqapplication.ui.theme.PandQApplicationTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge() // Explicit call since import was likely removed by user
 
-        val startDestination = mainViewModel.getStartDestination()
-        
-        
+        // Removed redundant startDestination call here as it's called inside setContent
         
         setContent {
             val networkStatus by mainViewModel.networkStatus.collectAsState()

@@ -48,12 +48,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.ComparisonBackgroundDark
-import com.group1.pandqapplication.ui.theme.ComparisonBackgroundLight
-import com.group1.pandqapplication.ui.theme.ComparisonBorder
-import com.group1.pandqapplication.ui.theme.ComparisonPlaceholderText
-import com.group1.pandqapplication.ui.theme.ComparisonPrimary
-import com.group1.pandqapplication.ui.theme.ComparisonTextWhite
+import com.group1.pandqapplication.shared.ui.theme.ComparisonBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.ComparisonBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.ComparisonBorder
+import com.group1.pandqapplication.shared.ui.theme.ComparisonPlaceholderText
+import com.group1.pandqapplication.shared.ui.theme.ComparisonPrimary
+import com.group1.pandqapplication.shared.ui.theme.ComparisonTextWhite
 
 @Composable
 fun ComparisonScreen(

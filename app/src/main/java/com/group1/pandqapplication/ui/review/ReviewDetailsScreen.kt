@@ -43,15 +43,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.CheckoutBackgroundDark
-import com.group1.pandqapplication.ui.theme.CheckoutBackgroundLight
-import com.group1.pandqapplication.ui.theme.ProductPrimary
-import com.group1.pandqapplication.ui.theme.ReviewSurfaceDark
-import com.group1.pandqapplication.ui.theme.ReviewSurfaceLight
-import com.group1.pandqapplication.ui.theme.ReviewTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.ReviewTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.ReviewTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.ReviewTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
+import com.group1.pandqapplication.shared.ui.theme.ReviewSurfaceDark
+import com.group1.pandqapplication.shared.ui.theme.ReviewSurfaceLight
+import com.group1.pandqapplication.shared.ui.theme.ReviewTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.ReviewTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.ReviewTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.ReviewTextSecondaryLight
 
 @Composable
 fun ReviewDetailsScreen(

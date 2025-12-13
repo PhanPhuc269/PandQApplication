@@ -43,17 +43,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.ProductPrimary
-import com.group1.pandqapplication.ui.theme.RoleBackgroundDark
-import com.group1.pandqapplication.ui.theme.RoleBackgroundLight
-import com.group1.pandqapplication.ui.theme.SupplierDividerDark
-import com.group1.pandqapplication.ui.theme.SupplierDividerLight
-import com.group1.pandqapplication.ui.theme.SupplierSurfaceDark
-import com.group1.pandqapplication.ui.theme.SupplierSurfaceLight
-import com.group1.pandqapplication.ui.theme.SupplierTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.SupplierTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.SupplierTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.SupplierTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
+import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.SupplierDividerDark
+import com.group1.pandqapplication.shared.ui.theme.SupplierDividerLight
+import com.group1.pandqapplication.shared.ui.theme.SupplierSurfaceDark
+import com.group1.pandqapplication.shared.ui.theme.SupplierSurfaceLight
+import com.group1.pandqapplication.shared.ui.theme.SupplierTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.SupplierTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.SupplierTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.SupplierTextSecondaryLight
 
 @Composable
 fun SupplierManagementScreen(

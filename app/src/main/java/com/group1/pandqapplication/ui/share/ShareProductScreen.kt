@@ -40,17 +40,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.CardDark
-import com.group1.pandqapplication.ui.theme.CardLight
-import com.group1.pandqapplication.ui.theme.CheckoutPrimary
-import com.group1.pandqapplication.ui.theme.ShareBackgroundIconDark
-import com.group1.pandqapplication.ui.theme.ShareBackgroundIconLight
-import com.group1.pandqapplication.ui.theme.ShareBorderDark
-import com.group1.pandqapplication.ui.theme.ShareBorderLight
-import com.group1.pandqapplication.ui.theme.ShareSubtleDark
-import com.group1.pandqapplication.ui.theme.ShareSubtleLight
-import com.group1.pandqapplication.ui.theme.TextDarkPrimary
-import com.group1.pandqapplication.ui.theme.TextLightPrimary
+import com.group1.pandqapplication.shared.ui.theme.CardDark
+import com.group1.pandqapplication.shared.ui.theme.CardLight
+import com.group1.pandqapplication.shared.ui.theme.CheckoutPrimary
+import com.group1.pandqapplication.shared.ui.theme.ShareBackgroundIconDark
+import com.group1.pandqapplication.shared.ui.theme.ShareBackgroundIconLight
+import com.group1.pandqapplication.shared.ui.theme.ShareBorderDark
+import com.group1.pandqapplication.shared.ui.theme.ShareBorderLight
+import com.group1.pandqapplication.shared.ui.theme.ShareSubtleDark
+import com.group1.pandqapplication.shared.ui.theme.ShareSubtleLight
+import com.group1.pandqapplication.shared.ui.theme.TextDarkPrimary
+import com.group1.pandqapplication.shared.ui.theme.TextLightPrimary
 
 @Composable
 fun ShareProductScreen(

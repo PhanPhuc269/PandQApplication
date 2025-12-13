@@ -44,16 +44,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.InventoryAlert
-import com.group1.pandqapplication.ui.theme.InventoryBackgroundDark
-import com.group1.pandqapplication.ui.theme.InventoryBackgroundLight
-import com.group1.pandqapplication.ui.theme.InventoryCardDark
-import com.group1.pandqapplication.ui.theme.InventoryCardLight
-import com.group1.pandqapplication.ui.theme.InventoryPrimary
-import com.group1.pandqapplication.ui.theme.InventoryTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.InventoryTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.InventoryTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.InventoryTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.InventoryAlert
+import com.group1.pandqapplication.shared.ui.theme.InventoryBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.InventoryBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.InventoryCardDark
+import com.group1.pandqapplication.shared.ui.theme.InventoryCardLight
+import com.group1.pandqapplication.shared.ui.theme.InventoryPrimary
+import com.group1.pandqapplication.shared.ui.theme.InventoryTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.InventoryTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.InventoryTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.InventoryTextSecondaryLight
 
 @Composable
 fun InventoryScreen(

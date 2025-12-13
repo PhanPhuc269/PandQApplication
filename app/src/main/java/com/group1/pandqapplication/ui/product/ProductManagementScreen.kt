@@ -41,18 +41,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.BranchBackgroundDark
-import com.group1.pandqapplication.ui.theme.BranchBackgroundLight
-import com.group1.pandqapplication.ui.theme.BranchTextMainDark
-import com.group1.pandqapplication.ui.theme.BranchTextMainLight
-import com.group1.pandqapplication.ui.theme.BranchTextSubDark
-import com.group1.pandqapplication.ui.theme.BranchTextSubLight
-import com.group1.pandqapplication.ui.theme.ProductChipUnselectedDark
-import com.group1.pandqapplication.ui.theme.ProductChipUnselectedLight
-import com.group1.pandqapplication.ui.theme.ProductPrimary
-import com.group1.pandqapplication.ui.theme.ProductStatusGreen
-import com.group1.pandqapplication.ui.theme.ProductStatusOrange
-import com.group1.pandqapplication.ui.theme.ProductStatusRed
+import com.group1.pandqapplication.shared.ui.theme.BranchBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.BranchBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.BranchTextMainDark
+import com.group1.pandqapplication.shared.ui.theme.BranchTextMainLight
+import com.group1.pandqapplication.shared.ui.theme.BranchTextSubDark
+import com.group1.pandqapplication.shared.ui.theme.BranchTextSubLight
+import com.group1.pandqapplication.shared.ui.theme.ProductChipUnselectedDark
+import com.group1.pandqapplication.shared.ui.theme.ProductChipUnselectedLight
+import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
+import com.group1.pandqapplication.shared.ui.theme.ProductStatusGreen
+import com.group1.pandqapplication.shared.ui.theme.ProductStatusOrange
+import com.group1.pandqapplication.shared.ui.theme.ProductStatusRed
 
 @Composable
 fun ProductManagementScreen(
@@ -68,7 +68,7 @@ fun ProductManagementScreen(
     // Product screen BG light: #F8F6F6, Dark: #221310.
     // Wait, #F8F6F6 is `CheckoutBackgroundLight`. #221310 is `CheckoutBackgroundDark`.
     // Let's reuse Checkout background colors for perfect match.
-    val backgroundColor = if (isDarkTheme) com.group1.pandqapplication.ui.theme.CheckoutBackgroundDark else com.group1.pandqapplication.ui.theme.CheckoutBackgroundLight
+    val backgroundColor = if (isDarkTheme) com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundDark else com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundLight
     val textMain = if (isDarkTheme) BranchTextMainDark else BranchTextMainLight // Reuse standard text colors match
     val textSub = if (isDarkTheme) BranchTextSubDark else BranchTextSubLight
     val surfaceColor = if (isDarkTheme) Color(0xFFFFFFFF).copy(alpha = 0.05f) else Color.White // List item bg

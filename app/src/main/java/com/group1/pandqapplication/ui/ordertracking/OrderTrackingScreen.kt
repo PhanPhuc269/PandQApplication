@@ -60,15 +60,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.BackgroundDark
-import com.group1.pandqapplication.ui.theme.BackgroundLight
-import com.group1.pandqapplication.ui.theme.CardDark
-import com.group1.pandqapplication.ui.theme.CardLight
-import com.group1.pandqapplication.ui.theme.Primary
-import com.group1.pandqapplication.ui.theme.TextDarkPrimary
-import com.group1.pandqapplication.ui.theme.TextDarkSecondary
-import com.group1.pandqapplication.ui.theme.TextLightPrimary
-import com.group1.pandqapplication.ui.theme.TextLightSecondary
+import com.group1.pandqapplication.shared.ui.theme.BackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.BackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.CardDark
+import com.group1.pandqapplication.shared.ui.theme.CardLight
+import com.group1.pandqapplication.shared.ui.theme.Primary
+import com.group1.pandqapplication.shared.ui.theme.TextDarkPrimary
+import com.group1.pandqapplication.shared.ui.theme.TextDarkSecondary
+import com.group1.pandqapplication.shared.ui.theme.TextLightPrimary
+import com.group1.pandqapplication.shared.ui.theme.TextLightSecondary
 
 @Composable
 fun OrderTrackingScreen(

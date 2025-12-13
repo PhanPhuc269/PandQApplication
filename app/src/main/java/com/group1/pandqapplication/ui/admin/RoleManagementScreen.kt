@@ -47,15 +47,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group1.pandqapplication.ui.theme.ProductPrimary
-import com.group1.pandqapplication.ui.theme.RoleBackgroundDark
-import com.group1.pandqapplication.ui.theme.RoleBackgroundLight
-import com.group1.pandqapplication.ui.theme.RoleSurfaceDark
-import com.group1.pandqapplication.ui.theme.RoleSurfaceLight
-import com.group1.pandqapplication.ui.theme.RoleTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.RoleTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.RoleTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.RoleTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
+import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.RoleSurfaceDark
+import com.group1.pandqapplication.shared.ui.theme.RoleSurfaceLight
+import com.group1.pandqapplication.shared.ui.theme.RoleTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.RoleTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.RoleTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.RoleTextSecondaryLight
 
 @Composable
 fun RoleManagementScreen(

@@ -47,18 +47,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group1.pandqapplication.ui.theme.CardLight
-import com.group1.pandqapplication.ui.theme.ShippingBackgroundDark
-import com.group1.pandqapplication.ui.theme.ShippingBackgroundLight
-import com.group1.pandqapplication.ui.theme.ShippingCardDark
-import com.group1.pandqapplication.ui.theme.ShippingPrimary
-import com.group1.pandqapplication.ui.theme.ShippingStatusCancelled
-import com.group1.pandqapplication.ui.theme.ShippingStatusInProgress
-import com.group1.pandqapplication.ui.theme.ShippingStatusPending
-import com.group1.pandqapplication.ui.theme.ShippingStatusSuccess
-import com.group1.pandqapplication.ui.theme.ShippingTextDarkSecondary
-import com.group1.pandqapplication.ui.theme.ShippingTextLightPrimary
-import com.group1.pandqapplication.ui.theme.ShippingTextLightSecondary
+import com.group1.pandqapplication.shared.ui.theme.CardLight
+import com.group1.pandqapplication.shared.ui.theme.ShippingBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.ShippingBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.ShippingCardDark
+import com.group1.pandqapplication.shared.ui.theme.ShippingPrimary
+import com.group1.pandqapplication.shared.ui.theme.ShippingStatusCancelled
+import com.group1.pandqapplication.shared.ui.theme.ShippingStatusInProgress
+import com.group1.pandqapplication.shared.ui.theme.ShippingStatusPending
+import com.group1.pandqapplication.shared.ui.theme.ShippingStatusSuccess
+import com.group1.pandqapplication.shared.ui.theme.ShippingTextDarkSecondary
+import com.group1.pandqapplication.shared.ui.theme.ShippingTextLightPrimary
+import com.group1.pandqapplication.shared.ui.theme.ShippingTextLightSecondary
 
 @Composable
 fun ShippingManagementScreen(

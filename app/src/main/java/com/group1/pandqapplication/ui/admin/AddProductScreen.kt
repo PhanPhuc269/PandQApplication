@@ -46,16 +46,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.AddProductBackgroundDark
-import com.group1.pandqapplication.ui.theme.AddProductBackgroundLight
-import com.group1.pandqapplication.ui.theme.AddProductError
-import com.group1.pandqapplication.ui.theme.AddProductPrimary
-import com.group1.pandqapplication.ui.theme.AddProductSurfaceDark
-import com.group1.pandqapplication.ui.theme.AddProductSurfaceLight
-import com.group1.pandqapplication.ui.theme.AddProductTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.AddProductTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.AddProductTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.AddProductTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.AddProductBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.AddProductBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.AddProductError
+import com.group1.pandqapplication.shared.ui.theme.AddProductPrimary
+import com.group1.pandqapplication.shared.ui.theme.AddProductSurfaceDark
+import com.group1.pandqapplication.shared.ui.theme.AddProductSurfaceLight
+import com.group1.pandqapplication.shared.ui.theme.AddProductTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.AddProductTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.AddProductTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.AddProductTextSecondaryLight
 import androidx.compose.foundation.Canvas
 
 @Composable

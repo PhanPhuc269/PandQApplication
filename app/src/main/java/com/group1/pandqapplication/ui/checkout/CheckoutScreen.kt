@@ -2,6 +2,7 @@ package com.group1.pandqapplication.ui.checkout
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,17 +46,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group1.pandqapplication.ui.theme.CheckoutBackgroundDark
-import com.group1.pandqapplication.ui.theme.CheckoutBackgroundLight
-import com.group1.pandqapplication.ui.theme.CheckoutBorderDark
-import com.group1.pandqapplication.ui.theme.CheckoutBorderLight
-import com.group1.pandqapplication.ui.theme.CheckoutPrimary
-import com.group1.pandqapplication.ui.theme.CheckoutSurfaceDark
-import com.group1.pandqapplication.ui.theme.CheckoutSurfaceLight
-import com.group1.pandqapplication.ui.theme.CheckoutTextDark
-import com.group1.pandqapplication.ui.theme.CheckoutTextLight
-import com.group1.pandqapplication.ui.theme.CheckoutTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.CheckoutTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBorderDark
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBorderLight
+import com.group1.pandqapplication.shared.ui.theme.CheckoutPrimary
+import com.group1.pandqapplication.shared.ui.theme.CheckoutSurfaceDark
+import com.group1.pandqapplication.shared.ui.theme.CheckoutSurfaceLight
+import com.group1.pandqapplication.shared.ui.theme.CheckoutTextDark
+import com.group1.pandqapplication.shared.ui.theme.CheckoutTextLight
+import com.group1.pandqapplication.shared.ui.theme.CheckoutTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.CheckoutTextSecondaryLight
 
 @Composable
 fun CheckoutScreen(

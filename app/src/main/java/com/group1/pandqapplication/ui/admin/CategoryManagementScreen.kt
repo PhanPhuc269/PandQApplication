@@ -46,10 +46,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group1.pandqapplication.ui.theme.CategoryBackground
-import com.group1.pandqapplication.ui.theme.CategorySurface
-import com.group1.pandqapplication.ui.theme.CategoryTextPrimary
-import com.group1.pandqapplication.ui.theme.CategoryTextSecondary
+import com.group1.pandqapplication.shared.ui.theme.CategoryBackground
+import com.group1.pandqapplication.shared.ui.theme.CategorySurface
+import com.group1.pandqapplication.shared.ui.theme.CategoryTextPrimary
+import com.group1.pandqapplication.shared.ui.theme.CategoryTextSecondary
 
 @Composable
 fun CategoryManagementScreen(

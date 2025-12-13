@@ -47,17 +47,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group1.pandqapplication.ui.theme.PromotionBackgroundDark
-import com.group1.pandqapplication.ui.theme.PromotionBackgroundLight
-import com.group1.pandqapplication.ui.theme.PromotionBorderDark
-import com.group1.pandqapplication.ui.theme.PromotionBorderLight
-import com.group1.pandqapplication.ui.theme.PromotionCardDark
-import com.group1.pandqapplication.ui.theme.PromotionCardLight
-import com.group1.pandqapplication.ui.theme.PromotionPrimary
-import com.group1.pandqapplication.ui.theme.PromotionTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.PromotionTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.PromotionTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.PromotionTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.PromotionBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.PromotionBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.PromotionBorderDark
+import com.group1.pandqapplication.shared.ui.theme.PromotionBorderLight
+import com.group1.pandqapplication.shared.ui.theme.PromotionCardDark
+import com.group1.pandqapplication.shared.ui.theme.PromotionCardLight
+import com.group1.pandqapplication.shared.ui.theme.PromotionPrimary
+import com.group1.pandqapplication.shared.ui.theme.PromotionTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.PromotionTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.PromotionTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.PromotionTextSecondaryLight
 
 @Composable
 fun CreatePromotionScreen(

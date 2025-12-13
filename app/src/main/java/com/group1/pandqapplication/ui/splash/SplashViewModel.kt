@@ -2,8 +2,9 @@ package com.group1.pandqapplication.ui.splash
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.group1.pandqapplication.data.repository.AppRepository
-import com.group1.pandqapplication.util.Result
+import com.group1.pandqapplication.shared.data.repository.AppRepository
+import com.group1.pandqapplication.shared.util.ConnectivityObserver
+import com.group1.pandqapplication.shared.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

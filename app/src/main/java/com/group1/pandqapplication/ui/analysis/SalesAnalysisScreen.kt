@@ -43,20 +43,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.AnalysisCardDark
-import com.group1.pandqapplication.ui.theme.AnalysisCardLight
-import com.group1.pandqapplication.ui.theme.AnalysisGraphBlue
-import com.group1.pandqapplication.ui.theme.AnalysisGraphPurple
-import com.group1.pandqapplication.ui.theme.AnalysisGraphRed
-import com.group1.pandqapplication.ui.theme.AnalysisNegative
-import com.group1.pandqapplication.ui.theme.AnalysisPositive
-import com.group1.pandqapplication.ui.theme.AnalysisTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.AnalysisTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.AnalysisTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.AnalysisTextSecondaryLight
-import com.group1.pandqapplication.ui.theme.CheckoutBackgroundDark
-import com.group1.pandqapplication.ui.theme.CheckoutBackgroundLight
-import com.group1.pandqapplication.ui.theme.ProductPrimary
+import com.group1.pandqapplication.shared.ui.theme.AnalysisCardDark
+import com.group1.pandqapplication.shared.ui.theme.AnalysisCardLight
+import com.group1.pandqapplication.shared.ui.theme.AnalysisGraphBlue
+import com.group1.pandqapplication.shared.ui.theme.AnalysisGraphPurple
+import com.group1.pandqapplication.shared.ui.theme.AnalysisGraphRed
+import com.group1.pandqapplication.shared.ui.theme.AnalysisNegative
+import com.group1.pandqapplication.shared.ui.theme.AnalysisPositive
+import com.group1.pandqapplication.shared.ui.theme.AnalysisTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.AnalysisTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.AnalysisTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.AnalysisTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
 
 @Composable
 fun SalesAnalysisScreen(

@@ -2,8 +2,8 @@ package com.group1.pandqapplication.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.group1.pandqapplication.data.repository.AuthRepository
-import com.group1.pandqapplication.util.Result
+import com.group1.pandqapplication.shared.data.repository.AuthRepository
+import com.group1.pandqapplication.shared.util.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -50,18 +50,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.BackgroundLight
-import com.group1.pandqapplication.ui.theme.CardLight
-import com.group1.pandqapplication.ui.theme.FeedbackAccent
-import com.group1.pandqapplication.ui.theme.FeedbackBackgroundDark
-import com.group1.pandqapplication.ui.theme.FeedbackBorderDark
-import com.group1.pandqapplication.ui.theme.FeedbackBorderLight
-import com.group1.pandqapplication.ui.theme.FeedbackPlaceholderDark
-import com.group1.pandqapplication.ui.theme.FeedbackPlaceholderLight
-import com.group1.pandqapplication.ui.theme.FeedbackSecondaryDark
-import com.group1.pandqapplication.ui.theme.Primary
-import com.group1.pandqapplication.ui.theme.TextDarkPrimary
-import com.group1.pandqapplication.ui.theme.TextLightPrimary
+import com.group1.pandqapplication.shared.ui.theme.BackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.CardLight
+import com.group1.pandqapplication.shared.ui.theme.FeedbackAccent
+import com.group1.pandqapplication.shared.ui.theme.FeedbackBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.FeedbackBorderDark
+import com.group1.pandqapplication.shared.ui.theme.FeedbackBorderLight
+import com.group1.pandqapplication.shared.ui.theme.FeedbackPlaceholderDark
+import com.group1.pandqapplication.shared.ui.theme.FeedbackPlaceholderLight
+import com.group1.pandqapplication.shared.ui.theme.FeedbackSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.Primary
+import com.group1.pandqapplication.shared.ui.theme.TextDarkPrimary
+import com.group1.pandqapplication.shared.ui.theme.TextLightPrimary
 
 @Composable
 fun FeedbackScreen(

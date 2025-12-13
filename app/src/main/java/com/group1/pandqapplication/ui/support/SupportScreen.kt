@@ -52,15 +52,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group1.pandqapplication.ui.theme.ProductPrimary
-import com.group1.pandqapplication.ui.theme.RoleBackgroundDark
-import com.group1.pandqapplication.ui.theme.RoleBackgroundLight
-import com.group1.pandqapplication.ui.theme.SupportSurfaceDark
-import com.group1.pandqapplication.ui.theme.SupportSurfaceLight
-import com.group1.pandqapplication.ui.theme.SupportTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.SupportTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.SupportTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.SupportTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
+import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.SupportSurfaceDark
+import com.group1.pandqapplication.shared.ui.theme.SupportSurfaceLight
+import com.group1.pandqapplication.shared.ui.theme.SupportTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.SupportTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.SupportTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.SupportTextSecondaryLight
 
 @Composable
 fun SupportScreen(

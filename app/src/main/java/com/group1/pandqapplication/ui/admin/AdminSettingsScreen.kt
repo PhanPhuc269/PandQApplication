@@ -50,17 +50,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.ProductPrimary
-import com.group1.pandqapplication.ui.theme.RoleBackgroundDark
-import com.group1.pandqapplication.ui.theme.RoleBackgroundLight
-import com.group1.pandqapplication.ui.theme.SettingsIconBgDark
-import com.group1.pandqapplication.ui.theme.SettingsIconBgLight
-import com.group1.pandqapplication.ui.theme.SettingsSurfaceDark
-import com.group1.pandqapplication.ui.theme.SettingsSurfaceLight
-import com.group1.pandqapplication.ui.theme.SettingsTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.SettingsTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.SettingsTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.SettingsTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
+import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.SettingsIconBgDark
+import com.group1.pandqapplication.shared.ui.theme.SettingsIconBgLight
+import com.group1.pandqapplication.shared.ui.theme.SettingsSurfaceDark
+import com.group1.pandqapplication.shared.ui.theme.SettingsSurfaceLight
+import com.group1.pandqapplication.shared.ui.theme.SettingsTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.SettingsTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.SettingsTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.SettingsTextSecondaryLight
 
 @Composable
 fun AdminSettingsScreen(

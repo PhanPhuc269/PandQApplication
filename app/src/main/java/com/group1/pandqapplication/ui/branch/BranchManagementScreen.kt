@@ -39,16 +39,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group1.pandqapplication.ui.theme.BranchActive
-import com.group1.pandqapplication.ui.theme.BranchBackgroundDark
-import com.group1.pandqapplication.ui.theme.BranchBackgroundLight
-import com.group1.pandqapplication.ui.theme.BranchItemSurfaceDark
-import com.group1.pandqapplication.ui.theme.BranchItemSurfaceLight
-import com.group1.pandqapplication.ui.theme.BranchPrimary
-import com.group1.pandqapplication.ui.theme.BranchTextMainDark
-import com.group1.pandqapplication.ui.theme.BranchTextMainLight
-import com.group1.pandqapplication.ui.theme.BranchTextSubDark
-import com.group1.pandqapplication.ui.theme.BranchTextSubLight
+import com.group1.pandqapplication.shared.ui.theme.BranchActive
+import com.group1.pandqapplication.shared.ui.theme.BranchBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.BranchBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.BranchItemSurfaceDark
+import com.group1.pandqapplication.shared.ui.theme.BranchItemSurfaceLight
+import com.group1.pandqapplication.shared.ui.theme.BranchPrimary
+import com.group1.pandqapplication.shared.ui.theme.BranchTextMainDark
+import com.group1.pandqapplication.shared.ui.theme.BranchTextMainLight
+import com.group1.pandqapplication.shared.ui.theme.BranchTextSubDark
+import com.group1.pandqapplication.shared.ui.theme.BranchTextSubLight
 
 @Composable
 fun BranchManagementScreen(

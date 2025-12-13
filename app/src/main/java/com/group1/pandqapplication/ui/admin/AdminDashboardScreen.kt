@@ -44,17 +44,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group1.pandqapplication.ui.theme.AdminBackgroundDark
-import com.group1.pandqapplication.ui.theme.AdminBackgroundLight
-import com.group1.pandqapplication.ui.theme.AdminCardDark
-import com.group1.pandqapplication.ui.theme.AdminCardLight
-import com.group1.pandqapplication.ui.theme.AdminError
-import com.group1.pandqapplication.ui.theme.AdminPrimary
-import com.group1.pandqapplication.ui.theme.AdminSuccess
-import com.group1.pandqapplication.ui.theme.AdminTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.AdminTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.AdminTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.AdminTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.AdminBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.AdminBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.AdminCardDark
+import com.group1.pandqapplication.shared.ui.theme.AdminCardLight
+import com.group1.pandqapplication.shared.ui.theme.AdminError
+import com.group1.pandqapplication.shared.ui.theme.AdminPrimary
+import com.group1.pandqapplication.shared.ui.theme.AdminSuccess
+import com.group1.pandqapplication.shared.ui.theme.AdminTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.AdminTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.AdminTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.AdminTextSecondaryLight
 
 @Composable
 fun AdminDashboardScreen() {

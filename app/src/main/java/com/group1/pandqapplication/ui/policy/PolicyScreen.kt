@@ -42,19 +42,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group1.pandqapplication.ui.theme.PolicyBorderDark
-import com.group1.pandqapplication.ui.theme.PolicyBorderLight
-import com.group1.pandqapplication.ui.theme.PolicyComponentDark
-import com.group1.pandqapplication.ui.theme.PolicyComponentLight
-import com.group1.pandqapplication.ui.theme.PolicySegmentDark
-import com.group1.pandqapplication.ui.theme.PolicySegmentLight
-import com.group1.pandqapplication.ui.theme.PolicyTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.PolicyTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.PolicyTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.PolicyTextSecondaryLight
-import com.group1.pandqapplication.ui.theme.ProductPrimary
-import com.group1.pandqapplication.ui.theme.RoleBackgroundDark
-import com.group1.pandqapplication.ui.theme.RoleBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.PolicyBorderDark
+import com.group1.pandqapplication.shared.ui.theme.PolicyBorderLight
+import com.group1.pandqapplication.shared.ui.theme.PolicyComponentDark
+import com.group1.pandqapplication.shared.ui.theme.PolicyComponentLight
+import com.group1.pandqapplication.shared.ui.theme.PolicySegmentDark
+import com.group1.pandqapplication.shared.ui.theme.PolicySegmentLight
+import com.group1.pandqapplication.shared.ui.theme.PolicyTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.PolicyTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.PolicyTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.PolicyTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
+import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundLight
 
 @Composable
 fun PolicyScreen(

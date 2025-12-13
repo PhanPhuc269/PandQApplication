@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">PandQ Admin</string>
+    <string name="title_activity_admin">Admin Panel</string>
+</resources>

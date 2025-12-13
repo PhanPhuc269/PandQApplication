@@ -33,7 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group1.pandqapplication.ui.theme.BackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.BackgroundLight
 
 // Mock Data Models
 data class Notification(

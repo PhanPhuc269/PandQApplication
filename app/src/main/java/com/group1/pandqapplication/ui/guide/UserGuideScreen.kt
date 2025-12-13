@@ -31,13 +31,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.CheckoutBackgroundDark
-import com.group1.pandqapplication.ui.theme.CheckoutBackgroundLight
-import com.group1.pandqapplication.ui.theme.GuideTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.GuideTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.GuideTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.GuideTextSecondaryLight
-import com.group1.pandqapplication.ui.theme.ProductPrimary
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.GuideTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.GuideTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.GuideTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.GuideTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
 
 @Composable
 fun UserGuideScreen(

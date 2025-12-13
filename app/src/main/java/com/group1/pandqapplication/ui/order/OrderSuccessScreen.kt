@@ -37,14 +37,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.ui.theme.CheckoutBackgroundDark
-import com.group1.pandqapplication.ui.theme.CheckoutBackgroundLight
-import com.group1.pandqapplication.ui.theme.ProductPrimary
-import com.group1.pandqapplication.ui.theme.SuccessGreen
-import com.group1.pandqapplication.ui.theme.SuccessTextPrimaryDark
-import com.group1.pandqapplication.ui.theme.SuccessTextPrimaryLight
-import com.group1.pandqapplication.ui.theme.SuccessTextSecondaryDark
-import com.group1.pandqapplication.ui.theme.SuccessTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
+import com.group1.pandqapplication.shared.ui.theme.SuccessGreen
+import com.group1.pandqapplication.shared.ui.theme.SuccessTextPrimaryDark
+import com.group1.pandqapplication.shared.ui.theme.SuccessTextPrimaryLight
+import com.group1.pandqapplication.shared.ui.theme.SuccessTextSecondaryDark
+import com.group1.pandqapplication.shared.ui.theme.SuccessTextSecondaryLight
 
 @Composable
 fun OrderSuccessScreen(
