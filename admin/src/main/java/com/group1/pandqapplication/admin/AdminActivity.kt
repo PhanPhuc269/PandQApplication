@@ -56,7 +56,7 @@ class AdminActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 val navController = rememberNavController()
-                var currentRoute by remember { mutableStateOf(AdminScreen.Dashboard.route) }
+                var currentRoute by remember { mutableStateOf(AdminScreen.Login.route) }
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
 
@@ -87,7 +87,7 @@ class AdminActivity : ComponentActivity() {
                     ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = AdminScreen.Dashboard.route,
+                        startDestination = AdminScreen.Login.route,
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable(AdminScreen.Dashboard.route) {
@@ -186,6 +186,15 @@ class AdminActivity : ComponentActivity() {
                         }
                         composable(AdminScreen.CreatePromotion.route) {
                             CreatePromotionScreen(onBackClick = { navController.popBackStack() })
+                        }
+                        composable(AdminScreen.Login.route) {
+                            com.group1.pandqapplication.admin.ui.login.AdminLoginScreen(
+                                onLoginSuccess = {
+                                    navController.navigate(AdminScreen.Dashboard.route) {
+                                        popUpTo(AdminScreen.Login.route) { inclusive = true }
+                                    }
+                                }
+                            )
                         }
 
                     }

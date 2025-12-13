@@ -68,6 +68,9 @@ realm-base = { group = "io.realm.kotlin", name = "library-base", version.ref = "
 # DataStore
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version = "1.1.1" }
 
+# Biometric
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version = "1.1.0" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }

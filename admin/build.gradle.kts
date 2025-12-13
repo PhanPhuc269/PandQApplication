@@ -71,6 +71,9 @@ dependencies {
     // Realm
     implementation(libs.realm.base)
 
+    // Biometric
+    implementation(libs.androidx.biometric)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
