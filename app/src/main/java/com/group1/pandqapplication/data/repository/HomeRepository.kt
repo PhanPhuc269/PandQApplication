@@ -36,7 +36,12 @@ class HomeRepository @Inject constructor(
         query: String? = null
     ): Result<PaginationResponseDto<ProductDto>> {
         return try {
-            val response = apiService.searchProducts(page, size, categoryId, query)
+            val response = apiService.searchProductsHome(
+                query = query,
+                categoryId = categoryId,
+                page = page,
+                size = size
+            )
             Result.success(response)
         } catch (e: Exception) {
             Result.failure(e)
