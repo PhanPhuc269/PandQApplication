@@ -29,7 +29,8 @@ object AppModule {
         val config = RealmConfiguration.Builder(
             schema = setOf(LocationEntity::class, CategoryEntity::class)
         )
-        .schemaVersion(1)
+        .schemaVersion(2) // Bumped version due to CategoryEntity.iconUrl nullable change
+        .deleteRealmIfMigrationNeeded() // Auto-delete database on schema change (dev only)
         .build()
         return Realm.open(config)
     }

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,14 @@ plugins {
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.realm.kotlin)
     alias(libs.plugins.kotlin.compose)
+}
+
+// Read local.properties
+val localProperties = Properties().apply {
+    val localFile = rootProject.file("local.properties")
+    if (localFile.exists()) {
+        load(localFile.inputStream())
+    }
 }
 
 android {
@@ -15,7 +25,9 @@ android {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
-    }
+        
+        // Read BASE_URL from local.properties
+        buildConfigField("String", "BASE_URL", "\"${localProperties.getProperty("BASE_URL", "http://10.0.2.2:8080/")}\"")    }
 
     buildTypes {
         release {
@@ -35,6 +47,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
