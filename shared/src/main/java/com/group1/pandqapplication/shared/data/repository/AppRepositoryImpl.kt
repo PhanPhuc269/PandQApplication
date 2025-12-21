@@ -70,7 +70,7 @@ class AppRepositoryImpl @Inject constructor(
                         copyToRealm(CategoryEntity().apply {
                             id = dto.id
                             name = dto.name
-                            iconUrl = dto.iconUrl
+                            iconUrl = dto.imageUrl // Use imageUrl from CategoryDto
                         }, updatePolicy = UpdatePolicy.ALL)
                     }
                 }

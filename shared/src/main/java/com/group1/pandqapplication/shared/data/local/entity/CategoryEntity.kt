@@ -7,5 +7,5 @@ class CategoryEntity : RealmObject {
     @PrimaryKey
     var id: String = ""
     var name: String = ""
-    var iconUrl: String? = null  // Nullable to handle null from API
+    var iconUrl: String? = null // Nullable to handle null from API
 }
