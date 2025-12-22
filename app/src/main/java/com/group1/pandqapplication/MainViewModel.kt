@@ -31,4 +31,8 @@ class MainViewModel @Inject constructor(
             Screen.Onboarding.route
         }
     }
+
+    fun logout() {
+        authRepository.logout()
+    }
 }

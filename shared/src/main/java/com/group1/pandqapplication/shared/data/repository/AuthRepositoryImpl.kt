@@ -61,4 +61,60 @@ class AuthRepositoryImpl @Inject constructor(
     override fun logout() {
         auth.signOut()
     }
+
+    override fun getCurrentUserEmail(): String? {
+        return auth.currentUser?.email
+    }
+
+    override fun getCurrentUserDisplayName(): String? {
+        return auth.currentUser?.displayName
+    }
+
+    override fun getCurrentUserPhotoUrl(): String? {
+        return auth.currentUser?.photoUrl?.toString()
+    }
+
+    override suspend fun sendEmailVerification(): Flow<Result<Boolean>> = callbackFlow {
+        trySend(Result.Loading)
+        val user = auth.currentUser
+        if (user == null) {
+            trySend(Result.Error("Chưa đăng nhập"))
+            close()
+        } else {
+            user.sendEmailVerification()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        trySend(Result.Success(true))
+                    } else {
+                        trySend(Result.Error(task.exception?.message ?: "Gửi email xác thực thất bại"))
+                    }
+                    close()
+                }
+        }
+        awaitClose { }
+    }
+
+    override fun isEmailVerified(): Boolean {
+        return auth.currentUser?.isEmailVerified ?: false
+    }
+
+    override suspend fun reloadUser(): Flow<Result<Boolean>> = callbackFlow {
+        trySend(Result.Loading)
+        val user = auth.currentUser
+        if (user == null) {
+            trySend(Result.Error("Chưa đăng nhập"))
+            close()
+        } else {
+            user.reload()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        trySend(Result.Success(auth.currentUser?.isEmailVerified ?: false))
+                    } else {
+                        trySend(Result.Error(task.exception?.message ?: "Không thể tải lại thông tin"))
+                    }
+                    close()
+                }
+        }
+        awaitClose { }
+    }
 }

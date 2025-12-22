@@ -308,18 +308,6 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Text("Đăng nhập với Google", fontWeight = FontWeight.Medium)
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedButton(
-                    onClick = { /* TODO: Facebook Login */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF0F172A), containerColor = Color.White)
-                ) {
-                     Text("Đăng nhập với Facebook", fontWeight = FontWeight.Medium)
-                }
                 
                 Spacer(modifier = Modifier.height(32.dp))
                 // Footer
