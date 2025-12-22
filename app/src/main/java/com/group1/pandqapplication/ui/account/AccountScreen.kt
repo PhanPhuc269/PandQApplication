@@ -56,9 +56,7 @@ fun AccountScreen(
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = {}) {
-                         Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = Color(0xFF1F2937))
-                    }
+                    Spacer(modifier = Modifier.size(48.dp)) // Balance left side
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                          Text(
                              "Hồ sơ cá nhân", 
@@ -67,7 +65,7 @@ fun AccountScreen(
                              color = Color(0xFF111827)
                          ) 
                     }
-                    Spacer(modifier = Modifier.size(48.dp)) // Balance the Back button size
+                    Spacer(modifier = Modifier.size(48.dp)) // Balance right side
                 }
             }
         }
