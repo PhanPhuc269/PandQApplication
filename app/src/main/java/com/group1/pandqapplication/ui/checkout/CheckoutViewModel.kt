@@ -1,0 +1,184 @@
+package com.group1.pandqapplication.ui.checkout
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.group1.pandqapplication.shared.data.remote.AppApiService
+import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayCreateOrderRequest
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+data class CheckoutUiState(
+    val selectedPaymentMethod: PaymentMethod = PaymentMethod.ZALOPAY,
+    val isProcessingPayment: Boolean = false,
+    val paymentSuccess: Boolean = false,
+    val paymentError: String? = null,
+    val zpTransToken: String? = null,
+    val appTransId: String? = null
+)
+
+sealed class PaymentResult {
+    object Success : PaymentResult()
+    object Cancelled : PaymentResult()
+    data class Error(val message: String) : PaymentResult()
+    object ZaloPayNotInstalled : PaymentResult()
+}
+
+@HiltViewModel
+class CheckoutViewModel @Inject constructor(
+    private val apiService: AppApiService
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(CheckoutUiState())
+    val uiState: StateFlow<CheckoutUiState> = _uiState.asStateFlow()
+
+    fun selectPaymentMethod(method: PaymentMethod) {
+        _uiState.update { it.copy(selectedPaymentMethod = method) }
+    }
+
+    fun initiatePayment(totalAmount: Long, orderDescription: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isProcessingPayment = true, paymentError = null) }
+            
+            when (_uiState.value.selectedPaymentMethod) {
+                PaymentMethod.ZALOPAY -> {
+                    initiateZaloPayPayment(totalAmount, orderDescription)
+                }
+                PaymentMethod.SOPAY -> {
+                    _uiState.update { 
+                        it.copy(
+                            isProcessingPayment = false, 
+                            paymentError = "SoPay chưa được hỗ trợ"
+                        ) 
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun initiateZaloPayPayment(amount: Long, description: String) {
+        try {
+            // Call backend API to create ZaloPay order
+            val request = ZaloPayCreateOrderRequest(
+                amount = amount,
+                description = description,
+                userId = null, // TODO: Get from auth
+                orderId = null // TODO: Get from order data
+            )
+            
+            val response = apiService.createZaloPayOrder(request)
+            
+            if (response.returnCode == 1 && response.zpTransToken != null) {
+                _uiState.update { 
+                    it.copy(
+                        zpTransToken = response.zpTransToken,
+                        appTransId = response.appTransId,
+                        isProcessingPayment = false
+                    ) 
+                }
+            } else {
+                _uiState.update { 
+                    it.copy(
+                        isProcessingPayment = false, 
+                        paymentError = response.returnMessage ?: "Không thể tạo đơn hàng ZaloPay"
+                    ) 
+                }
+            }
+            
+        } catch (e: Exception) {
+            _uiState.update { 
+                it.copy(
+                    isProcessingPayment = false, 
+                    paymentError = "Lỗi kết nối: ${e.message}"
+                ) 
+            }
+        }
+    }
+
+    fun handlePaymentResult(result: PaymentResult) {
+        when (result) {
+            is PaymentResult.Success -> {
+                _uiState.update { 
+                    it.copy(
+                        paymentSuccess = true, 
+                        isProcessingPayment = false,
+                        paymentError = null
+                    ) 
+                }
+            }
+            is PaymentResult.Cancelled -> {
+                _uiState.update { 
+                    it.copy(
+                        isProcessingPayment = false,
+                        paymentError = "Thanh toán đã bị hủy"
+                    ) 
+                }
+            }
+            is PaymentResult.Error -> {
+                _uiState.update { 
+                    it.copy(
+                        isProcessingPayment = false,
+                        paymentError = result.message
+                    ) 
+                }
+            }
+            is PaymentResult.ZaloPayNotInstalled -> {
+                _uiState.update { 
+                    it.copy(
+                        isProcessingPayment = false,
+                        paymentError = "Vui lòng cài đặt ứng dụng ZaloPay để thanh toán"
+                    ) 
+                }
+            }
+        }
+    }
+
+    fun clearPaymentError() {
+        _uiState.update { it.copy(paymentError = null) }
+    }
+
+    fun resetPaymentState() {
+        _uiState.update { 
+            it.copy(
+                isProcessingPayment = false,
+                paymentSuccess = false,
+                paymentError = null,
+                zpTransToken = null,
+                appTransId = null
+            ) 
+        }
+    }
+
+    /**
+     * Check payment status after returning from ZaloPay app
+     */
+    fun checkPaymentStatus() {
+        val appTransId = _uiState.value.appTransId ?: return
+        
+        viewModelScope.launch {
+            try {
+                val response = apiService.getZaloPayStatus(appTransId)
+                
+                if (response.returnCode == 1) {
+                    handlePaymentResult(PaymentResult.Success)
+                } else if (response.isProcessing == true) {
+                    // Payment still processing, wait
+                    _uiState.update { 
+                        it.copy(paymentError = "Đang xử lý thanh toán...")
+                    }
+                } else {
+                    handlePaymentResult(PaymentResult.Error(response.returnMessage ?: "Thanh toán thất bại"))
+                }
+            } catch (e: Exception) {
+                // Network error, payment status unknown
+                _uiState.update { 
+                    it.copy(paymentError = "Không thể kiểm tra trạng thái thanh toán")
+                }
+            }
+        }
+    }
+}

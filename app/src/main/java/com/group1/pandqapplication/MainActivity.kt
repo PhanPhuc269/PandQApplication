@@ -1,5 +1,6 @@
 package com.group1.pandqapplication
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +17,7 @@ import com.group1.pandqapplication.shared.ui.theme.PandQApplicationTheme
 import com.group1.pandqapplication.shared.util.ConnectivityObserver
 import com.group1.pandqapplication.ui.navigation.PandQNavGraph
 import dagger.hilt.android.AndroidEntryPoint
+import vn.zalopay.sdk.ZaloPaySDK
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -24,9 +26,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge() // Explicit call since import was likely removed by user
-
-        // Removed redundant startDestination call here as it's called inside setContent
+        enableEdgeToEdge()
         
         setContent {
             val networkStatus by mainViewModel.networkStatus.collectAsState()
@@ -47,5 +47,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    /**
+     * Handle result from ZaloPay app after payment
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        ZaloPaySDK.getInstance().onResult(intent)
     }
 }
