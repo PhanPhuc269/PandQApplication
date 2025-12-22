@@ -1,6 +1,7 @@
 package com.group1.pandqapplication
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import com.group1.pandqapplication.ui.common.NetworkErrorScreen
+import com.group1.pandqapplication.util.RequestNotificationPermission
 
 import com.group1.pandqapplication.shared.ui.theme.PandQApplicationTheme
 import com.group1.pandqapplication.shared.util.ConnectivityObserver
@@ -24,12 +26,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge() // Explicit call since import was likely removed by user
-
-        // Removed redundant startDestination call here as it's called inside setContent
+        enableEdgeToEdge()
         
         setContent {
             val networkStatus by mainViewModel.networkStatus.collectAsState()
+            
+            // Request notification permission on Android 13+
+            RequestNotificationPermission { isGranted ->
+                Log.d("FCM", "Notification permission granted: $isGranted")
+            }
+            
             PandQApplicationTheme {
                 Box(modifier = Modifier.fillMaxSize()) {
                     val startDestination = mainViewModel.getStartDestination()
