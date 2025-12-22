@@ -5,28 +5,44 @@ import com.group1.pandqapplication.shared.data.remote.dto.InitConfigDto
 import com.group1.pandqapplication.shared.data.remote.dto.LocationDto
 import com.group1.pandqapplication.shared.data.remote.dto.PaginationResponseDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDto
+import com.group1.pandqapplication.shared.data.remote.dto.ProductSearchDto
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface AppApiService {
-    @GET("init-config")
+    @GET("api/v1/init-config")
     suspend fun getInitConfig(): InitConfigDto
 
-    @GET("master-data/locations")
+    @GET("api/v1/master-data/locations")
     suspend fun getLocations(): List<LocationDto>
 
-    @GET("api/v1/categories")
+    @GET("api/v1/master-data/categories")
     suspend fun getCategories(): List<CategoryDto>
 
     @GET("api/v1/products")
     suspend fun getProducts(): List<ProductDto>
 
+    // For HomeScreen - returns ProductDto
+    @GET("api/v1/products/search")
+    suspend fun searchProductsHome(
+        @Query("query") query: String? = null,
+        @Query("categoryId") categoryId: String? = null,
+        @Query("page") page: Int? = 0,
+        @Query("size") size: Int? = 10
+    ): PaginationResponseDto<ProductDto>
+
+    // For SearchScreen - returns ProductSearchDto with full filter options
     @GET("api/v1/products/search")
     suspend fun searchProducts(
-        @Query("page") page: Int = 0,
-        @Query("size") size: Int = 10,
+        @Query("query") query: String? = null,
         @Query("categoryId") categoryId: String? = null,
-        @Query("query") query: String? = null
-    ): PaginationResponseDto<ProductDto>
+        @Query("minPrice") minPrice: Double? = null,
+        @Query("maxPrice") maxPrice: Double? = null,
+        @Query("minRating") minRating: Double? = null,
+        @Query("inStockOnly") inStockOnly: Boolean? = false,
+        @Query("sortBy") sortBy: String? = "newest",
+        @Query("page") page: Int? = 0,
+        @Query("size") size: Int? = 20
+    ): PaginationResponseDto<ProductSearchDto>
 }
 

@@ -1,22 +1,26 @@
 package com.group1.pandqapplication.shared.data.remote.dto
 
+/**
+ * Generic wrapper for paginated API responses
+ * Matches backend PaginationResponseDto structure
+ */
 data class PaginationResponseDto<T>(
     val data: List<T>,
-    val meta: Meta?,
+    val meta: MetaResponseDto?,
     val code: String?,
     val message: String?
 )
 
-data class Meta(
+data class MetaResponseDto(
     val timestamp: String?,
-    val pagination: Pagination?
+    val pagination: PaginationMetaDto?
 )
 
-data class Pagination(
+data class PaginationMetaDto(
     val page: Int,
     val size: Int,
     val total: Long,
-    val totalPages: Int
+    val totalPages: Int = 0
 ) {
     val hasMore: Boolean
         get() = page < totalPages - 1
