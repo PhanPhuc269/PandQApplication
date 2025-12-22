@@ -37,7 +37,29 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
             authRepository.register(trimmedEmail, password).collect { result ->
-                processResult(result)
+                when (result) {
+                    is Result.Loading -> {
+                        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                    }
+                    is Result.Success -> {
+                        // Send verification email after successful registration
+                        sendVerificationEmail()
+                        _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+                    }
+                    is Result.Error -> {
+                        _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun sendVerificationEmail() {
+        viewModelScope.launch {
+            authRepository.sendEmailVerification().collect { result ->
+                if (result is Result.Success) {
+                    _uiState.update { it.copy(errorMessage = "Đã gửi email xác thực! Vui lòng kiểm tra hộp thư.") }
+                }
             }
         }
     }

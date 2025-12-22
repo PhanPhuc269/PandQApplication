@@ -1,10 +1,12 @@
 package com.group1.pandqapplication.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.group1.pandqapplication.MainViewModel
 import com.group1.pandqapplication.ui.home.HomeScreen
 import com.group1.pandqapplication.ui.login.LoginScreen
 import com.group1.pandqapplication.ui.checkout.CheckoutScreen
@@ -15,7 +17,8 @@ import com.group1.pandqapplication.ui.shipping.ShippingAddressScreen
 fun PandQNavGraph(
     navController: NavHostController = rememberNavController(),
     startDestination: String = Screen.Onboarding.route,
-    destinationAfterSplash: String = Screen.Onboarding.route
+    destinationAfterSplash: String = Screen.Onboarding.route,
+    mainViewModel: MainViewModel = hiltViewModel()
 ) {
     NavHost(
         navController = navController,
@@ -52,7 +55,8 @@ fun PandQNavGraph(
         composable(Screen.Home.route) {
             com.group1.pandqapplication.ui.main.MainScreen(
                 onLogout = {
-                     navController.navigate(Screen.Login.route) {
+                    mainViewModel.logout()
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 },
