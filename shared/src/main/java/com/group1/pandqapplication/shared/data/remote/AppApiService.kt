@@ -6,7 +6,16 @@ import com.group1.pandqapplication.shared.data.remote.dto.LocationDto
 import com.group1.pandqapplication.shared.data.remote.dto.PaginationResponseDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductSearchDto
+import com.group1.pandqapplication.shared.data.remote.dto.SepayCreateQRRequest
+import com.group1.pandqapplication.shared.data.remote.dto.SepayCreateQRResponse
+import com.group1.pandqapplication.shared.data.remote.dto.SepayStatusResponse
+import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayCreateOrderRequest
+import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayCreateOrderResponse
+import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayStatusResponse
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface AppApiService {
@@ -44,5 +53,26 @@ interface AppApiService {
         @Query("page") page: Int? = 0,
         @Query("size") size: Int? = 20
     ): PaginationResponseDto<ProductSearchDto>
-}
 
+    // ZaloPay Payment
+    @POST("api/v1/payments/zalopay/create-order")
+    suspend fun createZaloPayOrder(
+        @Body request: ZaloPayCreateOrderRequest
+    ): ZaloPayCreateOrderResponse
+
+    @GET("api/v1/payments/zalopay/status/{appTransId}")
+    suspend fun getZaloPayStatus(
+        @Path("appTransId") appTransId: String
+    ): ZaloPayStatusResponse
+
+    // SePay Payment (VietQR)
+    @POST("api/v1/payments/sepay/create-qr")
+    suspend fun createSepayQR(
+        @Body request: SepayCreateQRRequest
+    ): SepayCreateQRResponse
+
+    @GET("api/v1/payments/sepay/status/{transactionId}")
+    suspend fun getSepayStatus(
+        @Path("transactionId") transactionId: String
+    ): SepayStatusResponse
+}
