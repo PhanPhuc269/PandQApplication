@@ -17,6 +17,7 @@ data class ProductDetailUiState(
     val isLoading: Boolean = true,
     val isLoadingReviews: Boolean = false,
     val isSubmittingReview: Boolean = false,
+    val showWriteReviewScreen: Boolean = false, // Controls full screen visibility
     val product: ProductDetailDto? = null,
     val reviews: List<ReviewDto> = emptyList(),
     val quantity: Int = 1,
@@ -95,7 +96,7 @@ class ProductDetailViewModel @Inject constructor(
         loadReviews()
     }
 
-    fun submitReview(rating: Int, comment: String) {
+    fun submitReview(rating: Int, comment: String, imageUrls: List<String> = emptyList()) {
         if (rating < 1 || rating > 5) {
             _uiState.value = _uiState.value.copy(
                 reviewSubmitError = "Please select a rating"
@@ -118,11 +119,13 @@ class ProductDetailViewModel @Inject constructor(
                 productId = productId,
                 userId = demoUserId,
                 rating = rating,
-                comment = comment.ifBlank { null }
+                comment = comment.ifBlank { null },
+                imageUrls = imageUrls.ifEmpty { null }
             ).onSuccess {
                 _uiState.value = _uiState.value.copy(
                     isSubmittingReview = false,
-                    reviewSubmitSuccess = true
+                    reviewSubmitSuccess = true,
+                    showWriteReviewScreen = false // Close screen on success
                 )
                 // Reload reviews and product to update stats
                 loadReviews()
@@ -134,6 +137,11 @@ class ProductDetailViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun toggleWriteReviewScreen(show: Boolean) {
+        _uiState.value = _uiState.value.copy(showWriteReviewScreen = show)
+        if (!show) clearReviewSubmitState()
     }
 
     fun clearReviewSubmitState() {
@@ -154,6 +162,13 @@ class ProductDetailViewModel @Inject constructor(
     fun decreaseQuantity() {
         if (_uiState.value.quantity > 1) {
             _uiState.value = _uiState.value.copy(quantity = _uiState.value.quantity - 1)
+        }
+    }
+
+    fun uploadImage(file: java.io.File, onResult: (Result<String>) -> Unit) {
+        viewModelScope.launch {
+            val result = repository.uploadImage(file)
+            onResult(result)
         }
     }
 

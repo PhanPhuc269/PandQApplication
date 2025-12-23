@@ -64,5 +64,9 @@ interface AppApiService {
         @Query("page") page: Int? = 0,
         @Query("size") size: Int? = 20
     ): PaginationResponseDto<ProductSearchDto>
+
+    @retrofit2.http.Multipart
+    @POST("api/v1/upload")
+    suspend fun uploadImage(@retrofit2.http.Part file: okhttp3.MultipartBody.Part): okhttp3.ResponseBody
 }
 

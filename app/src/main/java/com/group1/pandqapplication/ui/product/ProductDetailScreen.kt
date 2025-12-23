@@ -14,6 +14,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -47,7 +49,6 @@ fun ProductDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val primaryColor = Color(0xFFec3713)
     val scrollState = rememberScrollState()
-    var showWriteReviewDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     val tabs = listOf("Description", "Specifications", "Reviews")
@@ -57,7 +58,6 @@ fun ProductDetailScreen(
         if (uiState.reviewSubmitSuccess) {
             snackbarHostState.showSnackbar("Đánh giá của bạn đã được gửi thành công!")
             viewModel.clearReviewSubmitState()
-            showWriteReviewDialog = false
         }
         if (uiState.reviewSubmitError != null) {
             snackbarHostState.showSnackbar(uiState.reviewSubmitError ?: "Có lỗi xảy ra")
@@ -65,231 +65,211 @@ fun ProductDetailScreen(
         }
     }
 
-    // Write Review Dialog
-    if (showWriteReviewDialog) {
-        WriteReviewDialog(
-            onDismiss = { 
-                showWriteReviewDialog = false
-                viewModel.clearReviewSubmitState()
-            },
-            onSubmit = { rating, comment ->
-                showWriteReviewDialog = false  // Đóng dialog ngay khi submit
-                viewModel.submitReview(rating, comment)
-            },
-            primaryColor = primaryColor,
-            isSubmitting = uiState.isSubmittingReview
-        )
-    }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F6F6))) {
+
+
+    // Main Content
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            bottomBar = {
+                if (!uiState.isLoading && uiState.product != null && !uiState.showWriteReviewScreen) {
+                    BottomCartBar(
+                        price = uiState.product!!.price,
+                        quantity = uiState.quantity,
+                        onIncrease = { viewModel.increaseQuantity() },
+                        onDecrease = { viewModel.decreaseQuantity() },
+                        primaryColor = primaryColor,
+                        onCartClick = onCartClick
+                    )
+                }
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                if (uiState.isLoading) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = primaryColor)
+                    }
+                } else if (uiState.product != null) {
+                    val product = uiState.product!!
+                    
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                    ) {
+                        // Header Image Section
+                        ProductImageHeader(
+                            product = product,
+                            primaryColor = primaryColor,
+                            onBackClick = onBackClick,
+                            onCartClick = onCartClick
+                        )
+
+                        // Product Details Content
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Text(
+                                text = product.name,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF18181B),
+                                lineHeight = 32.sp
+                            )
+                            
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = formatPrice(product.price),
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = primaryColor
+                                )
+                                Surface(
+                                    color = Color(0xFF22C55E).copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(100.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF22C55E).copy(alpha = 0.2f))
+                                ) {
+                                    Text(
+                                        text = if (product.status == "ACTIVE") "Còn hàng" else "Hết hàng",
+                                        color = Color(0xFF16A34A),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+    
+                            // Rating
+                            Row(
+                                modifier = Modifier.padding(top = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Filled.Star, contentDescription = null, tint = Color(0xFFEAB308), modifier = Modifier.size(18.dp))
+                                Text(
+                                    text = String.format("%.1f", product.averageRating ?: 0.0),
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 4.dp)
+                                )
+                                Text(
+                                    text = "(${product.reviewCount ?: 0} đánh giá)",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = "Xem tất cả",
+                                    color = primaryColor,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier
+                                        .padding(start = 8.dp)
+                                        .clickable { viewModel.selectTab(2) }
+                                )
+                            }
+                            
+                            // Description Preview
+                            product.description?.let { desc ->
+                                if (desc.isNotEmpty()) {
+                                    Text(
+                                        text = desc,
+                                        color = Color(0xFF52525B),
+                                        fontSize = 14.sp,
+                                        lineHeight = 20.sp,
+                                        maxLines = 4,
+                                        modifier = Modifier.padding(top = 16.dp)
+                                    )
+                                }
+                            }
+    
+                            // Tabs
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                tabs.forEachIndexed { index, title ->
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(end = 24.dp)
+                                            .clickable { viewModel.selectTab(index) }
+                                    ) {
+                                        Text(
+                                            text = title,
+                                            fontSize = 14.sp,
+                                            fontWeight = if (uiState.selectedTab == index) FontWeight.SemiBold else FontWeight.Medium,
+                                            color = if (uiState.selectedTab == index) primaryColor else Color(0xFF71717A)
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        if (uiState.selectedTab == index) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(24.dp)
+                                                    .height(2.dp)
+                                                    .background(primaryColor)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            HorizontalDivider(color = Color(0xFFE4E4E7))
+    
+                            Spacer(modifier = Modifier.height(24.dp))
+                            
+    
+                            when (uiState.selectedTab) {
+                                0 -> DescriptionSection(product.description)
+                                1 -> SpecificationsSection(product.specifications ?: emptyList())
+                                2 -> ReviewsSection(
+                                    reviews = uiState.reviews,
+                                    averageRating = product.averageRating,
+                                    reviewCount = product.reviewCount,
+                                    isLoading = uiState.isLoadingReviews,
+                                    filterByRating = uiState.filterByRating,
+                                    sortBy = uiState.sortBy,
+                                    onFilterChange = { viewModel.filterReviews(it) },
+                                    onSortChange = { viewModel.sortReviews(it) },
+                                    onWriteReviewClick = { viewModel.toggleWriteReviewScreen(true) }
+                                )
+                            }
+    
+                            // Related Products
+                            product.relatedProducts?.let { related ->
+                                if (related.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(32.dp))
+                                    RelatedProductsSection(
+                                        relatedProducts = related,
+                                        onProductClick = onProductClick
+                                    )
+                                }
+                            }
+                            
+                            // Bottom spacer to clear the floating bottom bar
+                            Spacer(modifier = Modifier.height(100.dp))
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Full Screen Write Review Overlay
+        if (uiState.showWriteReviewScreen) {
+            WriteReviewScreen(
+                product = uiState.product,
+                onBackClick = { viewModel.toggleWriteReviewScreen(false) },
+                onSubmitClick = { rating, comment, imageUrls ->
+                    viewModel.submitReview(rating, comment, imageUrls)
+                },
+                onUploadImage = { file, onResult -> viewModel.uploadImage(file, onResult) },
+                primaryColor = primaryColor
+            )
+        }
+        
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 100.dp)
         )
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = primaryColor)
-                }
-            }
-            uiState.error != null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "Đã xảy ra lỗi",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF111827)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = uiState.error ?: "Vui lòng thử lại",
-                            fontSize = 14.sp,
-                            color = Color(0xFF6B7280),
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Thử lại",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = primaryColor,
-                            modifier = Modifier.clickable { viewModel.retry() }
-                        )
-                    }
-                }
-            }
-            uiState.product != null -> {
-                val product = uiState.product!!
-                
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = 80.dp)
-                        .verticalScroll(scrollState)
-                ) {
-                    // Header Image Section
-                    ProductImageHeader(
-                        product = product,
-                        primaryColor = primaryColor,
-                        onBackClick = onBackClick,
-                        onCartClick = onCartClick
-                    )
-
-                    // Product Details Content
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            text = product.name,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF18181B),
-                            lineHeight = 32.sp
-                        )
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = formatPrice(product.price),
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = primaryColor
-                            )
-                            Surface(
-                                color = Color(0xFF22C55E).copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(100.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF22C55E).copy(alpha = 0.2f))
-                            ) {
-                                Text(
-                                    text = if (product.status == "ACTIVE") "Còn hàng" else "Hết hàng",
-                                    color = Color(0xFF16A34A),
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-
-                        // Rating
-                        Row(
-                            modifier = Modifier.padding(top = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Filled.Star, contentDescription = null, tint = Color(0xFFEAB308), modifier = Modifier.size(18.dp))
-                            Text(
-                                text = String.format("%.1f", product.averageRating ?: 0.0),
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 4.dp)
-                            )
-                            Text(
-                                text = "(${product.reviewCount ?: 0} đánh giá)",
-                                color = Color.Gray,
-                                fontSize = 14.sp
-                            )
-                            Text(
-                                text = "Xem tất cả",
-                                color = primaryColor,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier
-                                    .padding(start = 8.dp)
-                                    .clickable { viewModel.selectTab(2) }
-                            )
-                        }
-                        
-                        // Description Preview
-                        product.description?.let { desc ->
-                            if (desc.isNotEmpty()) {
-                                Text(
-                                    text = desc,
-                                    color = Color(0xFF52525B),
-                                    fontSize = 14.sp,
-                                    lineHeight = 20.sp,
-                                    maxLines = 4,
-                                    modifier = Modifier.padding(top = 16.dp)
-                                )
-                            }
-                        }
-
-                        // Tabs
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            tabs.forEachIndexed { index, title ->
-                                Column(
-                                    modifier = Modifier
-                                        .padding(end = 24.dp)
-                                        .clickable { viewModel.selectTab(index) }
-                                ) {
-                                    Text(
-                                        text = title,
-                                        fontSize = 14.sp,
-                                        fontWeight = if (uiState.selectedTab == index) FontWeight.SemiBold else FontWeight.Medium,
-                                        color = if (uiState.selectedTab == index) primaryColor else Color(0xFF71717A)
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    if (uiState.selectedTab == index) {
-                                        Box(
-                                            modifier = Modifier
-                                                .width(24.dp)
-                                                .height(2.dp)
-                                                .background(primaryColor)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        HorizontalDivider(color = Color(0xFFE4E4E7))
-
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        when (uiState.selectedTab) {
-                            0 -> DescriptionSection(product.description)
-                            1 -> SpecificationsSection(product.specifications ?: emptyList())
-                            2 -> ReviewsSection(
-                                reviews = uiState.reviews,
-                                averageRating = product.averageRating,
-                                reviewCount = product.reviewCount,
-                                isLoading = uiState.isLoadingReviews,
-                                filterByRating = uiState.filterByRating,
-                                sortBy = uiState.sortBy,
-                                onFilterChange = { viewModel.filterReviews(it) },
-                                onSortChange = { viewModel.sortReviews(it) },
-                                onWriteReviewClick = { showWriteReviewDialog = true }
-                            )
-                        }
-                        
-                        // Related Products
-                        product.relatedProducts?.let { related ->
-                            if (related.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(24.dp))
-                                RelatedProductsSection(
-                                    relatedProducts = related,
-                                    onProductClick = onProductClick
-                                )
-                            }
-                        }
-                    }
-                }
-                
-                // Sticky Bottom Bar
-                BottomCartBar(
-                    price = product.price,
-                    quantity = uiState.quantity,
-                    onIncrease = { viewModel.increaseQuantity() },
-                    onDecrease = { viewModel.decreaseQuantity() },
-                    primaryColor = primaryColor,
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                )
-            }
-        }
     }
 }
 
@@ -344,7 +324,7 @@ fun ProductImageHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.5f), Color.Transparent)))
-                .padding(top = 40.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -474,179 +454,176 @@ fun ReviewsSection(
     onWriteReviewClick: () -> Unit = {}
 ) {
     var showSortMenu by remember { mutableStateOf(false) }
-    Column {
+    
+    Column(modifier = Modifier.fillMaxWidth()) {
+         // Header with Write Review
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
+                .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Đánh giá & Xếp hạng", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Text(
-                "Viết đánh giá", 
-                color = Color(0xFFec3713), 
-                fontSize = 14.sp, 
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clickable { onWriteReviewClick() }
+                "Đánh giá & Xếp hạng",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF18181B)
             )
-        }
-        
-        // Filter Chips
-        LazyRow(
-            modifier = Modifier.padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item {
-                FilterChip(
-                    selected = filterByRating == null,
-                    onClick = { onFilterChange(null) },
-                    label = { Text("Tất cả") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFFec3713),
-                        selectedLabelColor = Color.White
-                    )
-                )
-            }
-            items(listOf(5, 4, 3, 2, 1)) { rating ->
-                FilterChip(
-                    selected = filterByRating == rating,
-                    onClick = { onFilterChange(rating) },
-                    label = { 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("$rating")
-                            Icon(
-                                Icons.Filled.Star, 
-                                contentDescription = null, 
-                                tint = if (filterByRating == rating) Color.White else Color(0xFFEAB308),
-                                modifier = Modifier.size(16.dp).padding(start = 2.dp)
-                            )
-                        }
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFFec3713),
-                        selectedLabelColor = Color.White
-                    )
+            Surface(
+                color = Color(0xFFec3713).copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.clickable { onWriteReviewClick() }
+            ) {
+                Text(
+                    "Viết đánh giá", 
+                    color = Color(0xFFec3713), 
+                    fontSize = 14.sp, 
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                 )
             }
         }
 
-        // Sort Dropdown
+        // Rating Summary Block (Big score left, Bars right)
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.End
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Left: Big Score
+            Column(
+                modifier = Modifier.padding(end = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = String.format("%.1f", averageRating ?: 0.0),
+                    fontSize = 48.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color(0xFF18181B),
+                    lineHeight = 48.sp
+                )
+                Row(modifier = Modifier.padding(vertical = 4.dp)) {
+                    val rating = (averageRating ?: 0.0).toInt()
+                    repeat(5) { index ->
+                        val icon = when {
+                            index < rating -> Icons.Filled.Star
+                            (averageRating ?: 0.0) - index >= 0.5 -> Icons.Filled.StarHalf
+                            else -> Icons.Filled.StarBorder // Hoặc icon star outline
+                        }
+                        // Dùng StarBorder hoặc tint màu khác cho sao rỗng nếu muốn chuẩn hơn
+                        Icon(
+                            imageVector = if(index < rating || (averageRating ?: 0.0) - index >= 0.5) Icons.Filled.Star else Icons.Filled.Star, // Tạm dùng Star hết và tint màu
+                            contentDescription = null, 
+                            tint = if(index < rating || (averageRating ?: 0.0) - index >= 0.5) Color(0xFFec3713) else Color(0xFFE4E4E7),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Text(
+                    "${reviewCount ?: 0} đánh giá", 
+                    fontSize = 14.sp, 
+                    color = Color(0xFF71717A),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            // Right: Progress Bars
+            Column(modifier = Modifier.weight(1f)) {
+                val totalReviews = reviews.size
+                val distribution = reviews.groupingBy { it.rating }.eachCount()
+                
+                (5 downTo 1).forEach { star ->
+                    val count = distribution[star] ?: 0
+                    val percentage = if (totalReviews > 0) (count * 100 / totalReviews) else 0
+                    RatingBarRow(star, percentage)
+                }
+            }
+        }
+        
+        HorizontalDivider(color = Color(0xFFE4E4E7), modifier = Modifier.padding(bottom = 24.dp))
+
+        // Filter Chips & Sort
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                item {
+                    FilterChipPill(
+                        selected = filterByRating == null,
+                        label = "Tất cả",
+                        onClick = { onFilterChange(null) }
+                    )
+                }
+                items(listOf(5, 4, 3, 2, 1)) { rating ->
+                    FilterChipPill(
+                        selected = filterByRating == rating,
+                        label = "$rating sao",
+                        onClick = { onFilterChange(rating) }
+                    )
+                }
+            }
+            
+            // Sort Icon only to save space or Icon + Text shortened
             Box {
-                OutlinedButton(
-                    onClick = { showSortMenu = true },
-                    shape = RoundedCornerShape(8.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
+                 Row(
+                    modifier = Modifier
+                        .clickable { showSortMenu = true }
+                        .padding(start = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Filled.Sort, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(Icons.Filled.Sort, contentDescription = null, tint = Color(0xFF18181B))
                     Text(
-                        when (sortBy) {
-                            "highest" -> "Cao nhất"
-                            "lowest" -> "Thấp nhất"
-                            else -> "Mới nhất"
-                        },
-                        fontSize = 14.sp
+                        "Lọc", 
+                        fontSize = 14.sp, 
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF18181B),
+                        modifier = Modifier.padding(start = 4.dp)
                     )
                 }
                 DropdownMenu(
                     expanded = showSortMenu,
-                    onDismissRequest = { showSortMenu = false }
+                    onDismissRequest = { showSortMenu = false },
+                    modifier = Modifier.background(Color.White)
                 ) {
-                    DropdownMenuItem(
-                        text = { Text("Mới nhất") },
-                        onClick = {
-                            onSortChange("newest")
-                            showSortMenu = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Đánh giá cao nhất") },
-                        onClick = {
-                            onSortChange("highest")
-                            showSortMenu = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Đánh giá thấp nhất") },
-                        onClick = {
-                            onSortChange("lowest")
-                            showSortMenu = false
-                        }
-                    )
-                }
-            }
-        }
-
-        // Summary Card
-        Surface(
-            color = Color.White,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
-        ) {
-            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = String.format("%.1f", averageRating ?: 0.0),
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Row {
-                        val rating = (averageRating ?: 0.0).toInt()
-                        repeat(rating) { Icon(Icons.Filled.Star, null, tint = Color(0xFFEAB308), modifier = Modifier.size(16.dp)) }
-                        if ((averageRating ?: 0.0) - rating >= 0.5) {
-                            Icon(Icons.Filled.StarHalf, null, tint = Color(0xFFEAB308), modifier = Modifier.size(16.dp))
-                        }
-                    }
-                    Text("${reviewCount ?: 0} đánh giá", fontSize = 12.sp, color = Color.Gray)
-                }
-                Spacer(modifier = Modifier.width(24.dp))
-                // Rating distribution would go here
-                Column(modifier = Modifier.weight(1f)) {
-                    RatingBar(5, 0.7f)
-                    RatingBar(4, 0.2f)
-                    RatingBar(3, 0.05f)
-                    RatingBar(2, 0.03f)
-                    RatingBar(1, 0.02f)
+                    DropdownMenuItem(text = { Text("Mới nhất") }, onClick = { onSortChange("newest"); showSortMenu = false })
+                    DropdownMenuItem(text = { Text("Cao nhất") }, onClick = { onSortChange("highest"); showSortMenu = false })
+                    DropdownMenuItem(text = { Text("Thấp nhất") }, onClick = { onSortChange("lowest"); showSortMenu = false })
                 }
             }
         }
         
+        // Reviews List
         when {
             isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color(0xFFec3713), modifier = Modifier.size(32.dp))
+                Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color(0xFFec3713))
                 }
             }
             reviews.isEmpty() -> {
                 Text(
-                    text = "Chưa có đánh giá nào cho sản phẩm này.",
-                    color = Color(0xFF6B7280),
+                    text = "Chưa có đánh giá nào.",
+                    color = Color(0xFF71717A),
                     fontSize = 14.sp,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    textAlign = TextAlign.Center
                 )
             }
             else -> {
-                reviews.take(3).forEachIndexed { index, review ->
+                reviews.forEachIndexed { index, review ->
                     ReviewItem(review)
-                    if (index < reviews.size - 1 && index < 2) {
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Color(0xFFF1F5F9))
-                    }
-                }
-                
-                if (reviews.size > 3) {
-                    OutlinedButton(
-                        onClick = {},
-                        modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
-                    ) {
-                        Text("Xem tất cả ${reviews.size} đánh giá", color = Color(0xFF0F172A))
+                    if (index < reviews.size - 1) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 16.dp),
+                            color = Color(0xFFF4F4F5)
+                        )
                     }
                 }
             }
@@ -655,59 +632,179 @@ fun ReviewsSection(
 }
 
 @Composable
-fun RatingBar(stars: Int, progress: Float) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
-        Text(stars.toString(), fontSize = 10.sp, color = Color.Gray, modifier = Modifier.width(12.dp))
-        Box(modifier = Modifier.weight(1f).height(6.dp).clip(CircleShape).background(Color(0xFFF1F5F9))) {
-            Box(modifier = Modifier.fillMaxWidth(progress).fillMaxHeight().background(Color(0xFFec3713)))
+fun RatingBarRow(star: Int, percentage: Int) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
+    ) {
+        Text(
+            text = "$star", 
+            fontSize = 12.sp, 
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF18181B),
+            modifier = Modifier.width(16.dp)
+        )
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(6.dp)
+                .clip(RoundedCornerShape(100))
+                .background(Color(0xFFE4E4E7))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(percentage / 100f)
+                    .fillMaxHeight()
+                    .background(Color(0xFFec3713))
+            )
         }
+        Text(
+            text = "$percentage%", 
+            fontSize = 12.sp, 
+            color = Color(0xFF71717A),
+            modifier = Modifier.width(50.dp).padding(start = 8.dp),
+            textAlign = TextAlign.End
+        )
+    }
+}
+
+@Composable
+fun FilterChipPill(selected: Boolean, label: String, onClick: () -> Unit) {
+    Surface(
+        color = if (selected) Color(0xFFec3713) else Color(0xFFF4F4F5),
+        shape = RoundedCornerShape(100),
+        modifier = Modifier.clickable { onClick() }
+    ) {
+        Text(
+            text = label,
+            color = if (selected) Color.White else Color(0xFF18181B),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
     }
 }
 
 @Composable
 fun ReviewItem(review: ReviewDto) {
-    Column {
-        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE9D5FF)),
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // 1. Header: Avatar + Name + Time
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (!review.userAvatar.isNullOrEmpty()) {
+                AsyncImage(
+                    model = review.userAvatar, 
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF4F4F5)), // Placeholder color
+                     placeholder = null,
+                     error = null,
+                     contentScale = ContentScale.Crop
+                )
+            } else {
+                 Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFE5E7EB)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = review.userName?.take(2)?.uppercase() ?: "U",
-                        color = Color(0xFF7E22CE),
+                     Text(
+                        text = review.userName?.take(1)?.uppercase() ?: "U",
+                        color = Color(0xFF6B7280),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
+                        fontSize = 16.sp
                     )
                 }
-                Column(modifier = Modifier.padding(start = 12.dp)) {
-                    Text(review.userName ?: "Người dùng", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                    Row {
-                        repeat(review.rating) { Icon(Icons.Filled.Star, null, tint = Color(0xFFEAB308), modifier = Modifier.size(12.dp)) }
-                    }
-                }
             }
-            Text(formatRelativeTime(review.createdAt), fontSize = 12.sp, color = Color.Gray)
+            
+            Column(modifier = Modifier.padding(start = 12.dp)) {
+                Text(
+                    text = review.userName ?: "Người dùng",
+                    fontWeight = FontWeight.Bold, // Medium -> Bold per design
+                    fontSize = 15.sp,
+                    color = Color(0xFF18181B)
+                )
+                Text(
+                    text = formatRelativeTime(review.createdAt), // "2 days ago"
+                    fontSize = 12.sp,
+                    color = Color(0xFF71717A)
+                )
+            }
         }
+
+        // 2. Stars Row (Separate row per HTML reference)
+        Row(modifier = Modifier.padding(top = 8.dp)) {
+             repeat(5) { index ->
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = null,
+                    tint = if (index < review.rating) Color(0xFFec3713) else Color(0xFFE4E4E7), // Primary color stars
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+
+        // 3. Content
         review.comment?.let { comment ->
             if (comment.isNotEmpty()) {
-                Text(comment, fontSize = 14.sp, color = Color(0xFF475569), modifier = Modifier.padding(top = 8.dp))
+                Text(
+                    text = comment,
+                    fontSize = 15.sp,
+                    lineHeight = 24.sp,
+                    color = Color(0xFF3F3F46), // Zinc-700
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         }
+
+        // 4. Images
         review.imageUrls?.let { imageUrls ->
             if (imageUrls.isNotEmpty()) {
                 LazyRow(
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(imageUrls) { imageUrl ->
                         AsyncImage(
                             model = imageUrl,
                             contentDescription = null,
-                            modifier = Modifier.size(80.dp).clip(RoundedCornerShape(8.dp)),
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFFF4F4F5)),
                             contentScale = ContentScale.Crop
                         )
                     }
+                }
+            }
+        }
+
+        // 5. Helpful Button (Thumb Up)
+        Row(
+            modifier = Modifier.padding(top = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = Color.Transparent,
+                modifier = Modifier.clickable { /* TODO: Implement helpful */ }
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                     Icon(
+                        imageVector = Icons.Outlined.ThumbUp,
+                        contentDescription = "Helpful",
+                        tint = Color(0xFF71717A),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Hữu ích", // Removed count "12"
+                        fontSize = 13.sp,
+                        color = Color(0xFF71717A),
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(start = 6.dp)
+                    )
                 }
             }
         }
@@ -772,6 +869,7 @@ fun BottomCartBar(
     onIncrease: () -> Unit,
     onDecrease: () -> Unit,
     primaryColor: Color,
+    onCartClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -812,7 +910,7 @@ fun BottomCartBar(
             
             // Add to Cart Button
             Button(
-                onClick = { /* TODO: Add to cart */ },
+                onClick = onCartClick,
                 modifier = Modifier.weight(1f).height(48.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
@@ -841,87 +939,4 @@ fun formatRelativeTime(dateString: String): String {
     }
 }
 
-@Composable
-fun WriteReviewDialog(
-    onDismiss: () -> Unit,
-    onSubmit: (Int, String) -> Unit,
-    primaryColor: Color,
-    isSubmitting: Boolean = false
-) {
-    var rating by remember { mutableStateOf(5) }
-    var comment by remember { mutableStateOf("") }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = Color.White,
-        title = {
-            Text(
-                "Viết đánh giá",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                // Rating Stars
-                Text("Chọn số sao:", fontWeight = FontWeight.Medium)
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    (1..5).forEach { star ->
-                        IconButton(
-                            onClick = { rating = star },
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (star <= rating) Icons.Filled.Star else Icons.Filled.StarOutline,
-                                contentDescription = "Star $star",
-                                tint = if (star <= rating) Color(0xFFEAB308) else Color.Gray,
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-                    }
-                }
-                
-                // Comment
-                Text("Nhận xét của bạn:", fontWeight = FontWeight.Medium)
-                OutlinedTextField(
-                    value = comment,
-                    onValueChange = { comment = it },
-                    placeholder = { Text("Chia sẻ trải nghiệm của bạn với sản phẩm...") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = primaryColor,
-                        cursorColor = primaryColor
-                    )
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onSubmit(rating, comment) },
-                colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
-                shape = RoundedCornerShape(8.dp),
-                enabled = !isSubmitting
-            ) {
-                if (isSubmitting) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("Gửi đánh giá", fontWeight = FontWeight.Bold)
-                }
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Hủy", color = Color.Gray)
-            }
-        }
-    )
-}
