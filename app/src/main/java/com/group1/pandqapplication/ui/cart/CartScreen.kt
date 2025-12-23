@@ -217,15 +217,26 @@ fun CartItemRow(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Placeholder image since OrderItemDto doesn't have imageUrl
-            Box(
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.LightGray),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("IMG", color = Color.Gray, fontWeight = FontWeight.Bold)
+            // Product image
+            if (!item.imageUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = item.imageUrl,
+                    contentDescription = item.productName,
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.LightGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("IMG", color = Color.Gray, fontWeight = FontWeight.Bold)
+                }
             }
             
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

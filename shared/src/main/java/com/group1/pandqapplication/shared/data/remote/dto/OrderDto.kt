@@ -21,7 +21,8 @@ data class OrderItemDto(
     val productName: String,
     val quantity: Int,
     val price: Double,
-    val totalPrice: Double
+    val totalPrice: Double,
+    val imageUrl: String? = null
 )
 
 data class AddToCartRequest(
