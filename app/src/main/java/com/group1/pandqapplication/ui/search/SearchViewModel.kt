@@ -34,7 +34,7 @@ data class SearchUiState(
     val categories: List<CategoryItem> = emptyList(),
     val selectedCategoryId: String? = null,
     // Filter sheet state
-    val priceRange: ClosedFloatingPointRange<Float> = 0f..5000f,
+    val priceRange: ClosedFloatingPointRange<Float> = 0f..50000000f,
     val selectedRatingOption: Int = 3, // 1 = 4.0+, 2 = 3.0+, 3 = Any
     val inStockOnly: Boolean = false,
     // Pagination
@@ -119,8 +119,8 @@ class SearchViewModel @Inject constructor(
             }
             
             // If removing price filter
-            if (filterToRemove.startsWith("$")) {
-                newState = newState.copy(priceRange = 0f..5000f)
+            if (filterToRemove.endsWith("đ")) {
+                newState = newState.copy(priceRange = 0f..50000000f)
             }
             
             // If removing rating filter
@@ -142,7 +142,7 @@ class SearchViewModel @Inject constructor(
         _uiState.update { 
             it.copy(
                 activeFilters = emptyList(),
-                priceRange = 0f..5000f,
+                priceRange = 0f..50000000f,
                 selectedCategoryId = null,
                 selectedRatingOption = 3,
                 inStockOnly = false
@@ -190,7 +190,7 @@ class SearchViewModel @Inject constructor(
     fun onResetFilters() {
         _uiState.update {
             it.copy(
-                priceRange = 0f..5000f,
+                priceRange = 0f..50000000f,
                 selectedCategoryId = null,
                 selectedRatingOption = 3,
                 inStockOnly = false
@@ -234,8 +234,9 @@ class SearchViewModel @Inject constructor(
         }
 
         // Price range filter
-        if (state.priceRange.start > 0f || state.priceRange.endInclusive < 5000f) {
-            filters.add("$${state.priceRange.start.toInt()} - $${state.priceRange.endInclusive.toInt()}")
+        if (state.priceRange.start > 0f || state.priceRange.endInclusive < 50000000f) {
+            val formatter = NumberFormat.getInstance(Locale("vi", "VN"))
+            filters.add("${formatter.format(state.priceRange.start.toLong())}đ - ${formatter.format(state.priceRange.endInclusive.toLong())}đ")
         }
 
         // Rating filter
@@ -363,10 +364,10 @@ class SearchViewModel @Inject constructor(
     }
 
     private fun ProductSearchDto.toSearchProduct(): SearchProduct {
-        val formatter = NumberFormat.getCurrencyInstance(Locale.US)
+        val formatter = NumberFormat.getInstance(Locale("vi", "VN"))
         return SearchProduct(
             name = name,
-            price = formatter.format(price),
+            price = "${formatter.format(price?.toLong() ?: 0)}đ",
             rating = averageRating ?: 0.0,
             reviews = "(${reviewCount ?: 0})",
             imageUrl = thumbnailUrl ?: "",
