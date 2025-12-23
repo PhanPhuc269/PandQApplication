@@ -78,6 +78,7 @@ fun MapPickerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
+                    .statusBarsPadding()
             ) {
                 // Top bar with back button
                 Row(

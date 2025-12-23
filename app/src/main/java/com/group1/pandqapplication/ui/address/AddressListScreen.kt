@@ -52,7 +52,8 @@ fun AddressListScreen(
         topBar = {
             Surface(
                 color = backgroundColor,
-                shadowElevation = 2.dp
+                shadowElevation = 2.dp,
+                modifier = Modifier.statusBarsPadding()
             ) {
                 Row(
                     modifier = Modifier

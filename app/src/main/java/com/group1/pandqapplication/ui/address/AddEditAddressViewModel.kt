@@ -3,9 +3,11 @@ package com.group1.pandqapplication.ui.address
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.group1.pandqapplication.shared.data.remote.dto.CreateAddressRequest
 import com.group1.pandqapplication.shared.data.remote.dto.UpdateAddressRequest
 import com.group1.pandqapplication.shared.data.repository.AddressRepository
+import com.group1.pandqapplication.shared.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +33,7 @@ data class AddEditAddressUiState(
 @HiltViewModel
 class AddEditAddressViewModel @Inject constructor(
     private val addressRepository: AddressRepository,
+    private val userRepository: UserRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -38,12 +41,29 @@ class AddEditAddressViewModel @Inject constructor(
     val uiState: StateFlow<AddEditAddressUiState> = _uiState.asStateFlow()
 
     private val addressId: String? = savedStateHandle["addressId"]
-    private val currentUserId = "550e8400-e29b-41d4-a716-446655440000"
+    
+    // Get current user ID from Firebase Auth + backend
+    private var currentUserId: String? = null
+    
+    // Get email from Firebase Auth
+    private val currentUserEmail: String?
+        get() = FirebaseAuth.getInstance().currentUser?.email
 
     val isEditMode: Boolean get() = addressId != null
 
     init {
+        loadCurrentUser()
         addressId?.let { loadAddress(it) }
+    }
+    
+    private fun loadCurrentUser() {
+        val email = currentUserEmail ?: return
+        viewModelScope.launch {
+            userRepository.getUserByEmail(email)
+                .onSuccess { user ->
+                    currentUserId = user.id
+                }
+        }
     }
 
     private fun loadAddress(id: String) {
@@ -165,6 +185,13 @@ class AddEditAddressViewModel @Inject constructor(
             _uiState.update { it.copy(error = "Vui lòng nhập địa chỉ chi tiết") }
             return
         }
+        
+        // Check if userId is loaded
+        val userId = currentUserId
+        if (userId == null && !isEditMode) {
+            _uiState.update { it.copy(error = "Vui lòng đăng nhập để thêm địa chỉ") }
+            return
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, error = null) }
@@ -185,7 +212,7 @@ class AddEditAddressViewModel @Inject constructor(
             } else {
                 addressRepository.createAddress(
                     CreateAddressRequest(
-                        userId = currentUserId,
+                        userId = userId!!,
                         receiverName = state.receiverName,
                         phone = state.phone,
                         detailAddress = state.detailAddress,

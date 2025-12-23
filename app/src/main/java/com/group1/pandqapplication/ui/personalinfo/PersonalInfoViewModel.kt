@@ -3,6 +3,7 @@ package com.group1.pandqapplication.ui.personalinfo
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.group1.pandqapplication.shared.data.remote.dto.UserDto
 import com.group1.pandqapplication.shared.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,19 +35,30 @@ class PersonalInfoViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PersonalInfoUiState())
     val uiState: StateFlow<PersonalInfoUiState> = _uiState.asStateFlow()
 
-    // For demo purposes, using a hardcoded email
-    // In production, this should come from Firebase Auth or session
-    private val currentUserEmail = "leminhanh@example.com"
+    // Get current user email from Firebase Auth
+    private val currentUserEmail: String?
+        get() = FirebaseAuth.getInstance().currentUser?.email
 
     init {
         loadUserData()
     }
 
     fun loadUserData() {
+        val email = currentUserEmail
+        if (email == null) {
+            _uiState.update { 
+                it.copy(
+                    isLoading = false,
+                    error = "Vui lòng đăng nhập để xem thông tin cá nhân"
+                ) 
+            }
+            return
+        }
+        
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             
-            userRepository.getUserByEmail(currentUserEmail)
+            userRepository.getUserByEmail(email)
                 .onSuccess { user ->
                     _uiState.update {
                         it.copy(
@@ -78,7 +90,48 @@ class PersonalInfoViewModel @Inject constructor(
     }
 
     fun updateAvatarUrl(value: String) {
-        _uiState.update { it.copy(avatarUrl = value) }
+        _uiState.update { it.copy(avatarUrl = value, selectedImageUri = null) }
+    }
+    
+    fun setUploadingImage(isUploading: Boolean) {
+        _uiState.update { it.copy(isUploadingImage = isUploading) }
+    }
+    
+    /**
+     * Upload avatar URL and immediately save to backend
+     */
+    fun updateAvatarAndSave(url: String) {
+        val currentUser = _uiState.value.user ?: run {
+            _uiState.update { it.copy(isUploadingImage = false, error = "Không tìm thấy thông tin người dùng") }
+            return
+        }
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(avatarUrl = url, selectedImageUri = null) }
+            
+            userRepository.updateUser(
+                id = currentUser.id,
+                fullName = _uiState.value.fullName,
+                phone = _uiState.value.phone,
+                avatarUrl = url
+            )
+                .onSuccess { updatedUser ->
+                    _uiState.update {
+                        it.copy(
+                            isUploadingImage = false,
+                            user = updatedUser
+                        )
+                    }
+                }
+                .onFailure { exception ->
+                    _uiState.update {
+                        it.copy(
+                            isUploadingImage = false,
+                            error = exception.message ?: "Không thể cập nhật ảnh đại diện"
+                        )
+                    }
+                }
+        }
     }
 
     fun selectImage(uri: Uri) {

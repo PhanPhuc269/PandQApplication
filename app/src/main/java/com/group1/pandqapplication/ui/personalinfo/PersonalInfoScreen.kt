@@ -1,7 +1,6 @@
 package com.group1.pandqapplication.ui.personalinfo
 
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -24,12 +23,18 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import android.widget.Toast
+import com.group1.pandqapplication.util.CloudinaryHelper
+import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,12 +46,40 @@ fun PersonalInfoScreen(
     val backgroundColor = Color(0xFFF8F6F6)
     val primaryColor = Color(0xFFec3713)
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     
-    // Image picker launcher
+    // Image picker launcher with Cloudinary upload + auto-save to backend
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        uri?.let { viewModel.selectImage(it) }
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        if (uri != null) {
+            viewModel.setUploadingImage(true)
+            scope.launch {
+                try {
+                    // Convert Uri to File
+                    val file = uriToFile(context, uri)
+                    if (file != null && file.exists() && file.length() > 0) {
+                        val result = CloudinaryHelper.uploadImage(file)
+                        result.onSuccess { url ->
+                            // Auto-save to backend after successful upload
+                            viewModel.updateAvatarAndSave(url)
+                            Toast.makeText(context, "Cập nhật ảnh thành công!", Toast.LENGTH_SHORT).show()
+                        }
+                        result.onFailure { e ->
+                            viewModel.setUploadingImage(false)
+                            Toast.makeText(context, "Lỗi upload: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                    } else {
+                        viewModel.setUploadingImage(false)
+                        Toast.makeText(context, "Lỗi đọc file ảnh", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    viewModel.setUploadingImage(false)
+                    Toast.makeText(context, "Lỗi: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
     
     // Success animation state
@@ -73,7 +106,8 @@ fun PersonalInfoScreen(
         topBar = {
             Surface(
                 color = backgroundColor,
-                shadowElevation = 2.dp
+                shadowElevation = 2.dp,
+                modifier = Modifier.statusBarsPadding()
             ) {
                 Row(
                     modifier = Modifier
@@ -169,18 +203,24 @@ fun PersonalInfoScreen(
                                     .clip(CircleShape)
                                     .background(primaryColor)
                                     .clickable { 
-                                        imagePickerLauncher.launch(
-                                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                        )
+                                        imagePickerLauncher.launch("image/*")
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    Icons.Filled.CameraAlt,
-                                    contentDescription = "Change photo",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                if (uiState.isUploadingImage) {
+                                    CircularProgressIndicator(
+                                        color = Color.White,
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Filled.CameraAlt,
+                                        contentDescription = "Change photo",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -356,5 +396,25 @@ fun FormField(
             ),
             singleLine = true
         )
+    }
+}
+
+private fun uriToFile(context: android.content.Context, uri: android.net.Uri): java.io.File? {
+    val contentResolver = context.contentResolver
+    val tempFile = java.io.File.createTempFile("avatar_", ".jpg", context.cacheDir)
+    tempFile.deleteOnExit()
+
+    return try {
+        val inputStream = contentResolver.openInputStream(uri) ?: return null
+        val outputStream = java.io.FileOutputStream(tempFile)
+        inputStream.use { input ->
+            outputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
+        tempFile
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }

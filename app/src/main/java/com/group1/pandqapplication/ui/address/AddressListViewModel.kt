@@ -2,8 +2,10 @@ package com.group1.pandqapplication.ui.address
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.group1.pandqapplication.shared.data.remote.dto.AddressDto
 import com.group1.pandqapplication.shared.data.repository.AddressRepository
+import com.group1.pandqapplication.shared.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,24 +24,57 @@ data class AddressListUiState(
 
 @HiltViewModel
 class AddressListViewModel @Inject constructor(
-    private val addressRepository: AddressRepository
+    private val addressRepository: AddressRepository,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddressListUiState())
     val uiState: StateFlow<AddressListUiState> = _uiState.asStateFlow()
 
-    // Hardcoded userId for demo - should come from auth
-    private val currentUserId = "550e8400-e29b-41d4-a716-446655440000"
+    // Get current user ID from Firebase Auth + backend
+    private var currentUserId: String? = null
+    
+    // Get email from Firebase Auth
+    private val currentUserEmail: String?
+        get() = FirebaseAuth.getInstance().currentUser?.email
 
     init {
-        loadAddresses()
+        loadCurrentUserAndAddresses()
     }
-
-    fun loadAddresses() {
+    
+    private fun loadCurrentUserAndAddresses() {
+        val email = currentUserEmail
+        if (email == null) {
+            _uiState.update { it.copy(isLoading = false, error = "Vui lòng đăng nhập để xem địa chỉ") }
+            return
+        }
+        
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             
-            addressRepository.getAddressesByUserId(currentUserId)
+            userRepository.getUserByEmail(email)
+                .onSuccess { user ->
+                    currentUserId = user.id
+                    loadAddresses()
+                }
+                .onFailure { exception ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Không thể tải thông tin người dùng"
+                        )
+                    }
+                }
+        }
+    }
+
+    fun loadAddresses() {
+        val userId = currentUserId ?: return
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            
+            addressRepository.getAddressesByUserId(userId)
                 .onSuccess { addresses ->
                     _uiState.update {
                         it.copy(
