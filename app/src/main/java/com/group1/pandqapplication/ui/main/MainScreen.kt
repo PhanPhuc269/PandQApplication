@@ -47,7 +47,8 @@ fun MainScreen(
                     HomeScreen(
                         onLogout = onLogout,
                         onProductClick = onProductClick,
-                        onSearchClick = onSearchClick
+                        onSearchClick = onSearchClick,
+                        onCartClick = onCartClick
                     )
                 }
                 composable(BottomNavItem.Orders.route) { 

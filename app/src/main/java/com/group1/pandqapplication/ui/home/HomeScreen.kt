@@ -77,6 +77,7 @@ fun HomeScreen(
     onLogout: () -> Unit,
     onProductClick: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onCartClick: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -113,7 +114,7 @@ fun HomeScreen(
                     color = Color(0xFF111827)
                 )
                 IconButton(
-                    onClick = { /* TODO: Cart */ },
+                    onClick = onCartClick,
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
