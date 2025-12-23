@@ -104,6 +104,8 @@ dependencies {
 
     // ZaloPay SDK
     implementation(files("libs/zpdk-release-v3.1.aar"))
+    // OSMDroid for Maps
+    implementation("org.osmdroid:osmdroid-android:6.1.17")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

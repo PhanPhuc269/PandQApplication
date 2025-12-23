@@ -24,7 +24,9 @@ fun MainScreen(
     onCartClick: () -> Unit,
     onProductClick: (String) -> Unit,
     onSearchClick: () -> Unit,
-    onOrderClick: () -> Unit
+    onOrderClick: () -> Unit,
+    onPersonalInfoClick: () -> Unit = {},
+    onAddressListClick: () -> Unit = {}
 ) {
     val navController = rememberNavController()
 
@@ -53,7 +55,9 @@ fun MainScreen(
                 composable(BottomNavItem.Notifications.route) { NotificationsScreen() }
                 composable(BottomNavItem.Account.route) { 
                     com.group1.pandqapplication.ui.account.AccountScreen(
-                        onLogout = onLogout
+                        onLogout = onLogout,
+                        onNavigateToPersonalInfo = onPersonalInfoClick,
+                        onNavigateToAddressList = onAddressListClick
                     )
                 }
             }

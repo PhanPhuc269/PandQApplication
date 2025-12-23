@@ -13,4 +13,16 @@ sealed class Screen(val route: String) {
     data object Checkout : Screen("checkout")
     data object OrderTracking : Screen("order_tracking")
     data object ShippingAddress : Screen("shipping_address")
+    data object PersonalInfo : Screen("personal_info")
+    data object AddressList : Screen("address_list")
+    data object AddEditAddress : Screen("add_edit_address?addressId={addressId}") {
+        fun createRoute(addressId: String? = null): String {
+            return if (addressId != null) {
+                "add_edit_address?addressId=$addressId"
+            } else {
+                "add_edit_address"
+            }
+        }
+    }
+    data object MapPicker : Screen("map_picker")
 }

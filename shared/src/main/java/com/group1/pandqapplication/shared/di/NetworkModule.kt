@@ -4,8 +4,13 @@ import com.google.firebase.auth.FirebaseAuth
 import com.group1.pandqapplication.shared.util.Constants
 import com.group1.pandqapplication.shared.data.remote.ApiService
 import com.group1.pandqapplication.shared.data.remote.AppApiService
+import com.group1.pandqapplication.shared.data.remote.LocationIQService
+import com.group1.pandqapplication.shared.data.repository.AddressRepository
+import com.group1.pandqapplication.shared.data.repository.AddressRepositoryImpl
 import com.group1.pandqapplication.shared.data.repository.ProductRepository
 import com.group1.pandqapplication.shared.data.repository.ProductRepositoryImpl
+import com.group1.pandqapplication.shared.data.repository.UserRepository
+import com.group1.pandqapplication.shared.data.repository.UserRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -94,5 +99,37 @@ object NetworkModule {
     @Singleton
     fun provideProductRepository(appApiService: AppApiService, realm: Realm): ProductRepository {
         return ProductRepositoryImpl(appApiService, realm)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAddressRepository(appApiService: AppApiService): AddressRepository {
+        return AddressRepositoryImpl(appApiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserRepository(appApiService: AppApiService): UserRepository {
+        return UserRepositoryImpl(appApiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocationIQService(): LocationIQService {
+        // Simple OkHttpClient without auth for external LocationIQ API
+        val simpleClient = OkHttpClient.Builder()
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            })
+            .build()
+        
+        return Retrofit.Builder()
+            .baseUrl(com.group1.pandqapplication.shared.util.LocationIQConstants.BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(simpleClient)
+            .build()
+            .create(LocationIQService::class.java)
     }
 }

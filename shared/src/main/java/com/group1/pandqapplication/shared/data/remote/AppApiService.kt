@@ -1,7 +1,9 @@
 package com.group1.pandqapplication.shared.data.remote
 
+import com.group1.pandqapplication.shared.data.remote.dto.AddressDto
 import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
 import com.group1.pandqapplication.shared.data.remote.dto.CreateReviewDto
+import com.group1.pandqapplication.shared.data.remote.dto.CreateAddressRequest
 import com.group1.pandqapplication.shared.data.remote.dto.InitConfigDto
 import com.group1.pandqapplication.shared.data.remote.dto.LocationDto
 import com.group1.pandqapplication.shared.data.remote.dto.PaginationResponseDto
@@ -19,6 +21,10 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import com.group1.pandqapplication.shared.data.remote.dto.UpdateAddressRequest
+import com.group1.pandqapplication.shared.data.remote.dto.UpdateUserRequest
+import com.group1.pandqapplication.shared.data.remote.dto.UserDto
+import retrofit2.http.DELETE
 import retrofit2.http.Query
 
 interface AppApiService {
@@ -96,4 +102,38 @@ interface AppApiService {
     suspend fun getSepayStatus(
         @Path("transactionId") transactionId: String
     ): SepayStatusResponse
+
+    // User endpoints
+    @GET("api/v1/users/{id}")
+    suspend fun getUserById(@retrofit2.http.Path("id") id: String): UserDto
+
+    @GET("api/v1/users/email/{email}")
+    suspend fun getUserByEmail(@retrofit2.http.Path("email") email: String): UserDto
+
+    @retrofit2.http.PUT("api/v1/users/{id}")
+    suspend fun updateUser(
+        @retrofit2.http.Path("id") id: String,
+        @retrofit2.http.Body request: UpdateUserRequest
+    ): UserDto
+
+    // Address endpoints
+    @GET("api/v1/addresses/user/{userId}")
+    suspend fun getAddressesByUserId(@retrofit2.http.Path("userId") userId: String): List<AddressDto>
+
+    @GET("api/v1/addresses/{id}")
+    suspend fun getAddressById(@retrofit2.http.Path("id") id: String): AddressDto
+
+    @POST("api/v1/addresses")
+    suspend fun createAddress(@retrofit2.http.Body request: CreateAddressRequest): AddressDto
+
+    @retrofit2.http.PUT("api/v1/addresses/{id}")
+    suspend fun updateAddress(
+        @retrofit2.http.Path("id") id: String,
+        @retrofit2.http.Body request: UpdateAddressRequest
+    ): AddressDto
+
+    @DELETE("api/v1/addresses/{id}")
+    suspend fun deleteAddress(@retrofit2.http.Path("id") id: String)
 }
+
+

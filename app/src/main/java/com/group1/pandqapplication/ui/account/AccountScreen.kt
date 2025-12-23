@@ -36,7 +36,9 @@ import coil.compose.AsyncImage
 @Composable
 fun AccountScreen(
     onLogout: () -> Unit,
-    viewModel: AccountViewModel = hiltViewModel()
+    viewModel: AccountViewModel = hiltViewModel(),
+    onNavigateToPersonalInfo: () -> Unit = {},
+    onNavigateToAddressList: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val backgroundColor = Color(0xFFF8F6F6)
@@ -56,7 +58,9 @@ fun AccountScreen(
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(modifier = Modifier.size(48.dp)) // Balance left side
+                     IconButton(onClick = {}) {
+                         Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = Color(0xFF1F2937))
+                    }
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                          Text(
                              "Hồ sơ cá nhân", 
@@ -206,9 +210,19 @@ fun AccountScreen(
             Spacer(modifier = Modifier.height(20.dp))
             SectionHeader(title = "Tài khoản")
             SectionContainer {
-                SectionItem(icon = Icons.Outlined.Person, label = "Thông tin cá nhân", primaryColor = primaryColor)
+                SectionItem(
+                    icon = Icons.Outlined.Person, 
+                    label = "Thông tin cá nhân", 
+                    primaryColor = primaryColor,
+                    onClick = onNavigateToPersonalInfo
+                )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
-                SectionItem(icon = Icons.Outlined.Home, label = "Sổ địa chỉ", primaryColor = primaryColor)
+                SectionItem(
+                    icon = Icons.Outlined.Home, 
+                    label = "Sổ địa chỉ", 
+                    primaryColor = primaryColor,
+                    onClick = onNavigateToAddressList
+                )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 SectionItem(icon = Icons.Outlined.ReceiptLong, label = "Lịch sử đơn hàng", primaryColor = primaryColor)
             }

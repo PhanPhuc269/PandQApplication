@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.group1.pandqapplication.MainViewModel
+import androidx.navigation.navArgument
 import com.group1.pandqapplication.ui.home.HomeScreen
 import com.group1.pandqapplication.ui.login.LoginScreen
 import com.group1.pandqapplication.ui.checkout.CheckoutScreen
@@ -73,6 +74,12 @@ fun PandQNavGraph(
                 },
                 onOrderClick = {
                     navController.navigate(Screen.OrderTracking.route)
+                },
+                onPersonalInfoClick = {
+                    navController.navigate(Screen.PersonalInfo.route)
+                },
+                onAddressListClick = {
+                    navController.navigate(Screen.AddressList.route)
                 }
             )
         }
@@ -129,6 +136,56 @@ fun PandQNavGraph(
         composable(Screen.ShippingAddress.route) {
             ShippingAddressScreen(
                 onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(Screen.PersonalInfo.route) {
+            com.group1.pandqapplication.ui.personalinfo.PersonalInfoScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(Screen.AddressList.route) {
+            com.group1.pandqapplication.ui.address.AddressListScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onAddAddress = {
+                    navController.navigate(Screen.AddEditAddress.createRoute())
+                },
+                onEditAddress = { addressId ->
+                    navController.navigate(Screen.AddEditAddress.createRoute(addressId))
+                }
+            )
+        }
+        composable(
+            route = Screen.AddEditAddress.route,
+            arguments = listOf(
+                navArgument("addressId") {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) {
+            com.group1.pandqapplication.ui.address.AddEditAddressScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToMap = {
+                    navController.navigate(Screen.MapPicker.route)
+                }
+            )
+        }
+        composable(Screen.MapPicker.route) {
+            com.group1.pandqapplication.ui.address.MapPickerScreen(
+                onLocationSelected = { lat, lon, address ->
+                    // Save to singleton
+                    com.group1.pandqapplication.ui.address.MapSelectionHolder.setAddress(address)
+                    navController.popBackStack()
+                },
+                onNavigateBack = {
                     navController.popBackStack()
                 }
             )
