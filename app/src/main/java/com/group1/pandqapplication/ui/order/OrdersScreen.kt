@@ -3,6 +3,7 @@ package com.group1.pandqapplication.ui.order
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -26,7 +27,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.group1.pandqapplication.shared.data.remote.dto.OrderHistoryDto
 
 data class Order(
     val id: String,
@@ -40,13 +43,23 @@ data class Order(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrdersScreen(
-    onOrderClick: () -> Unit = {}
+    onOrderClick: () -> Unit = {},
+    viewModel: OrderHistoryViewModel = hiltViewModel(),
+    userId: String = "" // Will be passed from parent
 ) {
     val backgroundColor = Color(0xFFF8F6F6)
     val primaryColor = Color(0xFFec3713)
+    val uiState by viewModel.uiState.collectAsState()
 
-    // Mock Data
-    val allOrders = listOf(
+    // Initialize with userId on first composition
+    LaunchedEffect(userId) {
+        if (userId.isNotBlank()) {
+            viewModel.setUserId(userId)
+        }
+    }
+
+    // Dummy mock orders for preview/no user scenario
+    val mockOrders = listOf(
         Order(
             id = "#A1B2-C3D4",
             date = "15/10/2023",
@@ -73,17 +86,6 @@ fun OrdersScreen(
         )
     )
 
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("Tất cả") }
-    
-    val filters = listOf("Tất cả", "Đã giao", "Đang xử lý", "Đã huỷ")
-
-    val filteredOrders = allOrders.filter { order ->
-        val matchesSearch = order.id.contains(searchQuery, ignoreCase = true) || order.productName.contains(searchQuery, ignoreCase = true)
-        val matchesFilter = selectedFilter == "Tất cả" || order.status == selectedFilter
-        matchesSearch && matchesFilter
-    }
-
     Scaffold(
         containerColor = backgroundColor,
         topBar = {
@@ -106,7 +108,7 @@ fun OrdersScreen(
                              color = Color(0xFF111827)
                          ) 
                     }
-                    Spacer(modifier = Modifier.size(48.dp)) // Balance the Back button size
+                    Spacer(modifier = Modifier.size(48.dp))
                 }
             }
         }
@@ -132,12 +134,9 @@ fun OrdersScreen(
                     Icon(Icons.Filled.Search, contentDescription = null, tint = Color.Gray)
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(modifier = Modifier.weight(1f)) {
-//                        if (searchQuery.isEmpty()) {
-//                            Text("Tìm theo mã đơn hàng, tên sản phẩm...", color = Color.Gray, modifier = Modifier.fillMaxSize())
-//                        }
                         TextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
+                            value = uiState.searchQuery,
+                            onValueChange = { viewModel.onSearchQueryChange(it) },
                             placeholder = { 
                                 Text(
                                     "Tìm theo mã đơn hàng, tên sản phẩm...", 
@@ -153,24 +152,28 @@ fun OrdersScreen(
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent,
                             ),
-                            // Remove default padding to prevent text clipping in small height
                             shape = RoundedCornerShape(8.dp),
                             singleLine = true,
                             modifier = Modifier.fillMaxSize().padding(0.dp),
                             textStyle = TextStyle(fontSize = 14.sp)
                         )
                     }
+                    if (uiState.searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.onClearSearch() }, modifier = Modifier.size(24.dp)) {
+                            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Clear", tint = Color.Gray, modifier = Modifier.size(16.dp))
+                        }
+                    }
                 }
             }
 
-            // Filter Chips
+            // Filter Chips with Status Categories
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(filters) { filter ->
-                    val isSelected = filter == selectedFilter
+                items(OrderStatus.entries.take(4)) { status ->  // Show first 4 statuses
+                    val isSelected = status == uiState.selectedStatus
                     val bgColor = if (isSelected) primaryColor else Color(0xFFE5E7EB)
                     val textColor = if (isSelected) Color.White else Color(0xFF374151)
                     
@@ -179,10 +182,10 @@ fun OrdersScreen(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .height(32.dp)
-                            .clickable { selectedFilter = filter }
+                            .clickable { viewModel.onStatusFilterChange(status) }
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 12.dp)) {
-                            Text(filter, color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                            Text(status.displayName, color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
@@ -190,25 +193,58 @@ fun OrdersScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Order List
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                filteredOrders.forEach { order ->
-                    OrderItem(order = order, onClick = onOrderClick)
+            // Order List or Empty/Error
+            if (uiState.isLoading && uiState.orders.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+            } else if (uiState.error != null && uiState.orders.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(uiState.error ?: "Lỗi tải dữ liệu", color = Color.Red)
+                    }
+                }
+            } else if (uiState.orders.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Chưa có đơn hàng nào", color = Color.Gray)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(uiState.orders) { order ->
+                        OrderHistoryItem(order = order, onClick = onOrderClick)
+                    }
+                    
+                    // Load more button if available
+                    if (uiState.orders.size < uiState.totalItems) {
+                        item {
+                            Button(
+                                onClick = { viewModel.loadNextPage() },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
+                                enabled = !uiState.isLoading
+                            ) {
+                                if (uiState.isLoading) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                } else {
+                                    Text("Tải thêm")
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun OrderItem(order: Order, onClick: () -> Unit) {
+fun OrderHistoryItem(order: OrderHistoryDto, onClick: () -> Unit) {
     Surface(
         color = Color.White,
         shape = RoundedCornerShape(12.dp),
@@ -219,27 +255,27 @@ fun OrderItem(order: Order, onClick: () -> Unit) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = order.imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.LightGray)
-            )
+            if (order.items.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.LightGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(order.items.first().productName.take(1).uppercase(), fontWeight = FontWeight.Bold)
+                }
+            }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text("Đơn hàng ${order.id}", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                Text("Ngày đặt: ${order.date}", fontSize = 14.sp, color = Color.Gray)
-                Text(order.productName, fontSize = 14.sp, color = Color.Gray, maxLines = 1)
-                Text("Tổng cộng: ${formatCurrency(order.total)}đ", fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                Text("Đơn hàng ${order.id.take(8)}", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                Text(order.items.mapNotNull { it.productName }.take(1).joinToString(", "), fontSize = 14.sp, color = Color.Gray, maxLines = 1)
+                Text("Tổng: ${formatCurrency(order.finalAmount.toLong())}đ", fontWeight = FontWeight.Medium, fontSize = 14.sp)
                 
-                // Status Badge
                 val (badgeColor, textColor) = when (order.status) {
-                    "Đã giao" -> Color(0xFFDCFCE7) to Color(0xFF166534) // Green-100 to Green-800
-                    "Đang xử lý" -> Color(0xFFFFEDD5) to Color(0xFF9A3412) // Orange-100 to Orange-800
-                    "Đã huỷ" -> Color(0xFFFEE2E2) to Color(0xFF991B1B) // Red-100 to Red-800
+                    "DELIVERED" -> Color(0xFFDCFCE7) to Color(0xFF166534)
+                    "PENDING", "CONFIRMED" -> Color(0xFFFFEDD5) to Color(0xFF9A3412)
+                    "CANCELLED" -> Color(0xFFFEE2E2) to Color(0xFF991B1B)
                     else -> Color.LightGray to Color.Black
                 }
                 

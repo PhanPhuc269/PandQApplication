@@ -3,10 +3,12 @@ package com.group1.pandqapplication.shared.data.remote
 import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
 import com.group1.pandqapplication.shared.data.remote.dto.InitConfigDto
 import com.group1.pandqapplication.shared.data.remote.dto.LocationDto
+import com.group1.pandqapplication.shared.data.remote.dto.OrderHistoryDto
 import com.group1.pandqapplication.shared.data.remote.dto.PaginationResponseDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductSearchDto
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface AppApiService {
@@ -44,5 +46,15 @@ interface AppApiService {
         @Query("page") page: Int? = 0,
         @Query("size") size: Int? = 20
     ): PaginationResponseDto<ProductSearchDto>
+
+    // Order history with filters and search
+    @GET("api/v1/orders/user/{userId}/search")
+    suspend fun searchOrderHistory(
+        @Path("userId") userId: String,
+        @Query("status") status: String? = "all",
+        @Query("q") query: String? = null,
+        @Query("page") page: Int? = 0,
+        @Query("size") size: Int? = 20
+    ): PaginationResponseDto<OrderHistoryDto>
 }
 
