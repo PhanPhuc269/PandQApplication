@@ -84,7 +84,7 @@ fun FeedbackScreen(
                     .fillMaxWidth()
                     .background(secondaryBackgroundColor)
                     .border(width = 0.5.dp, color = borderColor)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 16.dp)
             ) {
                 IconButton(
                     onClick = onBackClick,
@@ -102,15 +102,6 @@ fun FeedbackScreen(
                     fontWeight = FontWeight.SemiBold,
                     color = textPrimary,
                     modifier = Modifier.align(Alignment.Center)
-                )
-                Text(
-                    text = "Gửi",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Primary.copy(alpha = 0.6f),
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .clickable { /* Submit */ }
                 )
             }
         },
