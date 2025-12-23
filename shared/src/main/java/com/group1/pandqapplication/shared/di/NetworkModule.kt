@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.group1.pandqapplication.shared.util.Constants
 import com.group1.pandqapplication.shared.data.remote.ApiService
 import com.group1.pandqapplication.shared.data.remote.AppApiService
+import com.group1.pandqapplication.shared.data.remote.AuthInterceptor
 import com.group1.pandqapplication.shared.data.repository.ProductRepository
 import com.group1.pandqapplication.shared.data.repository.ProductRepositoryImpl
 import dagger.Module

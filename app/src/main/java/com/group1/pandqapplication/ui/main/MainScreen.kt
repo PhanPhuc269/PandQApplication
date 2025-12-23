@@ -24,7 +24,10 @@ fun MainScreen(
     onCartClick: () -> Unit,
     onProductClick: (String) -> Unit,
     onSearchClick: () -> Unit,
-    onOrderClick: () -> Unit
+    onOrderClick: () -> Unit,
+    onNavigateToOrder: (String?) -> Unit = { _ -> onOrderClick() }, // Navigate to order with optional orderId
+    onNavigateToProduct: (String?) -> Unit = { id -> id?.let { onProductClick(it) } }, // Navigate to product with optional productId
+    onNavigateToPromotion: (String?) -> Unit = { _ -> } // Navigate to promotion
 ) {
     val navController = rememberNavController()
 
@@ -50,7 +53,36 @@ fun MainScreen(
                         onOrderClick = onOrderClick
                     ) 
                 }
-                composable(BottomNavItem.Notifications.route) { NotificationsScreen() }
+                composable(BottomNavItem.Notifications.route) { 
+                    NotificationsScreen(
+                        onNotificationClick = { targetUrl ->
+                            // Parse targetUrl and navigate to appropriate screen
+                            when {
+                                targetUrl == null -> { /* No navigation */ }
+                                targetUrl.contains("home") -> {
+                                    // Navigate to home tab
+                                    navController.navigate(BottomNavItem.Home.route) {
+                                        popUpTo(navController.graph.startDestinationId)
+                                        launchSingleTop = true
+                                    }
+                                }
+                                targetUrl.contains("orders") -> {
+                                    // Extract orderId from URL like "pandq://orders/29381"
+                                    val orderId = targetUrl.substringAfterLast("/")
+                                    onNavigateToOrder(orderId)
+                                }
+                                targetUrl.contains("products") -> {
+                                    val productId = targetUrl.substringAfterLast("/")
+                                    onNavigateToProduct(productId)
+                                }
+                                targetUrl.contains("promotions") || targetUrl.contains("coupons") || targetUrl.contains("flash-sale") -> {
+                                    val promoId = targetUrl.substringAfterLast("/")
+                                    onNavigateToPromotion(promoId)
+                                }
+                            }
+                        }
+                    )
+                }
                 composable(BottomNavItem.Account.route) { 
                     com.group1.pandqapplication.ui.account.AccountScreen(
                         onLogout = onLogout
@@ -60,3 +92,4 @@ fun MainScreen(
         }
     }
 }
+
