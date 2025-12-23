@@ -74,6 +74,10 @@ class AuthRepositoryImpl @Inject constructor(
         return auth.currentUser?.photoUrl?.toString()
     }
 
+    override fun getCurrentFirebaseUid(): String? {
+        return auth.currentUser?.uid
+    }
+
     override suspend fun sendEmailVerification(): Flow<Result<Boolean>> = callbackFlow {
         trySend(Result.Loading)
         val user = auth.currentUser

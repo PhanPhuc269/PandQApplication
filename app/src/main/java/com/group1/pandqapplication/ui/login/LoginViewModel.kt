@@ -1,9 +1,12 @@
 package com.group1.pandqapplication.ui.login
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.shared.data.repository.AuthRepository
+import com.group1.pandqapplication.shared.data.repository.NotificationRepository
 import com.group1.pandqapplication.shared.util.Result
+import com.group1.pandqapplication.util.FcmHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val notificationRepository: NotificationRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -45,6 +49,8 @@ class LoginViewModel @Inject constructor(
                         // Send verification email after successful registration
                         sendVerificationEmail()
                         _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+                        // Register FCM token after registration
+                        registerFcmToken()
                     }
                     is Result.Error -> {
                         _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
@@ -87,9 +93,45 @@ class LoginViewModel @Inject constructor(
             }
             is Result.Success -> {
                 _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+                // Register FCM token after successful login
+                registerFcmToken()
             }
             is Result.Error -> {
                 _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
+            }
+        }
+    }
+
+    /**
+     * Register FCM token with backend after login/register.
+     * Uses email and Firebase UID to link user, then sends FCM token.
+     */
+    private fun registerFcmToken() {
+        viewModelScope.launch {
+            try {
+                val email = authRepository.getCurrentUserEmail()
+                val firebaseUid = authRepository.getCurrentFirebaseUid()
+                
+                if (email.isNullOrEmpty()) {
+                    Log.w("FCM", "Cannot register FCM token: no email")
+                    return@launch
+                }
+
+                // Get FCM token
+                val fcmToken = FcmHelper.getToken()
+                Log.d("FCM", "Got FCM token: ${fcmToken.take(20)}...")
+                Log.d("FCM", "Firebase UID: $firebaseUid")
+
+                // Send token to backend with Firebase UID for linking
+                val result = notificationRepository.updateFcmTokenByEmail(email, fcmToken, firebaseUid)
+                
+                if (result.isSuccess) {
+                    Log.d("FCM", "FCM token registered successfully")
+                } else {
+                    Log.e("FCM", "Failed to register FCM token: ${result.exceptionOrNull()?.message}")
+                }
+            } catch (e: Exception) {
+                Log.e("FCM", "Error registering FCM token", e)
             }
         }
     }
@@ -106,3 +148,4 @@ class LoginViewModel @Inject constructor(
         _uiState.update { it.copy(errorMessage = null) }
     }
 }
+

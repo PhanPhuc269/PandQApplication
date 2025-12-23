@@ -12,9 +12,11 @@ interface AuthRepository {
     fun getCurrentUserEmail(): String?
     fun getCurrentUserDisplayName(): String?
     fun getCurrentUserPhotoUrl(): String?
+    fun getCurrentFirebaseUid(): String?
     
     // Email verification
     suspend fun sendEmailVerification(): Flow<Result<Boolean>>
     fun isEmailVerified(): Boolean
     suspend fun reloadUser(): Flow<Result<Boolean>>
 }
+

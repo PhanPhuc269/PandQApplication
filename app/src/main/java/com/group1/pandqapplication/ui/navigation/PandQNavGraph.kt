@@ -9,7 +9,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.group1.pandqapplication.MainViewModel
-import androidx.navigation.navArgument
 import com.group1.pandqapplication.ui.home.HomeScreen
 import com.group1.pandqapplication.ui.login.LoginScreen
 import com.group1.pandqapplication.ui.checkout.CheckoutScreen
@@ -80,6 +79,18 @@ fun PandQNavGraph(
                 },
                 onAddressListClick = {
                     navController.navigate(Screen.AddressList.route)
+                },                    
+                onNavigateToOrder = { orderId ->
+                    // TODO: Pass orderId to OrderTracking screen when it supports dynamic order
+                    navController.navigate(Screen.OrderTracking.route)
+                },
+                onNavigateToProduct = { productId ->
+                    // TODO: Pass productId to ProductDetail screen when it supports dynamic product
+                    navController.navigate(Screen.ProductDetail.route)
+                },
+                onNavigateToPromotion = { promoId ->
+                    // TODO: Navigate to promotion screen when available
+                    // For now, stay on current screen
                 }
             )
         }

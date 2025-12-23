@@ -7,6 +7,7 @@ import com.group1.pandqapplication.shared.data.remote.AppApiService
 import com.group1.pandqapplication.shared.data.remote.LocationIQService
 import com.group1.pandqapplication.shared.data.repository.AddressRepository
 import com.group1.pandqapplication.shared.data.repository.AddressRepositoryImpl
+import com.group1.pandqapplication.shared.data.remote.AuthInterceptor
 import com.group1.pandqapplication.shared.data.repository.ProductRepository
 import com.group1.pandqapplication.shared.data.repository.ProductRepositoryImpl
 import com.group1.pandqapplication.shared.data.repository.UserRepository

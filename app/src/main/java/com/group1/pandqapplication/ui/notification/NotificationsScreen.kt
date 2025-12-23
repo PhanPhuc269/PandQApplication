@@ -1,17 +1,23 @@
 package com.group1.pandqapplication.ui.notification
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Delete
@@ -20,12 +26,17 @@ import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.NotificationImportant
 import androidx.compose.material.icons.filled.Percent
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -33,51 +44,91 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.group1.pandqapplication.shared.data.remote.dto.NotificationDto
 import com.group1.pandqapplication.shared.ui.theme.BackgroundLight
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
-// Mock Data Models
-data class Notification(
+// UI Data Models for display
+data class NotificationUiModel(
     val id: String,
     val type: NotificationType,
     val title: String,
     val time: String,
     val description: String,
     val isRead: Boolean,
-    val date: String // "Hôm nay", "Hôm qua", "Tuần trước"
+    val date: String, // "Hôm nay", "Hôm qua", "Tuần trước"
+    val targetUrl: String? = null
 )
 
 enum class NotificationType {
     ORDER, PROMO, SYSTEM, FEEDBACK
 }
 
+// Helper to convert API data to UI model
+private fun NotificationDto.toUiModel(): NotificationUiModel {
+    val notifType = when (type) {
+        "ORDER_UPDATE" -> NotificationType.ORDER
+        "PROMOTION" -> NotificationType.PROMO
+        "SYSTEM" -> NotificationType.SYSTEM
+        else -> NotificationType.FEEDBACK
+    }
+    
+    val (timeStr, dateStr) = formatDateTime(createdAt)
+    
+    return NotificationUiModel(
+        id = id,
+        type = notifType,
+        title = title,
+        time = timeStr,
+        description = body,
+        isRead = isRead,
+        date = dateStr,
+        targetUrl = targetUrl
+    )
+}
+
+private fun formatDateTime(isoString: String): Pair<String, String> {
+    return try {
+        val dateTime = LocalDateTime.parse(isoString.substringBefore("+"))
+        val now = LocalDateTime.now()
+        val daysBetween = ChronoUnit.DAYS.between(dateTime.toLocalDate(), now.toLocalDate())
+        
+        val timeStr = dateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+        val dateStr = when {
+            daysBetween == 0L -> "Hôm nay"
+            daysBetween == 1L -> "Hôm qua"
+            daysBetween <= 7L -> "Tuần trước"
+            else -> dateTime.format(DateTimeFormatter.ofPattern("dd/MM"))
+        }
+        Pair(timeStr, dateStr)
+    } catch (e: Exception) {
+        Pair("--:--", "Khác")
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationsScreen() {
+fun NotificationsScreen(
+    viewModel: NotificationViewModel = hiltViewModel(),
+    onNotificationClick: (String?) -> Unit = {} // targetUrl for navigation
+) {
+    val uiState by viewModel.uiState.collectAsState()
     val primaryColor = Color(0xFFec3713)
     val backgroundColor = BackgroundLight
 
-    // Filter State
-    var selectedFilter by remember { mutableStateOf("All") } // All, Orders, Promos
-
-    // Mock Data State
-    var notifications by remember {
-        mutableStateOf(
-            listOf(
-                Notification("1", NotificationType.ORDER, "Giao hàng thành công", "10:30 AM", "Đơn hàng #29381 của bạn đã được giao thành công. Vui lòng xác nhận và đánh giá sản phẩm để nhận 200 xu.", false, "Hôm nay"),
-                Notification("2", NotificationType.PROMO, "Siêu Sale 11.11 \uD83D\uDD25", "10:00 AM", "Giảm giá lên đến 50% cho các sản phẩm điện tử. Số lượng có hạn, mua ngay kẻo lỡ!", false, "Hôm nay"),
-                Notification("3", NotificationType.ORDER, "Đơn hàng đang vận chuyển", "16:45", "Đơn hàng #29381 đã được bàn giao cho đơn vị vận chuyển GHN.", true, "Hôm qua"),
-                Notification("4", NotificationType.SYSTEM, "Bảo trì hệ thống", "09:00", "Hệ thống sẽ bảo trì định kỳ vào lúc 02:00 AM ngày 15/11. Dịch vụ sẽ gián đoạn trong 30 phút.", true, "Hôm qua"),
-                Notification("5", NotificationType.PROMO, "Mã giảm giá dành riêng cho bạn", "02 Th11", "Tặng bạn mã GIAM20K cho đơn hàng từ 100K. Hạn sử dụng đến hết tháng này.", true, "Tuần trước"),
-                Notification("6", NotificationType.FEEDBACK, "Shop đã trả lời đánh giá", "30 Th10", "\"Cảm ơn bạn đã tin tưởng ủng hộ shop ạ. Hy vọng bạn sẽ hài lòng với sản phẩm!\"", true, "Tuần trước")
-            )
-        )
+    // Convert API notifications to UI models
+    val allNotifications = remember(uiState.notifications) {
+        uiState.notifications.map { it.toUiModel() }
     }
 
     // Filter Logic
-    val filteredNotifications = when (selectedFilter) {
-        "Orders" -> notifications.filter { it.type == NotificationType.ORDER }
-        "Promos" -> notifications.filter { it.type == NotificationType.PROMO }
-        else -> notifications
+    val filteredNotifications = when (uiState.selectedFilter) {
+        "Orders" -> allNotifications.filter { it.type == NotificationType.ORDER }
+        "Promos" -> allNotifications.filter { it.type == NotificationType.PROMO }
+        else -> allNotifications
     }
 
     // Grouping Logic
@@ -88,77 +139,110 @@ fun NotificationsScreen() {
         topBar = {
             Surface(
                 color = backgroundColor.copy(alpha = 0.95f),
-                shadowElevation = 0.dp, // No shadow in design, just border usually but flat here
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E7EB)) // Close to gray-200
+                shadowElevation = 0.dp,
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E7EB))
             ) {
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .height(56.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = Color(0xFF111827))
-                    }
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        Text(
-                            "Thông báo",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = Color(0xFF111827)
-                        )
-                    }
-                    TextButton(onClick = {
-                        notifications = notifications.map { it.copy(isRead = true) }
-                    }) {
-                        Text("Đọc tất cả", color = primaryColor, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                    }
+                    Text(
+                        "Thông báo",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color(0xFF111827)
+                    )
                 }
             }
         }
     ) { paddingValues ->
-        Column(
+        val pullRefreshState = rememberPullToRefreshState()
+        
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading,
+            onRefresh = { viewModel.refresh() },
+            state = pullRefreshState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
             // Filter Segmented Control
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp) // px-4 py-4
-                    .height(48.dp) // h-12 in design roughly? No h-10 in design
+                    .padding(16.dp)
+                    .height(48.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFE5E7EB)) // gray-200
-                    .padding(4.dp), // p-1
+                    .background(Color(0xFFE5E7EB))
+                    .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val filters = listOf("All" to "Tất cả", "Orders" to "Đơn hàng", "Promos" to "Khuyến mãi")
                 filters.forEach { (key, label) ->
-                    val isSelected = selectedFilter == key
+                    val isSelected = uiState.selectedFilter == key
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
                             .clip(RoundedCornerShape(8.dp))
                             .background(if (isSelected) Color.White else Color.Transparent)
-                            .clickable { selectedFilter = key },
+                            .clickable { viewModel.setFilter(key) },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = label,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (isSelected) primaryColor else Color(0xFF6B7280) // text-primary vs text-gray-500
+                            color = if (isSelected) primaryColor else Color(0xFF6B7280)
                         )
                     }
                 }
             }
 
-            // Notification List
-            if (filteredNotifications.isEmpty()) {
-                // Empty State
+            // Loading State - Shimmer Skeleton
+            if (uiState.isLoading && uiState.notifications.isEmpty()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    item {
+                        ShimmerDateHeader()
+                    }
+                    items(5) {
+                        ShimmerNotificationItem()
+                    }
+                }
+            }
+            // Error State
+            else if (uiState.errorMessage != null) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        uiState.errorMessage ?: "Đã có lỗi xảy ra",
+                        color = Color(0xFF6B7280),
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.refresh() },
+                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                    ) {
+                        Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Thử lại")
+                    }
+                }
+            }
+            // Empty State
+            else if (filteredNotifications.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
@@ -186,8 +270,28 @@ fun NotificationsScreen() {
                         fontWeight = FontWeight.Medium
                     )
                 }
-            } else {
+            }
+            // Notification List
+            else {
+                val listState = rememberLazyListState()
+                
+                // Infinite scroll detection
+                val shouldLoadMore = remember {
+                    derivedStateOf {
+                        val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
+                            ?: return@derivedStateOf false
+                        lastVisibleItem.index >= listState.layoutInfo.totalItemsCount - 3
+                    }
+                }
+                
+                LaunchedEffect(shouldLoadMore.value) {
+                    if (shouldLoadMore.value && !uiState.isLoading) {
+                        viewModel.loadMore()
+                    }
+                }
+                
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
@@ -204,23 +308,47 @@ fun NotificationsScreen() {
                         items(items, key = { it.id }) { notification ->
                             SwipeToDismissNotificationItem(
                                 notification = notification,
-                                onDismiss = {
-                                    notifications = notifications.filter { it.id != notification.id }
+                                onDismiss = { viewModel.deleteNotification(notification.id) },
+                                onClick = {
+                                    viewModel.markAsRead(notification.id)
+                                    if (!notification.targetUrl.isNullOrEmpty()) {
+                                        onNotificationClick(notification.targetUrl)
+                                    }
                                 }
                             )
                         }
                     }
+                    
+                    // Loading indicator at bottom when loading more
+                    if (uiState.isLoadingMore) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = primaryColor
+                                )
+                            }
+                        }
+                    }
                 }
+            }
             }
         }
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeToDismissNotificationItem(
-    notification: Notification,
-    onDismiss: () -> Unit
+    notification: NotificationUiModel,
+    onDismiss: () -> Unit,
+    onClick: () -> Unit = {}
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = {
@@ -256,18 +384,18 @@ fun SwipeToDismissNotificationItem(
         },
         enableDismissFromStartToEnd = false
     ) {
-        NotificationItem(notification)
+        NotificationItem(notification, onClick)
     }
 }
 
 @Composable
-fun NotificationItem(notification: Notification) {
+fun NotificationItem(notification: NotificationUiModel, onClick: () -> Unit = {}) {
     val primaryColor = Color(0xFFec3713)
 
     Surface(
         color = if (notification.isRead) Color.White.copy(alpha = 0.75f) else Color.White,
-        modifier = Modifier.fillMaxWidth().clickable { /* TODO: Open detail */ },
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFFF3F4F6)) // Light divider
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFFF3F4F6))
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -283,29 +411,28 @@ fun NotificationItem(notification: Notification) {
                         .background(primaryColor)
                 )
             } else {
-                 Spacer(modifier = Modifier.width(14.dp)) // Maintain alignment if no dot
+                 Spacer(modifier = Modifier.width(14.dp))
             }
 
             // Icon
             val (icon, bgColor, iconColor) = when (notification.type) {
-                NotificationType.ORDER -> Triple(Icons.Filled.LocalShipping, Color(0xFFDBEAFE), Color(0xFF2563EB)) // Blue-100, Blue-600
-                NotificationType.PROMO -> Triple(Icons.Filled.Percent, Color(0xFFFFE4E6), primaryColor) // slightly diff red for bg
-                NotificationType.SYSTEM -> Triple(Icons.Filled.NotificationImportant, Color(0xFFF3F4F6), Color(0xFF4B5563)) // Gray-100, Gray-600
-                NotificationType.FEEDBACK -> Triple(Icons.Filled.Chat, Color(0xFFDCFCE7), Color(0xFF166534)) // Green-100, Green-800
+                NotificationType.ORDER -> Triple(Icons.Filled.LocalShipping, Color(0xFFDBEAFE), Color(0xFF2563EB))
+                NotificationType.PROMO -> Triple(Icons.Filled.Percent, Color(0xFFFFE4E6), primaryColor)
+                NotificationType.SYSTEM -> Triple(Icons.Filled.NotificationImportant, Color(0xFFF3F4F6), Color(0xFF4B5563))
+                NotificationType.FEEDBACK -> Triple(Icons.Filled.Chat, Color(0xFFDCFCE7), Color(0xFF166534))
             }
-            // Logic for specific icons like package for "processing" not strictly mapped here for brevity, simplified logic
 
-            // Special case for "Order Update" (Shipping/Package icon) from mock data logic correction
+            // Special case icons
             val actualIcon = if (notification.type == NotificationType.ORDER && notification.title.contains("vận chuyển")) Icons.Filled.Inventory2 
                              else if (notification.type == NotificationType.PROMO && notification.title.contains("Mã giảm giá")) Icons.Filled.ConfirmationNumber
                              else icon
 
-            val actualBgColor = if (notification.type == NotificationType.ORDER && notification.title.contains("vận chuyển")) Color(0xFFFFEDD5) // Orange-100
-                                else if (notification.type == NotificationType.PROMO && notification.title.contains("Mã giảm giá")) Color(0xFFF3E8FF) // Purple-100
+            val actualBgColor = if (notification.type == NotificationType.ORDER && notification.title.contains("vận chuyển")) Color(0xFFFFEDD5)
+                                else if (notification.type == NotificationType.PROMO && notification.title.contains("Mã giảm giá")) Color(0xFFF3E8FF)
                                 else bgColor
 
-            val actualIconColor = if (notification.type == NotificationType.ORDER && notification.title.contains("vận chuyển")) Color(0xFFEA580C) // Orange-600
-                                  else if (notification.type == NotificationType.PROMO && notification.title.contains("Mã giảm giá")) Color(0xFF9333EA) // Purple-600
+            val actualIconColor = if (notification.type == NotificationType.ORDER && notification.title.contains("vận chuyển")) Color(0xFFEA580C)
+                                  else if (notification.type == NotificationType.PROMO && notification.title.contains("Mã giảm giá")) Color(0xFF9333EA)
                                   else iconColor
 
 
@@ -354,6 +481,115 @@ fun NotificationItem(notification: Notification) {
                     lineHeight = 20.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+// Shimmer Effect Composables
+@Composable
+fun shimmerBrush(): Brush {
+    val shimmerColors = listOf(
+        Color(0xFFE5E7EB),
+        Color(0xFFF3F4F6),
+        Color(0xFFE5E7EB)
+    )
+
+    val transition = rememberInfiniteTransition(label = "shimmer")
+    val translateAnim = transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmer"
+    )
+
+    return Brush.linearGradient(
+        colors = shimmerColors,
+        start = Offset.Zero,
+        end = Offset(x = translateAnim.value, y = translateAnim.value)
+    )
+}
+
+@Composable
+fun ShimmerDateHeader() {
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .width(80.dp)
+            .height(20.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(shimmerBrush())
+    )
+}
+
+@Composable
+fun ShimmerNotificationItem() {
+    Surface(
+        color = Color.White,
+        modifier = Modifier.fillMaxWidth(),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFFF3F4F6))
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            // Shimmer dot placeholder
+            Spacer(modifier = Modifier.width(14.dp))
+
+            // Shimmer icon circle
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(shimmerBrush())
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Shimmer title
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(16.dp)
+                            .padding(end = 8.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(shimmerBrush())
+                    )
+                    // Shimmer time
+                    Box(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(shimmerBrush())
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                // Shimmer description line 1
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(shimmerBrush())
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                // Shimmer description line 2
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(shimmerBrush())
                 )
             }
         }
