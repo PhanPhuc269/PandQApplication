@@ -12,8 +12,8 @@
 /captures
 .externalNativeBuild
 .cxx
-# local.properties
-# app/google-services.json
-# admin/google-services.json
+local.properties
+app/google-services.json
+admin/google-services.json
 admin/build
 shared/build
