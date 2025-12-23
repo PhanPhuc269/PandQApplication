@@ -366,6 +366,7 @@ class SearchViewModel @Inject constructor(
     private fun ProductSearchDto.toSearchProduct(): SearchProduct {
         val formatter = NumberFormat.getInstance(Locale("vi", "VN"))
         return SearchProduct(
+            id = id,
             name = name,
             price = "${formatter.format(price?.toLong() ?: 0)}đ",
             rating = averageRating ?: 0.0,

@@ -45,6 +45,7 @@ import coil.compose.AsyncImage
 import com.group1.pandqapplication.shared.data.repository.CategoryItem
 
 data class SearchProduct(
+    val id: String,
     val name: String,
     val price: String,
     val rating: Double,
@@ -58,6 +59,7 @@ data class SearchProduct(
 @Composable
 fun SearchScreen(
     onBackClick: () -> Unit,
+    onProductClick: (String) -> Unit,
     viewModel: SearchViewModel = hiltViewModel()
 ) {
     val backgroundColor = Color(0xFFF8F6F6)
@@ -434,7 +436,8 @@ fun SearchScreen(
                         items(uiState.products) { product ->
                             ProductGridItem(
                                 product = product, 
-                                primaryColor = primaryColor
+                                primaryColor = primaryColor,
+                                onClick = { onProductClick(product.id) }
                             )
                         }
                         
@@ -498,9 +501,12 @@ fun SearchScreen(
 @Composable
 fun ProductGridItem(
     product: SearchProduct, 
-    primaryColor: Color
+    primaryColor: Color,
+    onClick: () -> Unit = {}
 ) {
-    Column {
+    Column(
+        modifier = Modifier.clickable { onClick() }
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -585,7 +591,7 @@ fun ProductGridItem(
 @Preview
 @Composable
 fun SearchScreenPreview() {
-    SearchScreen(onBackClick = {})
+    SearchScreen(onBackClick = {}, onProductClick = {})
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
