@@ -65,7 +65,7 @@ import com.group1.pandqapplication.shared.ui.theme.CheckoutTextSecondaryLight
 
 enum class PaymentMethod {
     ZALOPAY,
-    SOPAY
+    SEPAY
 }
 
 @Composable
@@ -87,6 +87,22 @@ fun CheckoutScreen(
     val textSecondary = if (isDarkTheme) CheckoutTextSecondaryDark else CheckoutTextSecondaryLight
     val borderColor = if (isDarkTheme) CheckoutBorderDark else CheckoutBorderLight
     val dotsInactive = if (isDarkTheme) Color(0xFF673B32) else Color(0xFFD6D3D1)
+    
+    // Show SePay QR Dialog when QR URL is available
+    if (uiState.sepayQrUrl != null) {
+        SepayQRDialog(
+            qrUrl = uiState.sepayQrUrl!!,
+            amount = 10000L, // TODO: Get from actual order
+            bankAccount = uiState.sepayBankAccount,
+            accountName = uiState.sepayAccountName,
+            content = uiState.sepayContent,
+            transactionId = uiState.sepayTransactionId,
+            onDismiss = { viewModel.resetPaymentState() },
+            onCheckStatus = { 
+                uiState.sepayTransactionId?.let { viewModel.checkSepayStatus(it) }
+            }
+        )
+    }
     
     // Show error in snackbar
     LaunchedEffect(uiState.paymentError) {
@@ -316,12 +332,12 @@ fun CheckoutScreen(
                             onClick = { viewModel.selectPaymentMethod(PaymentMethod.ZALOPAY) }
                         )
                         PaymentOption(
-                            text = "Thanh toán bằng SoPay",
-                            isSelected = uiState.selectedPaymentMethod == PaymentMethod.SOPAY,
+                            text = "Thanh toán bằng SePay",
+                            isSelected = uiState.selectedPaymentMethod == PaymentMethod.SEPAY,
                             surfaceColor = surfaceColor,
-                            borderColor = if (uiState.selectedPaymentMethod == PaymentMethod.SOPAY) CheckoutPrimary else borderColor,
+                            borderColor = if (uiState.selectedPaymentMethod == PaymentMethod.SEPAY) CheckoutPrimary else borderColor,
                             textPrimary = textPrimary,
-                            onClick = { viewModel.selectPaymentMethod(PaymentMethod.SOPAY) }
+                            onClick = { viewModel.selectPaymentMethod(PaymentMethod.SEPAY) }
                         )
                     }
                 }

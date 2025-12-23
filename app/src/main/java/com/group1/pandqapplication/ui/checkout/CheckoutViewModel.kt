@@ -3,6 +3,7 @@ package com.group1.pandqapplication.ui.checkout
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.shared.data.remote.AppApiService
+import com.group1.pandqapplication.shared.data.remote.dto.SepayCreateQRRequest
 import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayCreateOrderRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,13 @@ data class CheckoutUiState(
     val paymentSuccess: Boolean = false,
     val paymentError: String? = null,
     val zpTransToken: String? = null,
-    val appTransId: String? = null
+    val appTransId: String? = null,
+    // SePay state
+    val sepayQrUrl: String? = null,
+    val sepayTransactionId: String? = null,
+    val sepayBankAccount: String? = null,
+    val sepayAccountName: String? = null,
+    val sepayContent: String? = null
 )
 
 sealed class PaymentResult {
@@ -48,13 +55,8 @@ class CheckoutViewModel @Inject constructor(
                 PaymentMethod.ZALOPAY -> {
                     initiateZaloPayPayment(totalAmount, orderDescription)
                 }
-                PaymentMethod.SOPAY -> {
-                    _uiState.update { 
-                        it.copy(
-                            isProcessingPayment = false, 
-                            paymentError = "SoPay chưa được hỗ trợ"
-                        ) 
-                    }
+                PaymentMethod.SEPAY -> {
+                    initiateSepayPayment(totalAmount, orderDescription)
                 }
             }
         }
@@ -94,6 +96,50 @@ class CheckoutViewModel @Inject constructor(
                 it.copy(
                     isProcessingPayment = false, 
                     paymentError = "Lỗi kết nối: ${e.message}"
+                ) 
+            }
+        }
+    }
+
+    /**
+     * Initiate SePay payment using VietQR
+     * SePay generates a QR code for bank transfer payment
+     */
+    private suspend fun initiateSepayPayment(amount: Long, description: String) {
+        try {
+            val request = SepayCreateQRRequest(
+                amount = amount,
+                description = description,
+                orderId = null // TODO: Get from actual order
+            )
+            
+            val response = apiService.createSepayQR(request)
+            
+            if (response.returnCode == 1 && response.qrDataUrl != null) {
+                _uiState.update { 
+                    it.copy(
+                        isProcessingPayment = false,
+                        sepayQrUrl = response.qrDataUrl,
+                        sepayTransactionId = response.transactionId,
+                        sepayBankAccount = response.bankAccount,
+                        sepayAccountName = response.accountName,
+                        sepayContent = response.content
+                    ) 
+                }
+            } else {
+                _uiState.update { 
+                    it.copy(
+                        isProcessingPayment = false, 
+                        paymentError = response.returnMessage ?: "Không thể tạo mã QR"
+                    ) 
+                }
+            }
+            
+        } catch (e: Exception) {
+            _uiState.update { 
+                it.copy(
+                    isProcessingPayment = false, 
+                    paymentError = "Lỗi kết nối SePay: ${e.message}"
                 ) 
             }
         }
@@ -148,7 +194,13 @@ class CheckoutViewModel @Inject constructor(
                 paymentSuccess = false,
                 paymentError = null,
                 zpTransToken = null,
-                appTransId = null
+                appTransId = null,
+                // Clear SePay state
+                sepayQrUrl = null,
+                sepayTransactionId = null,
+                sepayBankAccount = null,
+                sepayAccountName = null,
+                sepayContent = null
             ) 
         }
     }
@@ -178,6 +230,25 @@ class CheckoutViewModel @Inject constructor(
                 _uiState.update { 
                     it.copy(paymentError = "Không thể kiểm tra trạng thái thanh toán")
                 }
+            }
+        }
+    }
+
+    /**
+     * Check SePay payment status
+     */
+    fun checkSepayStatus(transactionId: String) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.getSepayStatus(transactionId)
+                
+                if (response.returnCode == 1 && response.isPaid == true) {
+                    // Payment confirmed!
+                    handlePaymentResult(PaymentResult.Success)
+                }
+                // If not paid yet, do nothing - will retry automatically
+            } catch (e: Exception) {
+                // Ignore errors during status check
             }
         }
     }
