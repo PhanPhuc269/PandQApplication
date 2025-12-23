@@ -98,6 +98,9 @@ fun PandQNavGraph(
             com.group1.pandqapplication.ui.search.SearchScreen(
                 onBackClick = {
                     navController.popBackStack()
+                },
+                onProductClick = { productId ->
+                    navController.navigate(Screen.ProductDetail.createRoute(productId))
                 }
             )
         }

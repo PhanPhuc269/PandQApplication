@@ -21,6 +21,10 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,6 +45,7 @@ import coil.compose.AsyncImage
 import com.group1.pandqapplication.shared.data.repository.CategoryItem
 
 data class SearchProduct(
+    val id: String,
     val name: String,
     val price: String,
     val rating: Double,
@@ -54,6 +59,7 @@ data class SearchProduct(
 @Composable
 fun SearchScreen(
     onBackClick: () -> Unit,
+    onProductClick: (String) -> Unit,
     viewModel: SearchViewModel = hiltViewModel()
 ) {
     val backgroundColor = Color(0xFFF8F6F6)
@@ -227,76 +233,107 @@ fun SearchScreen(
                             // Sort dropdown
                             var showSortMenu by remember { mutableStateOf(false) }
                             Box {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.clickable { showSortMenu = true }
+                                Surface(
+                                    onClick = { showSortMenu = true },
+                                    shape = RoundedCornerShape(20.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E7EB)),
+                                    color = Color.White
                                 ) {
-                                    Text(
-                                        text = when (uiState.sortBy) {
-                                            "newest" -> "Mới nhất"
-                                            "price_asc" -> "Giá tăng"
-                                            "price_desc" -> "Giá giảm"
-                                            "rating" -> "Đánh giá"
-                                            else -> "Sắp xếp"
-                                        },
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFF4B5563)
-                                    )
-                                    Icon(Icons.Outlined.ExpandMore, contentDescription = null, tint = Color(0xFF4B5563))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Tune,
+                                            contentDescription = null,
+                                            tint = primaryColor,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = when (uiState.sortBy) {
+                                                "newest" -> "Mới nhất"
+                                                "price_asc" -> "Giá tăng dần"
+                                                "price_desc" -> "Giá giảm dần"
+                                                "rating" -> "Đánh giá"
+                                                else -> "Sắp xếp"
+                                            },
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color(0xFF374151)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Icon(
+                                            Icons.Outlined.ExpandMore,
+                                            contentDescription = null,
+                                            tint = Color(0xFF9CA3AF),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
                                 }
+
                                 DropdownMenu(
                                     expanded = showSortMenu,
-                                    onDismissRequest = { showSortMenu = false }
+                                    onDismissRequest = { showSortMenu = false },
+                                    modifier = Modifier.background(Color.White).width(180.dp)
                                 ) {
-                                    DropdownMenuItem(
-                                        text = { Text("Mới nhất") },
-                                        onClick = {
-                                            viewModel.onSortChange("newest")
-                                            showSortMenu = false
-                                        },
-                                        leadingIcon = if (uiState.sortBy == "newest") {
-                                            { Icon(Icons.Filled.Star, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp)) }
-                                        } else null
+                                    @Composable
+                                    fun SortMenuItem(
+                                        text: String,
+                                        icon: androidx.compose.ui.graphics.vector.ImageVector,
+                                        isSelected: Boolean,
+                                        onClick: () -> Unit
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { 
+                                                Text(
+                                                    text, 
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                    color = if (isSelected) primaryColor else Color(0xFF374151)
+                                                ) 
+                                            },
+                                            onClick = onClick,
+                                            leadingIcon = {
+                                                Icon(
+                                                    icon, 
+                                                    contentDescription = null, 
+                                                    tint = if (isSelected) primaryColor else Color(0xFF9CA3AF),
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            },
+                                            trailingIcon = if (isSelected) {
+                                                { Icon(Icons.Filled.Check, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp)) }
+                                            } else null
+                                        )
+                                    }
+
+                                    SortMenuItem(
+                                        text = "Mới nhất",
+                                        icon = Icons.Filled.AccessTime,
+                                        isSelected = uiState.sortBy == "newest",
+                                        onClick = { viewModel.onSortChange("newest"); showSortMenu = false }
                                     )
-                                    DropdownMenuItem(
-                                        text = { Text("Giá: Thấp → Cao") },
-                                        onClick = {
-                                            viewModel.onSortChange("price_asc")
-                                            showSortMenu = false
-                                        },
-                                        leadingIcon = if (uiState.sortBy == "price_asc") {
-                                            { Icon(Icons.Filled.Star, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp)) }
-                                        } else null
+                                    SortMenuItem(
+                                        text = "Giá tăng dần",
+                                        icon = Icons.Filled.TrendingUp,
+                                        isSelected = uiState.sortBy == "price_asc",
+                                        onClick = { viewModel.onSortChange("price_asc"); showSortMenu = false }
                                     )
-                                    DropdownMenuItem(
-                                        text = { Text("Giá: Cao → Thấp") },
-                                        onClick = {
-                                            viewModel.onSortChange("price_desc")
-                                            showSortMenu = false
-                                        },
-                                        leadingIcon = if (uiState.sortBy == "price_desc") {
-                                            { Icon(Icons.Filled.Star, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp)) }
-                                        } else null
+                                    SortMenuItem(
+                                        text = "Giá giảm dần",
+                                        icon = Icons.Filled.TrendingDown,
+                                        isSelected = uiState.sortBy == "price_desc",
+                                        onClick = { viewModel.onSortChange("price_desc"); showSortMenu = false }
                                     )
-                                    DropdownMenuItem(
-                                        text = { Text("Đánh giá cao") },
-                                        onClick = {
-                                            viewModel.onSortChange("rating")
-                                            showSortMenu = false
-                                        },
-                                        leadingIcon = if (uiState.sortBy == "rating") {
-                                            { Icon(Icons.Filled.Star, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp)) }
-                                        } else null
+                                    SortMenuItem(
+                                        text = "Đánh giá cao",
+                                        icon = Icons.Filled.Star,
+                                        isSelected = uiState.sortBy == "rating",
+                                        onClick = { viewModel.onSortChange("rating"); showSortMenu = false }
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Divider(
-                                color = Color(0xFFD1D5DB),
-                                modifier = Modifier.height(16.dp).width(1.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Icon(Icons.Filled.GridView, contentDescription = null, tint = Color(0xFF4B5563))
                         }
                     }
@@ -399,7 +436,8 @@ fun SearchScreen(
                         items(uiState.products) { product ->
                             ProductGridItem(
                                 product = product, 
-                                primaryColor = primaryColor
+                                primaryColor = primaryColor,
+                                onClick = { onProductClick(product.id) }
                             )
                         }
                         
@@ -463,9 +501,12 @@ fun SearchScreen(
 @Composable
 fun ProductGridItem(
     product: SearchProduct, 
-    primaryColor: Color
+    primaryColor: Color,
+    onClick: () -> Unit = {}
 ) {
-    Column {
+    Column(
+        modifier = Modifier.clickable { onClick() }
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -550,7 +591,7 @@ fun ProductGridItem(
 @Preview
 @Composable
 fun SearchScreenPreview() {
-    SearchScreen(onBackClick = {})
+    SearchScreen(onBackClick = {}, onProductClick = {})
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -614,18 +655,19 @@ fun FilterBottomSheetContent(
         }
 
         // Price Range
+        val priceFormatter = java.text.NumberFormat.getInstance(java.util.Locale("vi", "VN"))
         Row(
             modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text("Khoảng giá", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF374151))
-            Text("$${priceRange.start.toInt()} - $${priceRange.endInclusive.toInt()}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = primaryColor)
+            Text("${priceFormatter.format(priceRange.start.toLong())}đ - ${priceFormatter.format(priceRange.endInclusive.toLong())}đ", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = primaryColor)
         }
 
         RangeSlider(
             value = priceRange,
             onValueChange = onPriceRangeChange,
-            valueRange = 0f..5000f,
+            valueRange = 0f..50000000f,
             colors = SliderDefaults.colors(
                 thumbColor = Color.White,
                 activeTrackColor = primaryColor,
@@ -648,7 +690,7 @@ fun FilterBottomSheetContent(
             ) {
                 Text("Min", fontSize = 12.sp, color = Color(0xFF6B7280))
                 Spacer(Modifier.width(8.dp))
-                Text("$ ${priceRange.start.toInt()}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF111827))
+                Text("${priceFormatter.format(priceRange.start.toLong())}đ", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF111827))
             }
             // Max
             Row(
@@ -661,7 +703,7 @@ fun FilterBottomSheetContent(
             ) {
                 Text("Max", fontSize = 12.sp, color = Color(0xFF6B7280))
                 Spacer(Modifier.width(8.dp))
-                Text("$ ${priceRange.endInclusive.toInt()}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF111827))
+                Text("${priceFormatter.format(priceRange.endInclusive.toLong())}đ", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF111827))
             }
         }
 
