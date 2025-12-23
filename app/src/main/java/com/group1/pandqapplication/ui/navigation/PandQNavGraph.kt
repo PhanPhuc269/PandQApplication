@@ -3,9 +3,11 @@ package com.group1.pandqapplication.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.group1.pandqapplication.MainViewModel
 import com.group1.pandqapplication.ui.home.HomeScreen
 import com.group1.pandqapplication.ui.login.LoginScreen
@@ -63,8 +65,8 @@ fun PandQNavGraph(
                 onCartClick = {
                     navController.navigate(Screen.Cart.route)
                 },
-                onProductClick = {
-                    navController.navigate(Screen.ProductDetail.route)
+                onProductClick = { productId ->
+                    navController.navigate(Screen.ProductDetail.createRoute(productId))
                 },
                 onSearchClick = {
                     navController.navigate(Screen.Search.route)
@@ -93,13 +95,19 @@ fun PandQNavGraph(
                 }
             )
         }
-        composable(Screen.ProductDetail.route) {
+        composable(
+            route = Screen.ProductDetail.route,
+            arguments = listOf(navArgument("productId") { type = NavType.StringType })
+        ) {
             com.group1.pandqapplication.ui.product.ProductDetailScreen(
                 onBackClick = {
                     navController.popBackStack()
                 },
                 onCartClick = {
                     navController.navigate(Screen.Cart.route)
+                },
+                onProductClick = { productId ->
+                    navController.navigate(Screen.ProductDetail.createRoute(productId))
                 }
             )
         }

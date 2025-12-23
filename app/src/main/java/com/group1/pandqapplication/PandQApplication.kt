@@ -6,6 +6,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import dagger.hilt.android.HiltAndroidApp
+import vn.zalopay.sdk.Environment
+import vn.zalopay.sdk.ZaloPaySDK
 
 @HiltAndroidApp
 class PandQApplication : Application() {
@@ -18,6 +20,7 @@ class PandQApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        ZaloPaySDK.init(2554, Environment.SANDBOX)
     }
 
     private fun createNotificationChannel() {

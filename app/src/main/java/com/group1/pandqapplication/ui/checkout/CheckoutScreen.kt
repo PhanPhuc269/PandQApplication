@@ -23,29 +23,34 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundDark
 import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundLight
 import com.group1.pandqapplication.shared.ui.theme.CheckoutBorderDark
@@ -58,11 +63,22 @@ import com.group1.pandqapplication.shared.ui.theme.CheckoutTextLight
 import com.group1.pandqapplication.shared.ui.theme.CheckoutTextSecondaryDark
 import com.group1.pandqapplication.shared.ui.theme.CheckoutTextSecondaryLight
 
+enum class PaymentMethod {
+    ZALOPAY,
+    SEPAY
+}
+
 @Composable
 fun CheckoutScreen(
     onBackClick: () -> Unit = {},
-    onEditAddressClick: () -> Unit = {}
+    onEditAddressClick: () -> Unit = {},
+    onPaymentSuccess: () -> Unit = {},
+    viewModel: CheckoutViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    
     val isDarkTheme = false // Toggle for testing
     
     val backgroundColor = if (isDarkTheme) CheckoutBackgroundDark else CheckoutBackgroundLight
@@ -71,9 +87,76 @@ fun CheckoutScreen(
     val textSecondary = if (isDarkTheme) CheckoutTextSecondaryDark else CheckoutTextSecondaryLight
     val borderColor = if (isDarkTheme) CheckoutBorderDark else CheckoutBorderLight
     val dotsInactive = if (isDarkTheme) Color(0xFF673B32) else Color(0xFFD6D3D1)
+    
+    // Show SePay QR Dialog when QR URL is available
+    if (uiState.sepayQrUrl != null) {
+        SepayQRDialog(
+            qrUrl = uiState.sepayQrUrl!!,
+            amount = 10000L, // TODO: Get from actual order
+            bankAccount = uiState.sepayBankAccount,
+            accountName = uiState.sepayAccountName,
+            content = uiState.sepayContent,
+            transactionId = uiState.sepayTransactionId,
+            onDismiss = { viewModel.resetPaymentState() },
+            onCheckStatus = { 
+                uiState.sepayTransactionId?.let { viewModel.checkSepayStatus(it) }
+            }
+        )
+    }
+    
+    // Show error in snackbar
+    LaunchedEffect(uiState.paymentError) {
+        uiState.paymentError?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearPaymentError()
+        }
+    }
+    
+    // Handle payment success
+    LaunchedEffect(uiState.paymentSuccess) {
+        if (uiState.paymentSuccess) {
+            onPaymentSuccess()
+            viewModel.resetPaymentState()
+        }
+    }
+    
+    // Handle ZaloPay transaction token - call ZaloPay SDK to open sandbox app
+    LaunchedEffect(uiState.zpTransToken) {
+        uiState.zpTransToken?.let { token ->
+            // Get Activity from context
+            val activity = context as? android.app.Activity
+            if (activity != null) {
+                // Call ZaloPay SDK to pay order - opens ZaloPay Sandbox app
+                vn.zalopay.sdk.ZaloPaySDK.getInstance().payOrder(
+                    activity,
+                    token,
+                    "pandqapp://payment/callback",
+                    object : vn.zalopay.sdk.listeners.PayOrderListener {
+                        override fun onPaymentSucceeded(transactionId: String, transToken: String, appTransId: String) {
+                            viewModel.handlePaymentResult(PaymentResult.Success)
+                        }
+
+                        override fun onPaymentCanceled(zpTransToken: String, appTransId: String) {
+                            viewModel.handlePaymentResult(PaymentResult.Cancelled)
+                        }
+
+                        override fun onPaymentError(zaloPayError: vn.zalopay.sdk.ZaloPayError, zpTransToken: String, appTransId: String) {
+                            if (zaloPayError == vn.zalopay.sdk.ZaloPayError.PAYMENT_APP_NOT_FOUND) {
+                                viewModel.handlePaymentResult(PaymentResult.ZaloPayNotInstalled)
+                            } else {
+                                viewModel.handlePaymentResult(PaymentResult.Error("Lỗi thanh toán: ${zaloPayError.name}"))
+                            }
+                        }
+                    }
+                )
+            }
+            viewModel.resetPaymentState()
+        }
+    }
 
     Scaffold(
         containerColor = backgroundColor,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Box(
                 modifier = Modifier
@@ -107,19 +190,31 @@ fun CheckoutScreen(
                     .padding(16.dp)
             ) {
                 Button(
-                    onClick = { /* Confirm Order */ },
+                    onClick = { 
+                        // TODO: Get actual amount from order data
+                        viewModel.initiatePayment(10000L, "Đơn hàng PandQ")
+                    },
+                    enabled = !uiState.isProcessingPayment,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = CheckoutPrimary),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "Xác nhận - 2.480.000₫",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    if (uiState.isProcessingPayment) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Xác nhận - 10.000₫",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
@@ -230,17 +325,19 @@ fun CheckoutScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         PaymentOption(
                             text = "Thanh toán bằng ZaloPay",
-                            isSelected = true,
+                            isSelected = uiState.selectedPaymentMethod == PaymentMethod.ZALOPAY,
                             surfaceColor = surfaceColor,
-                            borderColor = CheckoutPrimary, // Active border
-                            textPrimary = textPrimary
+                            borderColor = if (uiState.selectedPaymentMethod == PaymentMethod.ZALOPAY) CheckoutPrimary else borderColor,
+                            textPrimary = textPrimary,
+                            onClick = { viewModel.selectPaymentMethod(PaymentMethod.ZALOPAY) }
                         )
                         PaymentOption(
-                            text = "Thanh toán bằng SoPay",
-                            isSelected = false,
+                            text = "Thanh toán bằng SePay",
+                            isSelected = uiState.selectedPaymentMethod == PaymentMethod.SEPAY,
                             surfaceColor = surfaceColor,
-                            borderColor = borderColor,
-                            textPrimary = textPrimary
+                            borderColor = if (uiState.selectedPaymentMethod == PaymentMethod.SEPAY) CheckoutPrimary else borderColor,
+                            textPrimary = textPrimary,
+                            onClick = { viewModel.selectPaymentMethod(PaymentMethod.SEPAY) }
                         )
                     }
                 }
@@ -349,13 +446,15 @@ fun PaymentOption(
     isSelected: Boolean,
     surfaceColor: Color,
     borderColor: Color,
-    textPrimary: Color
+    textPrimary: Color,
+    onClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .border(
-                width = if (isSelected) 1.dp else 1.dp,
+                width = if (isSelected) 2.dp else 1.dp,
                 color = borderColor,
                 shape = RoundedCornerShape(12.dp)
             )
@@ -363,11 +462,9 @@ fun PaymentOption(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Compose RadioButton doesn't support easy custom "dot" drawing identical to HTML without custom Canvas, 
-        // but default RadioButton is close enough.
         RadioButton(
             selected = isSelected,
-            onClick = { },
+            onClick = onClick,
             colors = RadioButtonDefaults.colors(
                 selectedColor = CheckoutPrimary,
                 unselectedColor = Color.Gray

@@ -22,12 +22,12 @@ import com.group1.pandqapplication.ui.product.ProductDetailScreen
 fun MainScreen(
     onLogout: () -> Unit,
     onCartClick: () -> Unit,
-    onProductClick: () -> Unit,
+    onProductClick: (String) -> Unit,
     onSearchClick: () -> Unit,
     onOrderClick: () -> Unit,
-    onNavigateToOrder: (String?) -> Unit = { onOrderClick() }, // Navigate to order with optional orderId
-    onNavigateToProduct: (String?) -> Unit = { onProductClick() }, // Navigate to product with optional productId
-    onNavigateToPromotion: (String?) -> Unit = {} // Navigate to promotion
+    onNavigateToOrder: (String?) -> Unit = { _ -> onOrderClick() }, // Navigate to order with optional orderId
+    onNavigateToProduct: (String?) -> Unit = { id -> id?.let { onProductClick(it) } }, // Navigate to product with optional productId
+    onNavigateToPromotion: (String?) -> Unit = { _ -> } // Navigate to promotion
 ) {
     val navController = rememberNavController()
 
