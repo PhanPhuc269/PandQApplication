@@ -55,7 +55,6 @@ class CartViewModel @Inject constructor(
 
     fun addToCart(userId: String, productId: String, quantity: Int) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null, success = false)
             try {
                 val request = AddToCartRequest(
                     userId = userId,
@@ -66,20 +65,72 @@ class CartViewModel @Inject constructor(
                 if (response.isSuccessful && response.body() != null) {
                     _uiState.value = _uiState.value.copy(
                         cart = response.body(),
-                        isLoading = false,
                         error = null,
                         success = true
                     )
                 } else {
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
                         error = response.message() ?: "Không thể thêm vào giỏ hàng",
                         success = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    isLoading = false,
+                    error = e.message ?: "Có lỗi xảy ra",
+                    success = false
+                )
+            }
+        }
+    }
+
+    fun decreaseQuantity(userId: String, productId: String) {
+        viewModelScope.launch {
+            try {
+                val request = AddToCartRequest(
+                    userId = userId,
+                    productId = productId,
+                    quantity = 1
+                )
+                val response = apiService.decreaseQuantity(request)
+                if (response.isSuccessful && response.body() != null) {
+                    _uiState.value = _uiState.value.copy(
+                        cart = response.body(),
+                        error = null,
+                        success = true
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        error = response.message() ?: "Không thể giảm số lượng",
+                        success = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = e.message ?: "Có lỗi xảy ra",
+                    success = false
+                )
+            }
+        }
+    }
+
+    fun removeFromCart(userId: String, productId: String) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.removeFromCart(userId, productId)
+                if (response.isSuccessful && response.body() != null) {
+                    _uiState.value = _uiState.value.copy(
+                        cart = response.body(),
+                        error = null,
+                        success = true
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        error = response.message() ?: "Không thể xóa khỏi giỏ hàng",
+                        success = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Có lỗi xảy ra",
                     success = false
                 )

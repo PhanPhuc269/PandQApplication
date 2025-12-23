@@ -182,10 +182,10 @@ fun CartScreen(
                                 viewModel.addToCart(userId, item.productId, 1)
                             },
                             onDecrease = {
-                                // TODO: Implement remove from cart or decrease quantity
+                                viewModel.decreaseQuantity(userId, item.productId)
                             },
                             onDelete = {
-                                // TODO: Implement delete from cart
+                                viewModel.removeFromCart(userId, item.productId)
                             }
                         )
                         HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
