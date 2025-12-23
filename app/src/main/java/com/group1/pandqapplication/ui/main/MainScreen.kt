@@ -22,7 +22,7 @@ import com.group1.pandqapplication.ui.product.ProductDetailScreen
 fun MainScreen(
     onLogout: () -> Unit,
     onCartClick: () -> Unit,
-    onProductClick: () -> Unit,
+    onProductClick: (String) -> Unit,
     onSearchClick: () -> Unit,
     onOrderClick: () -> Unit
 ) {

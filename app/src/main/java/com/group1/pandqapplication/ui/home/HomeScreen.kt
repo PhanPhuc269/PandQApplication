@@ -74,7 +74,7 @@ data class Banner(
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
-    onProductClick: () -> Unit,
+    onProductClick: (String) -> Unit,
     onSearchClick: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -365,7 +365,7 @@ fun HomeScreen(
 
                     // Product Grid from API
                     items(uiState.products) { product ->
-                        ProductItem(product = product, onClick = onProductClick)
+                        ProductItem(product = product, onClick = { onProductClick(product.id) })
                     }
                     
                     // Loading More Indicator

@@ -1,12 +1,18 @@
 package com.group1.pandqapplication.shared.data.remote
 
 import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
+import com.group1.pandqapplication.shared.data.remote.dto.CreateReviewDto
 import com.group1.pandqapplication.shared.data.remote.dto.InitConfigDto
 import com.group1.pandqapplication.shared.data.remote.dto.LocationDto
 import com.group1.pandqapplication.shared.data.remote.dto.PaginationResponseDto
+import com.group1.pandqapplication.shared.data.remote.dto.ProductDetailDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductSearchDto
+import com.group1.pandqapplication.shared.data.remote.dto.ReviewDto
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface AppApiService {
@@ -21,6 +27,20 @@ interface AppApiService {
 
     @GET("api/v1/products")
     suspend fun getProducts(): List<ProductDto>
+
+    @GET("api/v1/products/{id}")
+    suspend fun getProductById(@Path("id") productId: String): ProductDetailDto
+
+    @GET("api/v1/reviews/product/{productId}")
+    suspend fun getReviewsByProductId(
+        @Path("productId") productId: String,
+        @Query("filterByRating") filterByRating: Int? = null,
+        @Query("sortBy") sortBy: String? = "newest"
+    ): List<ReviewDto>
+
+    @POST("api/v1/reviews")
+    suspend fun createReview(@Body request: CreateReviewDto): ReviewDto
+
 
     // For HomeScreen - returns ProductDto
     @GET("api/v1/products/search")
