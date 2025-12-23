@@ -1,8 +1,10 @@
 package com.group1.pandqapplication.shared.data.remote
 
+import com.group1.pandqapplication.shared.data.remote.dto.AddToCartRequest
 import com.group1.pandqapplication.shared.data.remote.dto.FcmTokenByEmailRequest
 import com.group1.pandqapplication.shared.data.remote.dto.FcmTokenRequest
 import com.group1.pandqapplication.shared.data.remote.dto.NotificationDto
+import com.group1.pandqapplication.shared.data.remote.dto.OrderDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -31,6 +33,13 @@ interface ApiService {
 
     @POST("api/v1/users/fcm-token-by-email")
     suspend fun updateFcmTokenByEmail(@Body request: FcmTokenByEmailRequest): Response<Unit>
+
+    // Cart/Order endpoints
+    @POST("api/v1/orders/cart/add")
+    suspend fun addToCart(@Body request: AddToCartRequest): Response<OrderDto>
+
+    @GET("api/v1/orders/cart/{userId}")
+    suspend fun getCart(@Path("userId") userId: String): Response<OrderDto>
 }
 
 

@@ -117,7 +117,8 @@ fun PandQNavGraph(
                 },
                 onProductClick = { productId ->
                     navController.navigate(Screen.ProductDetail.createRoute(productId))
-                }
+                },
+                userId = mainViewModel.getCurrentUserId()
             )
         }
         composable(Screen.Cart.route) {
@@ -127,7 +128,8 @@ fun PandQNavGraph(
                 },
                 onCheckoutClick = {
                     navController.navigate(Screen.Checkout.route)
-                }
+                },
+                userId = mainViewModel.getCurrentUserId()
             )
         }
         composable(Screen.Checkout.route) {

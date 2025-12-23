@@ -44,6 +44,7 @@ fun ProductDetailScreen(
     onBackClick: () -> Unit,
     onCartClick: () -> Unit,
     onProductClick: (String) -> Unit = {},
+    userId: String = "",
     viewModel: ProductDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -52,6 +53,18 @@ fun ProductDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val tabs = listOf("Description", "Specifications", "Reviews")
+
+    // Handle add to cart success/error
+    LaunchedEffect(uiState.addToCartSuccess, uiState.addToCartError) {
+        if (uiState.addToCartSuccess) {
+            snackbarHostState.showSnackbar("Đã thêm vào giỏ hàng thành công!")
+            viewModel.clearAddToCartState()
+        }
+        if (uiState.addToCartError != null) {
+            snackbarHostState.showSnackbar(uiState.addToCartError ?: "Có lỗi xảy ra")
+            viewModel.clearAddToCartState()
+        }
+    }
 
     // Handle review submission success/error
     LaunchedEffect(uiState.reviewSubmitSuccess, uiState.reviewSubmitError) {
@@ -79,7 +92,8 @@ fun ProductDetailScreen(
                         onIncrease = { viewModel.increaseQuantity() },
                         onDecrease = { viewModel.decreaseQuantity() },
                         primaryColor = primaryColor,
-                        onCartClick = onCartClick
+                        onCartClick = onCartClick,
+                        onAddToCart = { if (userId.isNotEmpty()) viewModel.addToCart(userId) }
                     )
                 }
             }
@@ -870,6 +884,7 @@ fun BottomCartBar(
     onDecrease: () -> Unit,
     primaryColor: Color,
     onCartClick: () -> Unit = {},
+    onAddToCart: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -910,7 +925,7 @@ fun BottomCartBar(
             
             // Add to Cart Button
             Button(
-                onClick = onCartClick,
+                onClick = onAddToCart,
                 modifier = Modifier.weight(1f).height(48.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor)

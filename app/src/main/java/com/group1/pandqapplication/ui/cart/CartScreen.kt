@@ -25,7 +25,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.group1.pandqapplication.shared.data.remote.dto.OrderItemDto
+import java.text.NumberFormat
+import java.util.Locale
 
 data class CartItem(
     val id: String,
@@ -40,34 +44,22 @@ data class CartItem(
 @Composable
 fun CartScreen(
     onBackClick: () -> Unit,
-    onCheckoutClick: () -> Unit
+    onCheckoutClick: () -> Unit,
+    userId: String = "",
+    viewModel: CartViewModel = hiltViewModel()
 ) {
     val primaryColor = Color(0xFFec3713)
     val backgroundColor = Color(0xFFF8F6F6)
+    val uiState by viewModel.uiState.collectAsState()
 
-    // Mock Data
-    val initialItems = listOf(
-        CartItem(
-            id = "1",
-            name = "iPhone 15 Pro Max",
-            price = 28990000,
-            imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDdODobtQd_W5spuyIGTgg_cqsIU72MtAASv72x6Mopjd9AznJ1IEQAOeLiUIV8h-y-RBI7tZCKXrZTKoOO3RT1UyKk_U10eott4lXGX8BNnEEWXPbhWamoYLDhScmST0BA1MXWO_PMFuYux5Ya5nacwU8kZqlWYGItZgvxpGypJa65k8o8kF9h5svoIYSOzIM5YXLwiGbIRBIVSApJFsAe7Z5tar16dwVR1PXDSuceKbRVwiiDA166KdQEVhh4-HFSjwisIclvdVY",
-            attributes = "Màu: Titan Tự nhiên, Dung lượng: 256GB",
-            quantity = 1
-        ),
-        CartItem(
-            id = "2",
-            name = "MacBook Pro 14 inch M3",
-            price = 45490000,
-            imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuAcDejJUzHOU86Zp2P-V-MWK-67Ft3fu9kMGSqUzSvUJrk6NzDy02JVMzNYEMWhYTqL2qpWkc3pGR4amaTQ630O0OxLZZf5j9EYMaf8pHbueu7Hq3lZyPRN1WWsajCcbuPxS3MCag_2wLO-HXfSUMd5gHcIO6cfyUHp5CzcESaFi3pzYQSEWBfKBLlimDfg4v7_DS7tKBYrrkMdJbAoziQbyPZVNH2PudZu3JV2As36MbL6ZS2DNlryf7NXXAJEJMmFyRWSZAb1KJs",
-            attributes = "Màu: Bạc, RAM: 16GB",
-            quantity = 1
-        )
-    )
+    // Load cart when screen appears
+    LaunchedEffect(userId) {
+        if (userId.isNotEmpty()) {
+            viewModel.loadCart(userId)
+        }
+    }
 
-    var cartItems by remember { mutableStateOf(initialItems) }
-    
-    val totalPrice = cartItems.sumOf { it.price * it.quantity }
+    val totalPrice = uiState.cart?.items?.sumOf { it.price * it.quantity } ?: 0.0
 
     Scaffold(
         containerColor = backgroundColor,
@@ -91,74 +83,114 @@ fun CartScreen(
             )
         },
         bottomBar = {
-            Surface(
-                color = backgroundColor,
-                shadowElevation = 16.dp,
-                modifier = Modifier.shadow(16.dp)
-            ) {
-               Column(
-                   modifier = Modifier
-                       .fillMaxWidth()
-                       .background(backgroundColor)
-                       .padding(16.dp)
-               ) {
-                   Row(
-                       modifier = Modifier.fillMaxWidth(),
-                       horizontalArrangement = Arrangement.SpaceBetween
+            if (!uiState.isLoading && (uiState.cart?.items?.isNotEmpty() == true)) {
+                Surface(
+                    color = backgroundColor,
+                    shadowElevation = 16.dp,
+                    modifier = Modifier.shadow(16.dp)
+                ) {
+                   Column(
+                       modifier = Modifier
+                           .fillMaxWidth()
+                           .background(backgroundColor)
+                           .padding(16.dp)
                    ) {
-                       Text("Tạm tính", color = Color.Gray, fontSize = 14.sp)
-                       Text("${formatCurrency(totalPrice)}đ", fontWeight = FontWeight.Medium, fontSize = 14.sp)
-                   }
-                   Text(
-                       "Phí vận chuyển sẽ được tính ở bước tiếp theo.", 
-                       color = Color.Gray, 
-                       fontSize = 12.sp,
-                       modifier = Modifier.padding(top = 4.dp)
-                   )
-                   Spacer(modifier = Modifier.height(8.dp))
-                   Row(
-                       modifier = Modifier.fillMaxWidth(),
-                       horizontalArrangement = Arrangement.SpaceBetween
-                   ) {
-                       Text("Thành tiền", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                       Text("${formatCurrency(totalPrice)}đ", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                   }
-                   Spacer(modifier = Modifier.height(16.dp))
-                   Button(
-                       onClick = onCheckoutClick,
-                       modifier = Modifier.fillMaxWidth().height(50.dp),
-                       shape = RoundedCornerShape(8.dp),
-                       colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
-                   ) {
-                       Text("Tiến hành Thanh toán", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                   }
-               } 
+                       Row(
+                           modifier = Modifier.fillMaxWidth(),
+                           horizontalArrangement = Arrangement.SpaceBetween
+                       ) {
+                           Text("Tạm tính", color = Color.Gray, fontSize = 14.sp)
+                           Text("${formatCurrency(totalPrice)}đ", fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                       }
+                       Text(
+                           "Phí vận chuyển sẽ được tính ở bước tiếp theo.", 
+                           color = Color.Gray, 
+                           fontSize = 12.sp,
+                           modifier = Modifier.padding(top = 4.dp)
+                       )
+                       Spacer(modifier = Modifier.height(8.dp))
+                       Row(
+                           modifier = Modifier.fillMaxWidth(),
+                           horizontalArrangement = Arrangement.SpaceBetween
+                       ) {
+                           Text("Thành tiền", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                           Text("${formatCurrency(totalPrice)}đ", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                       }
+                       Spacer(modifier = Modifier.height(16.dp))
+                       Button(
+                           onClick = onCheckoutClick,
+                           modifier = Modifier.fillMaxWidth().height(50.dp),
+                           shape = RoundedCornerShape(8.dp),
+                           colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                       ) {
+                           Text("Tiến hành Thanh toán", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                       }
+                   } 
+                }
             }
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(top = 8.dp)
-        ) {
-            items(cartItems) { item ->
-                CartItemRow(
-                    item = item,
-                    primaryColor = primaryColor,
-                    onIncrease = { 
-                        cartItems = cartItems.map { if (it.id == item.id) it.copy(quantity = it.quantity + 1) else it }
-                    },
-                    onDecrease = {
-                        if (item.quantity > 1) {
-                            cartItems = cartItems.map { if (it.id == item.id) it.copy(quantity = it.quantity - 1) else it }
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = primaryColor)
+                }
+            }
+            uiState.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Lỗi: ${uiState.error}", color = Color.Red)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { if (userId.isNotEmpty()) viewModel.loadCart(userId) }) {
+                            Text("Thử lại")
                         }
-                    },
-                    onDelete = {
-                        cartItems = cartItems.filter { it.id != item.id }
                     }
-                )
-                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                }
+            }
+            uiState.cart?.items?.isEmpty() == true -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Giỏ hàng trống", fontSize = 16.sp, color = Color.Gray)
+                }
+            }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentPadding = PaddingValues(top = 8.dp)
+                ) {
+                    items(uiState.cart?.items ?: emptyList()) { item ->
+                        CartItemRow(
+                            item = item,
+                            primaryColor = primaryColor,
+                            onIncrease = { 
+                                viewModel.addToCart(userId, item.productId, 1)
+                            },
+                            onDecrease = {
+                                // TODO: Implement remove from cart or decrease quantity
+                            },
+                            onDelete = {
+                                // TODO: Implement delete from cart
+                            }
+                        )
+                        HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                    }
+                }
             }
         }
     }
@@ -166,7 +198,7 @@ fun CartScreen(
 
 @Composable
 fun CartItemRow(
-    item: CartItem,
+    item: OrderItemDto,
     primaryColor: Color,
     onIncrease: () -> Unit,
     onDecrease: () -> Unit,
@@ -182,26 +214,23 @@ fun CartItemRow(
         // Product Info
         Row(
             modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = item.imageUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            // Placeholder image since OrderItemDto doesn't have imageUrl
+            Box(
                 modifier = Modifier
                     .size(70.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color.LightGray)
-            )
+                    .background(Color.LightGray),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("IMG", color = Color.Gray, fontWeight = FontWeight.Bold)
+            }
+            
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(item.name, fontWeight = FontWeight.Medium, fontSize = 16.sp)
-                Text("${formatCurrency(item.price)}đ", color = Color(0xFFc99b92), fontSize = 14.sp) // Color approx from image
-                Text(
-                    item.attributes, 
-                    color = Color.Gray, 
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp
-                )
+                Text(item.productName, fontWeight = FontWeight.Medium, fontSize = 16.sp)
+                Text("${formatCurrency(item.price)}đ", color = Color(0xFFec3713), fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
         }
         
@@ -244,8 +273,9 @@ fun CartItemRow(
     }
 }
 
-fun formatCurrency(amount: Long): String {
-    return String.format("%,d", amount).replace(',', '.')
+fun formatCurrency(amount: Double): String {
+    val longAmount = amount.toLong()
+    return String.format("%,d", longAmount).replace(',', '.')
 }
 
 @Preview

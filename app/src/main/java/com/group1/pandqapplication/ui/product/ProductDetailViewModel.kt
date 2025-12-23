@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.data.repository.ProductRepository
+import com.group1.pandqapplication.shared.data.remote.ApiService
+import com.group1.pandqapplication.shared.data.remote.dto.AddToCartRequest
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDetailDto
 import com.group1.pandqapplication.shared.data.remote.dto.ReviewDto
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,12 +28,15 @@ data class ProductDetailUiState(
     val sortBy: String = "newest", // "newest", "highest", "lowest"
     val error: String? = null,
     val reviewSubmitSuccess: Boolean = false,
-    val reviewSubmitError: String? = null
+    val reviewSubmitError: String? = null,
+    val addToCartSuccess: Boolean = false,
+    val addToCartError: String? = null
 )
 
 @HiltViewModel
 class ProductDetailViewModel @Inject constructor(
     private val repository: ProductRepository,
+    private val apiService: ApiService,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -163,6 +168,44 @@ class ProductDetailViewModel @Inject constructor(
         if (_uiState.value.quantity > 1) {
             _uiState.value = _uiState.value.copy(quantity = _uiState.value.quantity - 1)
         }
+    }
+
+    fun addToCart(userId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                addToCartError = null,
+                addToCartSuccess = false
+            )
+            try {
+                val request = AddToCartRequest(
+                    userId = userId,
+                    productId = productId,
+                    quantity = _uiState.value.quantity
+                )
+                val response = apiService.addToCart(request)
+                if (response.isSuccessful) {
+                    _uiState.value = _uiState.value.copy(
+                        addToCartSuccess = true,
+                        quantity = 1  // Reset quantity after adding
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        addToCartError = response.message() ?: "Không thể thêm vào giỏ hàng"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    addToCartError = e.message ?: "Có lỗi xảy ra"
+                )
+            }
+        }
+    }
+
+    fun clearAddToCartState() {
+        _uiState.value = _uiState.value.copy(
+            addToCartSuccess = false,
+            addToCartError = null
+        )
     }
 
     fun uploadImage(file: java.io.File, onResult: (Result<String>) -> Unit) {

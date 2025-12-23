@@ -35,4 +35,8 @@ class MainViewModel @Inject constructor(
     fun logout() {
         authRepository.logout()
     }
+
+    fun getCurrentUserId(): String {
+        return authRepository.getCurrentFirebaseUid() ?: ""
+    }
 }
