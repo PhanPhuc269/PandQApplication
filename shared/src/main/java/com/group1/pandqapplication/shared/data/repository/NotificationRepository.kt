@@ -62,5 +62,19 @@ class NotificationRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun getNotificationsByEmail(email: String): Result<List<NotificationDto>> {
+        return try {
+            val response = apiService.getNotificationsByEmail(email)
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: emptyList())
+            } else {
+                Result.failure(Exception("Failed to get notifications: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
+
 

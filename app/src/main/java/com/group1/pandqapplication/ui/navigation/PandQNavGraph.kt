@@ -71,6 +71,18 @@ fun PandQNavGraph(
                 },
                 onOrderClick = {
                     navController.navigate(Screen.OrderTracking.route)
+                },
+                onNavigateToOrder = { orderId ->
+                    // TODO: Pass orderId to OrderTracking screen when it supports dynamic order
+                    navController.navigate(Screen.OrderTracking.route)
+                },
+                onNavigateToProduct = { productId ->
+                    // TODO: Pass productId to ProductDetail screen when it supports dynamic product
+                    navController.navigate(Screen.ProductDetail.route)
+                },
+                onNavigateToPromotion = { promoId ->
+                    // TODO: Navigate to promotion screen when available
+                    // For now, stay on current screen
                 }
             )
         }

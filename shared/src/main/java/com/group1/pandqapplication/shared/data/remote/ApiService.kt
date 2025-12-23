@@ -9,6 +9,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @GET("endpoint")
@@ -17,6 +18,9 @@ interface ApiService {
     // Notification endpoints
     @GET("api/v1/notifications/user/{userId}")
     suspend fun getNotifications(@Path("userId") userId: String): Response<List<NotificationDto>>
+
+    @GET("api/v1/notifications/by-email")
+    suspend fun getNotificationsByEmail(@Query("email") email: String): Response<List<NotificationDto>>
 
     @PUT("api/v1/notifications/{id}/read")
     suspend fun markNotificationAsRead(@Path("id") id: String): Response<Unit>
@@ -28,5 +32,6 @@ interface ApiService {
     @POST("api/v1/users/fcm-token-by-email")
     suspend fun updateFcmTokenByEmail(@Body request: FcmTokenByEmailRequest): Response<Unit>
 }
+
 
 
