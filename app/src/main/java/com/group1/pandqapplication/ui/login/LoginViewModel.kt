@@ -105,9 +105,11 @@ class LoginViewModel @Inject constructor(
     /**
      * Register FCM token with backend after login/register.
      * Uses email and Firebase UID to link user, then sends FCM token.
+     * Note: Uses GlobalScope with NonCancellable to ensure the API call completes
+     * even after the ViewModel is destroyed during navigation.
      */
     private fun registerFcmToken() {
-        viewModelScope.launch {
+        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO + kotlinx.coroutines.NonCancellable) {
             try {
                 val email = authRepository.getCurrentUserEmail()
                 val firebaseUid = authRepository.getCurrentFirebaseUid()
