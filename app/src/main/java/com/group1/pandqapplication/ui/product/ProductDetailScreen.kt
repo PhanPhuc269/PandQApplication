@@ -66,14 +66,10 @@ fun ProductDetailScreen(
         }
     }
 
-    // Handle review submission success/error
-    LaunchedEffect(uiState.reviewSubmitSuccess, uiState.reviewSubmitError) {
+    // Handle review submission success - error is handled by AlertDialog in WriteReviewScreen
+    LaunchedEffect(uiState.reviewSubmitSuccess) {
         if (uiState.reviewSubmitSuccess) {
             snackbarHostState.showSnackbar("Đánh giá của bạn đã được gửi thành công!")
-            viewModel.clearReviewSubmitState()
-        }
-        if (uiState.reviewSubmitError != null) {
-            snackbarHostState.showSnackbar(uiState.reviewSubmitError ?: "Có lỗi xảy ra")
             viewModel.clearReviewSubmitState()
         }
     }
@@ -85,7 +81,7 @@ fun ProductDetailScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             bottomBar = {
-                if (!uiState.isLoading && uiState.product != null && !uiState.showWriteReviewScreen) {
+                if (!uiState.isLoading && uiState.product != null) {
                     BottomCartBar(
                         price = uiState.product!!.price,
                         quantity = uiState.quantity,
@@ -185,20 +181,7 @@ fun ProductDetailScreen(
                                         .clickable { viewModel.selectTab(2) }
                                 )
                             }
-                            
-                            // Description Preview
-                            product.description?.let { desc ->
-                                if (desc.isNotEmpty()) {
-                                    Text(
-                                        text = desc,
-                                        color = Color(0xFF52525B),
-                                        fontSize = 14.sp,
-                                        lineHeight = 20.sp,
-                                        maxLines = 4,
-                                        modifier = Modifier.padding(top = 16.dp)
-                                    )
-                                }
-                            }
+
     
                             // Tabs
                             Spacer(modifier = Modifier.height(24.dp))
@@ -243,8 +226,7 @@ fun ProductDetailScreen(
                                     filterByRating = uiState.filterByRating,
                                     sortBy = uiState.sortBy,
                                     onFilterChange = { viewModel.filterReviews(it) },
-                                    onSortChange = { viewModel.sortReviews(it) },
-                                    onWriteReviewClick = { viewModel.toggleWriteReviewScreen(true) }
+                                    onSortChange = { viewModel.sortReviews(it) }
                                 )
                             }
     
@@ -265,19 +247,6 @@ fun ProductDetailScreen(
                     }
                 }
             }
-        }
-        
-        // Full Screen Write Review Overlay
-        if (uiState.showWriteReviewScreen) {
-            WriteReviewScreen(
-                product = uiState.product,
-                onBackClick = { viewModel.toggleWriteReviewScreen(false) },
-                onSubmitClick = { rating, comment, imageUrls ->
-                    viewModel.submitReview(rating, comment, imageUrls)
-                },
-                onUploadImage = { file, onResult -> viewModel.uploadImage(file, onResult) },
-                primaryColor = primaryColor
-            )
         }
         
         SnackbarHost(
@@ -464,41 +433,19 @@ fun ReviewsSection(
     filterByRating: Int? = null,
     sortBy: String = "newest",
     onFilterChange: (Int?) -> Unit = {},
-    onSortChange: (String) -> Unit = {},
-    onWriteReviewClick: () -> Unit = {}
+    onSortChange: (String) -> Unit = {}
 ) {
     var showSortMenu by remember { mutableStateOf(false) }
     
     Column(modifier = Modifier.fillMaxWidth()) {
-         // Header with Write Review
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp)
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Đánh giá & Xếp hạng",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF18181B)
-            )
-            Surface(
-                color = Color(0xFFec3713).copy(alpha = 0.1f),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.clickable { onWriteReviewClick() }
-            ) {
-                Text(
-                    "Viết đánh giá", 
-                    color = Color(0xFFec3713), 
-                    fontSize = 14.sp, 
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                )
-            }
-        }
+         // Header
+        Text(
+            "Đánh giá & Xếp hạng",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF18181B),
+            modifier = Modifier.padding(bottom = 24.dp, start = 4.dp, end = 4.dp)
+        )
 
         // Rating Summary Block (Big score left, Bars right)
         Row(
@@ -932,7 +879,6 @@ fun BottomCartBar(
             ) {
                 Icon(Icons.Filled.ShoppingBag, contentDescription = null, modifier = Modifier.size(20.dp))
                 Text("Thêm vào giỏ", modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold)
-                Text("| ${formatPrice(price * quantity)}", modifier = Modifier.padding(start = 8.dp), color = Color.White.copy(alpha = 0.8f))
             }
         }
     }

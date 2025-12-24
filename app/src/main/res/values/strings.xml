@@ -1,5 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">PandQ Application</string>
-    <!-- TODO: Replace with real OAuth Web Client ID from Firebase Console -->
-    <string name="default_web_client_id">951162743968-placeholder.apps.googleusercontent.com</string>
+    <string name="default_web_client_id">163212375706-nceon7fob3k8qrkcb7s5kutir7hpqkv2.apps.googleusercontent.com</string>
 </resources>

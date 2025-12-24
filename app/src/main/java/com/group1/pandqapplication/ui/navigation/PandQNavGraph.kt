@@ -1,6 +1,8 @@
 package com.group1.pandqapplication.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -165,7 +167,10 @@ fun PandQNavGraph(
                 onBackClick = {
                     navController.popBackStack()
                 },
-                orderId = orderId
+                orderId = orderId,
+                onReviewClick = { productId, _ ->
+                    navController.navigate(Screen.WriteReview.createRoute(productId))
+                }
             )
         }
         composable(Screen.ShippingAddress.route) {
@@ -250,6 +255,37 @@ fun PandQNavGraph(
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 }
+            )
+        }
+        composable(
+            route = Screen.WriteReview.route,
+            arguments = listOf(navArgument("productId") { type = NavType.StringType })
+        ) {
+            // Use ProductDetailViewModel for review submission
+            // ViewModel will auto-load product from SavedStateHandle "productId"
+            val viewModel: com.group1.pandqapplication.ui.product.ProductDetailViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsState()
+            
+            // Handle success - navigate back to Home (which has Orders tab)
+            androidx.compose.runtime.LaunchedEffect(uiState.reviewSubmitSuccess) {
+                if (uiState.reviewSubmitSuccess) {
+                    // Navigate back to Home and clear the back stack
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
+            }
+            
+            com.group1.pandqapplication.ui.product.WriteReviewScreen(
+                product = uiState.product,
+                onBackClick = { navController.popBackStack() },
+                onSubmitClick = { rating, comment, imageUrls ->
+                    viewModel.submitReview(rating, comment, imageUrls)
+                },
+                primaryColor = com.group1.pandqapplication.shared.ui.theme.Primary,
+                isSubmitting = uiState.isSubmittingReview,
+                errorMessage = uiState.reviewSubmitError,
+                onDismissError = { viewModel.clearReviewSubmitState() }
             )
         }
     }

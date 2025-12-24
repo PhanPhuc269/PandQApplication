@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.data.repository.ProductRepository
+import com.group1.pandqapplication.shared.data.repository.AuthRepository
 import com.group1.pandqapplication.shared.data.remote.ApiService
 import com.group1.pandqapplication.shared.data.remote.dto.AddToCartRequest
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDetailDto
@@ -37,6 +38,7 @@ data class ProductDetailUiState(
 class ProductDetailViewModel @Inject constructor(
     private val repository: ProductRepository,
     private val apiService: ApiService,
+    private val authRepository: AuthRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -116,13 +118,20 @@ class ProductDetailViewModel @Inject constructor(
                 reviewSubmitSuccess = false
             )
 
-            // TODO: Get actual user ID from auth context
-            // Using a demo user ID for now (from database seed data)
-            val demoUserId = "cccc2222-cccc-2222-cccc-222222222222"
+            // Get Firebase UID of current logged-in user
+            val currentUserId = authRepository.getCurrentFirebaseUid() ?: ""
+            
+            if (currentUserId.isEmpty()) {
+                _uiState.value = _uiState.value.copy(
+                    isSubmittingReview = false,
+                    reviewSubmitError = "Vui lòng đăng nhập để đánh giá"
+                )
+                return@launch
+            }
 
             repository.createReview(
                 productId = productId,
-                userId = demoUserId,
+                userId = currentUserId,
                 rating = rating,
                 comment = comment.ifBlank { null },
                 imageUrls = imageUrls.ifEmpty { null }
