@@ -172,7 +172,7 @@ fun OrdersScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(OrderStatus.entries.take(4)) { status ->  // Show first 4 statuses
+                items(OrderStatus.entries) { status ->
                     val isSelected = status == uiState.selectedStatus
                     val bgColor = if (isSelected) primaryColor else Color(0xFFE5E7EB)
                     val textColor = if (isSelected) Color.White else Color(0xFF374151)

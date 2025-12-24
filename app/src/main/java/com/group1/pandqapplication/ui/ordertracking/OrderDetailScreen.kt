@@ -158,7 +158,7 @@ fun OrderDetailScreen(
                             name = item.productName,
                             quantity = item.quantity,
                             unitPrice = "${item.price}₫",
-                            totalPrice = "${(item.price * item.quantity)}₫",
+                            totalPrice = "${item.price.multiply(java.math.BigDecimal.valueOf(item.quantity.toLong()))}₫",
                             textPrimary = textPrimary,
                             textSecondary = textSecondary
                         )

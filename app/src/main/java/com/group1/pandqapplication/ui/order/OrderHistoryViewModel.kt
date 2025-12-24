@@ -97,7 +97,7 @@ class OrderHistoryViewModel @Inject constructor(
                     it.copy(
                         orders = if (resetPage || page == 0) response.data else it.orders + response.data,
                         currentPage = targetPage,
-                        totalItems = response.meta.totalElements,
+                        totalItems = response.meta?.pagination?.total ?: it.totalItems,
                         isLoading = false
                     )
                 }

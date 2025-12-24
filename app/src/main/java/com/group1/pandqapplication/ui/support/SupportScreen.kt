@@ -427,7 +427,7 @@ private fun ContactOption(
                 .fillMaxWidth()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.Center
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
