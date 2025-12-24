@@ -73,11 +73,17 @@ fun CheckoutScreen(
     onBackClick: () -> Unit = {},
     onEditAddressClick: () -> Unit = {},
     onPaymentSuccess: () -> Unit = {},
+    orderId: String = "87995e2b-656e-4dc0-9ed1-dffafce97410",  // Order ID from database
     viewModel: CheckoutViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Load payment details when screen appears
+    LaunchedEffect(orderId) {
+        viewModel.loadPaymentDetails(orderId)
+    }
     
     val isDarkTheme = false // Toggle for testing
     
@@ -92,7 +98,7 @@ fun CheckoutScreen(
     if (uiState.sepayQrUrl != null) {
         SepayQRDialog(
             qrUrl = uiState.sepayQrUrl!!,
-            amount = 10000L, // TODO: Get from actual order
+            amount = uiState.paymentDetails?.finalAmount ?: 0L,
             bankAccount = uiState.sepayBankAccount,
             accountName = uiState.sepayAccountName,
             content = uiState.sepayContent,
@@ -191,10 +197,9 @@ fun CheckoutScreen(
             ) {
                 Button(
                     onClick = { 
-                        // TODO: Get actual amount from order data
-                        viewModel.initiatePayment(10000L, "Đơn hàng PandQ")
+                        viewModel.initiatePayment(orderId)
                     },
-                    enabled = !uiState.isProcessingPayment,
+                    enabled = !uiState.isProcessingPayment && uiState.paymentDetails != null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -208,8 +213,13 @@ fun CheckoutScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
+                        val amount = if (uiState.paymentDetails != null) {
+                            formatPrice(uiState.paymentDetails!!.finalAmount)
+                        } else {
+                            "..."
+                        }
                         Text(
-                            text = "Xác nhận - 10.000₫",
+                            text = "Xác nhận - $amount",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -284,7 +294,7 @@ fun CheckoutScreen(
                         
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "John Doe",
+                                text = uiState.paymentDetails?.userName ?: "Đang tải...",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = textPrimary,
@@ -292,7 +302,7 @@ fun CheckoutScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = "(+84) 987 654 321, 123 Đường ABC, Phường X, Quận Y, TP. Z",
+                                text = "${uiState.paymentDetails?.userPhone?.let { "(+84) $it, " } ?: ""} ${uiState.paymentDetails?.shippingAddress ?: ""}, ${uiState.paymentDetails?.shippingDistrict ?: ""}, ${uiState.paymentDetails?.shippingCity ?: ""}",
                                 fontSize = 14.sp,
                                 color = textSecondary,
                                 maxLines = 2,
@@ -406,9 +416,11 @@ fun CheckoutScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        SummaryRow("Tạm tính", "2.500.000₫", textSecondary, textPrimary)
-                        SummaryRow("Phí vận chuyển", "30.000₫", textSecondary, textPrimary)
-                        SummaryRow("Giảm giá", "-50.000₫", textSecondary, CheckoutPrimary)
+                        SummaryRow("Tạm tính", formatPrice(uiState.paymentDetails?.subtotal ?: 0), textSecondary, textPrimary)
+                        SummaryRow("Phí vận chuyển", formatPrice(uiState.paymentDetails?.shippingFee ?: 0), textSecondary, textPrimary)
+                        if ((uiState.paymentDetails?.discountAmount ?: 0) > 0) {
+                            SummaryRow("Giảm giá", "-${formatPrice(uiState.paymentDetails?.discountAmount ?: 0)}", textSecondary, CheckoutPrimary)
+                        }
                         
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 0.dp),
@@ -427,7 +439,7 @@ fun CheckoutScreen(
                                 color = textPrimary
                             )
                             Text(
-                                text = "2.480.000₫",
+                                text = formatPrice(uiState.paymentDetails?.finalAmount ?: 0),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = textPrimary
@@ -501,6 +513,15 @@ fun SummaryRow(label: String, value: String, labelColor: Color, valueColor: Colo
             fontWeight = if (valueColor == CheckoutPrimary) FontWeight.Normal else FontWeight.Normal
         )
     }
+}
+
+fun formatPrice(amount: Long): String {
+    return String.format("%,d₫", amount).replace(',', '.')
+}
+
+fun formatCurrency(amount: Double): String {
+    val longAmount = amount.toLong()
+    return String.format("%,d", longAmount).replace(',', '.')
 }
 
 @Preview
