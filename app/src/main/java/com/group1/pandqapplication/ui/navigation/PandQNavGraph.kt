@@ -126,20 +126,31 @@ fun PandQNavGraph(
                 onBackClick = {
                     navController.popBackStack()
                 },
-                onCheckoutClick = {
-                    navController.navigate(Screen.Checkout.route)
+                onCheckoutClick = { orderId ->
+                    navController.navigate(Screen.Checkout.createRoute(orderId))
                 },
                 userId = mainViewModel.getCurrentUserId()
             )
         }
-        composable(Screen.Checkout.route) {
+        composable(
+            route = Screen.Checkout.route,
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
             CheckoutScreen(
                 onBackClick = {
                     navController.popBackStack()
                 },
                 onEditAddressClick = {
                     navController.navigate(Screen.ShippingAddress.route)
-                }
+                },
+                onPaymentSuccess = {
+                    // Navigate to success screen and clear back stack to checkout
+                    navController.navigate(Screen.OrderSuccess.route) {
+                        popUpTo(Screen.Checkout.route) { inclusive = true }
+                    }
+                },
+                orderId = orderId
             )
         }
         composable(Screen.OrderTracking.route) {
@@ -203,6 +214,24 @@ fun PandQNavGraph(
                 },
                 onNavigateBack = {
                     navController.popBackStack()
+                }
+        )
+        }
+        composable(Screen.OrderSuccess.route) {
+            com.group1.pandqapplication.ui.order.OrderSuccessScreen(
+                onCloseClick = {
+                    // Go back to home, clearing the payment flow from back stack
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onTrackOrderClick = {
+                    navController.navigate(Screen.OrderTracking.route)
+                },
+                onContinueShoppingClick = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
                 }
             )
         }

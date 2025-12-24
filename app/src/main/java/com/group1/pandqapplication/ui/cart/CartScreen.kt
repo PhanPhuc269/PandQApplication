@@ -44,7 +44,7 @@ data class CartItem(
 @Composable
 fun CartScreen(
     onBackClick: () -> Unit,
-    onCheckoutClick: () -> Unit,
+    onCheckoutClick: (orderId: String) -> Unit,
     userId: String = "",
     viewModel: CartViewModel = hiltViewModel()
 ) {
@@ -117,14 +117,19 @@ fun CartScreen(
                            Text("${formatCurrency(totalPrice)}đ", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                        }
                        Spacer(modifier = Modifier.height(16.dp))
-                       Button(
-                           onClick = onCheckoutClick,
-                           modifier = Modifier.fillMaxWidth().height(50.dp),
-                           shape = RoundedCornerShape(8.dp),
-                           colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
-                       ) {
-                           Text("Tiến hành Thanh toán", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                       }
+                        Button(
+                            onClick = { 
+                                uiState.cart?.id?.let { orderId ->
+                                    onCheckoutClick(orderId)
+                                }
+                            },
+                            enabled = uiState.cart?.id != null,
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                        ) {
+                            Text("Tiến hành Thanh toán", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        }
                    } 
                 }
             }

@@ -73,7 +73,7 @@ fun CheckoutScreen(
     onBackClick: () -> Unit = {},
     onEditAddressClick: () -> Unit = {},
     onPaymentSuccess: () -> Unit = {},
-    orderId: String = "87995e2b-656e-4dc0-9ed1-dffafce97410",  // Order ID from database
+    orderId: String,  // Required: Order ID from cart
     viewModel: CheckoutViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -155,8 +155,10 @@ fun CheckoutScreen(
                         }
                     }
                 )
+                // Clear only zpTransToken to prevent this LaunchedEffect from re-triggering
+                // Keep appTransId for payment status checking
+                viewModel.clearZpTransToken()
             }
-            viewModel.resetPaymentState()
         }
     }
 
@@ -527,5 +529,5 @@ fun formatCurrency(amount: Double): String {
 @Preview
 @Composable
 fun PreviewCheckoutScreen() {
-    CheckoutScreen()
+    CheckoutScreen(orderId = "preview-order-id")
 }

@@ -10,7 +10,9 @@ sealed class Screen(val route: String) {
     data object Cart : Screen("cart_screen")
     data object Search : Screen("search_screen")
     data object Splash : Screen("splash")
-    data object Checkout : Screen("checkout")
+    data object Checkout : Screen("checkout/{orderId}") {
+        fun createRoute(orderId: String) = "checkout/$orderId"
+    }
     data object OrderTracking : Screen("order_tracking")
     data object ShippingAddress : Screen("shipping_address")
     data object PersonalInfo : Screen("personal_info")
@@ -25,4 +27,5 @@ sealed class Screen(val route: String) {
         }
     }
     data object MapPicker : Screen("map_picker")
+    data object OrderSuccess : Screen("order_success")
 }

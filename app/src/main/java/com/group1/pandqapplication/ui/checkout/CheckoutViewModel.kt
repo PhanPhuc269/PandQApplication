@@ -225,6 +225,14 @@ class CheckoutViewModel @Inject constructor(
         _uiState.update { it.copy(paymentError = null) }
     }
 
+    /**
+     * Clear zpTransToken after SDK call to prevent LaunchedEffect re-triggering
+     * Keeps appTransId for payment status checking
+     */
+    fun clearZpTransToken() {
+        _uiState.update { it.copy(zpTransToken = null) }
+    }
+
     fun resetPaymentState() {
         _uiState.update { 
             it.copy(
