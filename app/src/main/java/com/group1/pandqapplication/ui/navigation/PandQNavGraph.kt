@@ -165,7 +165,17 @@ fun PandQNavGraph(
                 onBackClick = {
                     navController.popBackStack()
                 },
+                onSupportClick = {
+                    navController.navigate(Screen.Support.route)
+                },
                 orderId = orderId
+            )
+        }
+        composable(Screen.Support.route) {
+            com.group1.pandqapplication.ui.support.SupportScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
             )
         }
         composable(Screen.ShippingAddress.route) {

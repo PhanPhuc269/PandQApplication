@@ -22,6 +22,7 @@ sealed class Screen(val route: String) {
             }
         }
     }
+    data object Support : Screen("support")
     data object ShippingAddress : Screen("shipping_address")
     data object PersonalInfo : Screen("personal_info")
     data object AddressList : Screen("address_list")
