@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.group1.pandqapplication.shared.data.remote.dto.OrderHistoryDto
+import java.time.format.DateTimeFormatter
 
 data class Order(
     val id: String,
@@ -198,6 +199,19 @@ fun OrdersScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
+            } else if (uiState.isLoading && uiState.orders.isEmpty()) {
+                // Skeleton Loading UI
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(vertical = 12.dp)
+                ) {
+                    items(5) {
+                        OrderHistorySkeletonItem()
+                    }
+                }
             } else if (uiState.error != null && uiState.orders.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -245,6 +259,9 @@ fun OrdersScreen(
 
 @Composable
 fun OrderHistoryItem(order: OrderHistoryDto, onClick: () -> Unit) {
+    val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    val formattedDate = order.createdAt.format(dateFormatter)
+    
     Surface(
         color = Color.White,
         shape = RoundedCornerShape(12.dp),
@@ -255,41 +272,70 @@ fun OrderHistoryItem(order: OrderHistoryDto, onClick: () -> Unit) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (order.items.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.LightGray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(order.items.first().productName.take(1).uppercase(), fontWeight = FontWeight.Bold)
+            // Product Image
+            Box(
+                modifier = Modifier
+                    .size(70.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.LightGray),
+                contentAlignment = Alignment.Center
+            ) {
+                if (order.items.isNotEmpty() && !order.items.first().imageUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = order.items.first().imageUrl,
+                        contentDescription = order.items.first().productName,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                } else {
+                    Text(
+                        order.items.firstOrNull()?.productName?.take(1)?.uppercase() ?: "📦",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp
+                    )
                 }
             }
+            
             Spacer(modifier = Modifier.width(16.dp))
+            
             Column(modifier = Modifier.weight(1f)) {
                 Text("Đơn hàng ${order.id.take(8)}", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                 Text(order.items.mapNotNull { it.productName }.take(1).joinToString(", "), fontSize = 14.sp, color = Color.Gray, maxLines = 1)
                 Text("Tổng: ${formatCurrency(order.finalAmount.toLong())}đ", fontWeight = FontWeight.Medium, fontSize = 14.sp)
                 
-                val (badgeColor, textColor) = when (order.status) {
-                    "DELIVERED" -> Color(0xFFDCFCE7) to Color(0xFF166534)
-                    "PENDING", "CONFIRMED" -> Color(0xFFFFEDD5) to Color(0xFF9A3412)
-                    "CANCELLED" -> Color(0xFFFEE2E2) to Color(0xFF991B1B)
-                    else -> Color.LightGray to Color.Black
-                }
-                
-                Surface(
-                    color = badgeColor,
-                    shape = RoundedCornerShape(100.dp),
-                    modifier = Modifier.padding(top = 4.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val (badgeColor, textColor) = when (order.status) {
+                        "DELIVERED" -> Color(0xFFDCFCE7) to Color(0xFF166534)
+                        "PENDING", "CONFIRMED" -> Color(0xFFFFEDD5) to Color(0xFF9A3412)
+                        "CANCELLED" -> Color(0xFFFEE2E2) to Color(0xFF991B1B)
+                        else -> Color.LightGray to Color.Black
+                    }
+                    
+                    Surface(
+                        color = badgeColor,
+                        shape = RoundedCornerShape(100.dp)
+                    ) {
+                        Text(
+                            order.status,
+                            color = textColor,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                        )
+                    }
+                    
                     Text(
-                        order.status,
-                        color = textColor,
+                        formattedDate,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                        color = Color.Gray
                     )
                 }
             }
@@ -298,8 +344,76 @@ fun OrderHistoryItem(order: OrderHistoryDto, onClick: () -> Unit) {
     }
 }
 
+@Composable
+fun OrderHistorySkeletonItem() {
+    Surface(
+        color = Color.White,
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E7EB)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .shimmerEffect(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Image skeleton
+            Box(
+                modifier = Modifier
+                    .size(70.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.LightGray)
+            )
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            // Text skeleton
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(16.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color.LightGray)
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color.LightGray)
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color.LightGray)
+                )
+            }
+            
+            Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = Color.Gray)
+        }
+    }
+}
+
 fun formatCurrency(amount: Long): String {
     return String.format("%,d", amount).replace(',', '.')
+}
+
+fun Modifier.shimmerEffect(): Modifier {
+    return this.background(
+        brush = androidx.compose.ui.graphics.Brush.linearGradient(
+            colors = listOf(
+                Color(0xFFF0F0F0),
+                Color(0xFFE0E0E0),
+                Color(0xFFF0F0F0)
+            ),
+            start = androidx.compose.ui.geometry.Offset(0f, 0f),
+            end = androidx.compose.ui.geometry.Offset(100f, 100f)
+        )
+    )
 }
 
 @Preview
