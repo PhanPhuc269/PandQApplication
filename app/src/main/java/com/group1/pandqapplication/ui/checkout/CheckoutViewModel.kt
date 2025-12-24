@@ -3,6 +3,7 @@ package com.group1.pandqapplication.ui.checkout
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.shared.data.remote.AppApiService
+import com.group1.pandqapplication.shared.data.remote.dto.PaymentDetailsDto
 import com.group1.pandqapplication.shared.data.remote.dto.SepayCreateQRRequest
 import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayCreateOrderRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +26,10 @@ data class CheckoutUiState(
     val sepayTransactionId: String? = null,
     val sepayBankAccount: String? = null,
     val sepayAccountName: String? = null,
-    val sepayContent: String? = null
+    val sepayContent: String? = null,
+    // Payment details from API
+    val paymentDetails: PaymentDetailsDto? = null,
+    val isLoadingPaymentDetails: Boolean = false
 )
 
 sealed class PaymentResult {
@@ -47,29 +51,61 @@ class CheckoutViewModel @Inject constructor(
         _uiState.update { it.copy(selectedPaymentMethod = method) }
     }
 
-    fun initiatePayment(totalAmount: Long, orderDescription: String) {
+    /**
+     * Load payment details from API for checkout
+     * This fetches user info, shipping address, items, and amounts
+     */
+    fun loadPaymentDetails(orderId: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isProcessingPayment = true, paymentError = null) }
+            _uiState.update { it.copy(isLoadingPaymentDetails = true, paymentError = null) }
             
-            when (_uiState.value.selectedPaymentMethod) {
-                PaymentMethod.ZALOPAY -> {
-                    initiateZaloPayPayment(totalAmount, orderDescription)
+            try {
+                val paymentDetails = apiService.getPaymentDetails(orderId)
+                
+                // Payment details loaded successfully
+                _uiState.update { 
+                    it.copy(
+                        isLoadingPaymentDetails = false,
+                        paymentDetails = paymentDetails
+                    ) 
                 }
-                PaymentMethod.SEPAY -> {
-                    initiateSepayPayment(totalAmount, orderDescription)
+                
+            } catch (e: Exception) {
+                _uiState.update { 
+                    it.copy(
+                        isLoadingPaymentDetails = false, 
+                        paymentError = "Lỗi tải thông tin đơn hàng: ${e.message}"
+                    ) 
                 }
             }
         }
     }
 
-    private suspend fun initiateZaloPayPayment(amount: Long, description: String) {
+    fun initiatePayment(orderId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isProcessingPayment = true, paymentError = null) }
+            
+            when (_uiState.value.selectedPaymentMethod) {
+                PaymentMethod.ZALOPAY -> {
+                    initiateZaloPayPayment(orderId)
+                }
+                PaymentMethod.SEPAY -> {
+                    initiateSepayPayment(orderId)
+                }
+            }
+        }
+    }
+
+    private suspend fun initiateZaloPayPayment(orderId: String) {
         try {
-            // Call backend API to create ZaloPay order
+            // Use actual amount from payment details
+            val finalAmount = _uiState.value.paymentDetails?.finalAmount ?: 0L
+            
             val request = ZaloPayCreateOrderRequest(
-                amount = amount,
-                description = description,
-                userId = null, // TODO: Get from auth
-                orderId = null // TODO: Get from order data
+                amount = finalAmount,
+                description = "Thanh toán đơn hàng",
+                userId = _uiState.value.paymentDetails?.userId,
+                orderId = orderId
             )
             
             val response = apiService.createZaloPayOrder(request)
@@ -105,12 +141,14 @@ class CheckoutViewModel @Inject constructor(
      * Initiate SePay payment using VietQR
      * SePay generates a QR code for bank transfer payment
      */
-    private suspend fun initiateSepayPayment(amount: Long, description: String) {
+    private suspend fun initiateSepayPayment(orderId: String) {
         try {
+            val finalAmount = _uiState.value.paymentDetails?.finalAmount ?: 0L
+            
             val request = SepayCreateQRRequest(
-                amount = amount,
-                description = description,
-                orderId = null // TODO: Get from actual order
+                amount = finalAmount,
+                description = "Chuyen khoan ngan hang",
+                orderId = orderId
             )
             
             val response = apiService.createSepayQR(request)

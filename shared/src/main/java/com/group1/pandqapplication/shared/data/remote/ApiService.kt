@@ -5,6 +5,8 @@ import com.group1.pandqapplication.shared.data.remote.dto.FcmTokenByEmailRequest
 import com.group1.pandqapplication.shared.data.remote.dto.FcmTokenRequest
 import com.group1.pandqapplication.shared.data.remote.dto.NotificationDto
 import com.group1.pandqapplication.shared.data.remote.dto.OrderDto
+import com.group1.pandqapplication.shared.data.remote.dto.PaymentDetailsDto
+import com.group1.pandqapplication.shared.data.remote.dto.UserResponseDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -47,6 +49,14 @@ interface ApiService {
 
     @POST("api/v1/orders/cart/decrease")
     suspend fun decreaseQuantity(@Body request: AddToCartRequest): Response<OrderDto>
+
+    // User endpoints
+    @GET("api/v1/users/{id}")
+    suspend fun getUserById(@Path("id") userId: String): UserResponseDto
+
+    // Payment endpoints
+    @GET("api/v1/payments/details/{orderId}")
+    suspend fun getPaymentDetails(@Path("orderId") orderId: String): PaymentDetailsDto
 }
 
 

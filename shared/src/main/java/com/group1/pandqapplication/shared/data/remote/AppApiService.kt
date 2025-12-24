@@ -6,6 +6,7 @@ import com.group1.pandqapplication.shared.data.remote.dto.CreateReviewDto
 import com.group1.pandqapplication.shared.data.remote.dto.CreateAddressRequest
 import com.group1.pandqapplication.shared.data.remote.dto.InitConfigDto
 import com.group1.pandqapplication.shared.data.remote.dto.LocationDto
+import com.group1.pandqapplication.shared.data.remote.dto.PaymentDetailsDto
 import com.group1.pandqapplication.shared.data.remote.dto.PaginationResponseDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDetailDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDto
@@ -102,6 +103,12 @@ interface AppApiService {
     suspend fun getSepayStatus(
         @Path("transactionId") transactionId: String
     ): SepayStatusResponse
+
+    // Payment Details - Get order information for checkout
+    @GET("api/v1/payments/details/{orderId}")
+    suspend fun getPaymentDetails(
+        @Path("orderId") orderId: String
+    ): PaymentDetailsDto
 
     // User endpoints
     @GET("api/v1/users/{id}")
