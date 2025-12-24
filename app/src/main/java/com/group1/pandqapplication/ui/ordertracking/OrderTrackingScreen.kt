@@ -83,10 +83,11 @@ fun OrderTrackingScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    // Load order tracking if orderId is provided
-    LaunchedEffect(orderId) {
-        if (orderId != null) {
-            viewModel.loadOrderTracking(orderId)
+    // Load order tracking - either from parameter or by API
+    LaunchedEffect(orderId, order) {
+        when {
+            order != null -> viewModel.setOrder(order)
+            orderId != null -> viewModel.loadOrderTracking(orderId)
         }
     }
 
@@ -201,17 +202,33 @@ fun OrderTrackingScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            text = "Đơn hàng ${currentOrder.id.take(8)}",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = textPrimary
-                        )
+                        val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                        val orderDate = currentOrder.createdAt.format(dateFormatter)
+                        val estimatedDate = currentOrder.createdAt.plusDays(4).format(dateFormatter)
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Đơn hàng #${currentOrder.id.take(6).uppercase()}",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textPrimary
+                            )
+                            Text(
+                                text = orderDate,
+                                fontSize = 14.sp,
+                                color = textSecondary
+                            )
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Trạng thái: ${currentOrder.status.replace("_", " ")}",
+                            text = "Dự kiến giao hàng: $estimatedDate",
                             fontSize = 14.sp,
-                            color = textSecondary
+                            fontWeight = FontWeight.Medium,
+                            color = textPrimary
                         )
                     }
                 }
@@ -331,36 +348,20 @@ fun OrderTrackingScreen(
                     }
                 }
 
-                // Action Buttons
-                Row(
+                // Support Button
+                Button(
+                    onClick = onSupportClick,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        .height(52.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Button(
-                        onClick = onDetailClick,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Chi tiết", fontWeight = FontWeight.Bold)
-                    }
-
-                    Button(
-                        onClick = onSupportClick,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Primary.copy(alpha = 0.8f)
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Hỗ trợ", fontWeight = FontWeight.Bold)
-                    }
+                    Text(
+                        text = "Liên hệ hỗ trợ",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -376,42 +377,43 @@ private fun TrackingStepItem(
     textPrimary: Color,
     textSecondary: Color
 ) {
+    val isActive = step.isCompleted || step.isCurrent
+    val stepIcon = when (step.status) {
+        "PENDING" -> "📋"
+        "CONFIRMED" -> "✅"
+        "SHIPPING" -> "🚚"
+        "DELIVERED" -> "📦"
+        else -> "•"
+    }
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = if (isLast) 0.dp else 24.dp)
+            .padding(bottom = if (isLast) 0.dp else 16.dp)
             .drawBehind {
                 if (!isLast) {
                     drawLine(
                         color = if (step.isCompleted) Primary else Color.LightGray,
-                        start = Offset(18.dp.toPx(), 40.dp.toPx()),
-                        end = Offset(18.dp.toPx(), size.height),
+                        start = Offset(20.dp.toPx(), 44.dp.toPx()),
+                        end = Offset(20.dp.toPx(), size.height + 8.dp.toPx()),
                         strokeWidth = 2.dp.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f)
                     )
                 }
             }
     ) {
         Box(
             modifier = Modifier
-                .padding(start = 2.dp)
-                .size(36.dp)
+                .size(40.dp)
                 .background(
-                    color = if (step.isCompleted || step.isCurrent) Primary else Color.Transparent,
-                    shape = CircleShape
-                )
-                .border(
-                    width = if (step.isCompleted || step.isCurrent) 0.dp else 2.dp,
-                    color = if (step.isCompleted || step.isCurrent) Color.Transparent else Color.LightGray,
+                    color = if (isActive) Primary else Color.LightGray.copy(alpha = 0.3f),
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = if (step.isCompleted) "✓" else "•",
-                color = if (step.isCompleted || step.isCurrent) Color.White else Color.Gray,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                text = stepIcon,
+                fontSize = 18.sp
             )
         }
 
@@ -422,8 +424,15 @@ private fun TrackingStepItem(
                 text = step.label,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = if (step.isCurrent) Primary else textPrimary
+                color = if (isActive) textPrimary else textSecondary
             )
+            if (step.description.isNotEmpty()) {
+                Text(
+                    text = step.description,
+                    fontSize = 13.sp,
+                    color = textSecondary
+                )
+            }
         }
     }
 }
@@ -435,54 +444,58 @@ private fun StatusUpdateItem(
     textSecondary: Color,
     cardColor: Color
 ) {
-    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-    val formattedTime = update.timestamp.format(timeFormatter)
+    val timeFormatter = DateTimeFormatter.ofPattern("hh:mm\na", java.util.Locale("vi", "VN"))
+    val formattedTime = update.timestamp.format(timeFormatter).replace("\n", "\n")
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top
     ) {
-        Text(
-            text = formattedTime,
-            fontSize = 12.sp,
-            color = textSecondary,
+        Column(
+            modifier = Modifier.width(48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            val timeParts = formattedTime.split("\n")
+            Text(
+                text = timeParts.getOrNull(0) ?: "",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = textSecondary
+            )
+            Text(
+                text = timeParts.getOrNull(1)?.uppercase() ?: "AM",
+                fontSize = 11.sp,
+                color = textSecondary
+            )
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Timeline dot
+        Box(
             modifier = Modifier
-                .width(64.dp)
-                .padding(top = 2.dp),
-            textAlign = TextAlign.End
+                .padding(top = 6.dp)
+                .size(10.dp)
+                .background(
+                    color = if (update.isCompleted) Primary else Color.LightGray,
+                    shape = CircleShape
+                )
         )
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.Top) {
-                Box(
-                    modifier = Modifier
-                        .padding(top = 6.dp)
-                        .size(12.dp)
-                        .background(
-                            color = if (update.isCompleted) Primary else Color.LightGray,
-                            shape = CircleShape
-                        )
-                        .border(4.dp, cardColor, CircleShape)
-                )
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Text(
-                        text = update.title,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = textPrimary
-                    )
-                    Text(
-                        text = update.description,
-                        fontSize = 14.sp,
-                        color = textSecondary
-                    )
-                }
-            }
+            Text(
+                text = update.title,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = textPrimary
+            )
+            Text(
+                text = update.description,
+                fontSize = 13.sp,
+                color = textSecondary
+            )
         }
     }
 }
