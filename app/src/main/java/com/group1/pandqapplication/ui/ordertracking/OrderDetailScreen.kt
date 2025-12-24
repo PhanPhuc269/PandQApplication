@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -129,12 +132,20 @@ fun OrderDetailScreen(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "15/08/2023, 10:30 AM",
+                        text = order?.createdAt?.toString() ?: "Đang tải...",
                         fontSize = 14.sp,
                         color = textSecondary
                     )
                 }
             }
+
+            // Order Status Timeline
+            OrderStatusTimeline(
+                currentStatus = order?.status ?: "PENDING",
+                cardColor = cardColor,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary
+            )
 
             // Products Section
             Card(
@@ -186,9 +197,9 @@ fun OrderDetailScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    BillingRow("Tạm tính", "15.850.000₫", textPrimary, textSecondary)
-                    BillingRow("Phí vận chuyển", "50.000₫", textPrimary, textSecondary)
-                    BillingRow("Giảm giá", "-1.000.000₫", Color.Red, textSecondary)
+                    BillingRow("Tạm tính", "${order?.totalAmount ?: "0"}₫", textPrimary, textSecondary)
+                    BillingRow("Phí vận chuyển", "${order?.shippingFee ?: "0"}₫", textPrimary, textSecondary)
+                    BillingRow("Giảm giá", "-${order?.discountAmount ?: "0"}₫", Color.Red, textSecondary)
                     
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 12.dp),
@@ -205,7 +216,7 @@ fun OrderDetailScreen(
                 }
             }
 
-            // Customer Information
+            // Shipping & Payment Information
             Card(
                 colors = CardDefaults.cardColors(containerColor = cardColor),
                 shape = RoundedCornerShape(12.dp),
@@ -214,71 +225,317 @@ fun OrderDetailScreen(
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "Thông tin khách hàng",
+                        text = "Địa chỉ giao hàng",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = textPrimary
+                        color = textPrimary,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    InfoRow("Tên:", "Nguyễn Văn A", textPrimary, textSecondary)
-                    InfoRow("Số điện thoại:", "0987654321", textPrimary, textSecondary)
-                    InfoRow("Địa chỉ giao hàng:", "123 Đường Lê Lợi, Quận 1, TP.HCM", textPrimary, textSecondary)
-                    InfoRow("Ghi chú:", "Giao hàng nhanh, liên lạc trước khi tới", textPrimary, textSecondary)
-                }
-            }
-
-            // Payment & Shipping
-            Card(
-                colors = CardDefaults.cardColors(containerColor = cardColor),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "Thanh toán & Vận chuyển",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary
+                        text = order?.shippingAddress ?: "Chưa có thông tin",
+                        fontSize = 14.sp,
+                        color = textSecondary,
+                        modifier = Modifier.padding(bottom = 20.dp)
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
 
-                    InfoRow("Phương thức thanh toán:", "Thanh toán khi nhận hàng (COD)", textPrimary, textSecondary)
-                    InfoRow("Shipper:", "Chưa được giao", textPrimary, Color(0xFFFB7185))
-                    InfoRow("Trạng thái thanh toán:", "Chưa thanh toán", textPrimary, Color(0xFFFB7185))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        color = Color.Gray.copy(alpha = 0.2f)
+                    )
+
+                    Text(
+                        text = "Phương thức thanh toán",
+                        fontSize = 14.sp,
+                        color = textSecondary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = order?.paymentMethod?.replace("_", " ") ?: "Chưa xác định",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textPrimary,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
             }
 
-            // Action Buttons
+            // Action Buttons (based on order status)
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Button(
-                    onClick = { /* Assign to Shipper */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Giao cho Shipper", fontWeight = FontWeight.Bold)
-                }
+                when (order?.status?.uppercase()) {
+                    "DELIVERED" -> {
+                        // Show Rate & Reorder button for delivered orders
+                        Button(
+                            onClick = { /* Navigate to review screen */ },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Đánh giá sản phẩm", fontWeight = FontWeight.Bold)
+                        }
 
-                Button(
-                    onClick = { /* Update Status */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Primary.copy(alpha = 0.8f)),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text("Cập nhật trạng thái", fontWeight = FontWeight.Bold)
+                        Button(
+                            onClick = { /* Reorder */ },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Primary.copy(alpha = 0.8f)
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Mua lại", fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = { /* Request return */ },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFEF4444).copy(alpha = 0.8f)
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Yêu cầu trả hàng", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    "PENDING", "CONFIRMED" -> {
+                        // Show Cancel button for pending/confirmed orders
+                        Button(
+                            onClick = { /* Cancel order */ },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFEF4444)
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Hủy đơn hàng", fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = { /* Contact support */ },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Primary.copy(alpha = 0.8f)
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Liên hệ hỗ trợ", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    "SHIPPING" -> {
+                        // Show tracking and support for shipping orders
+                        Button(
+                            onClick = { /* Track shipment */ },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Theo dõi vận chuyển", fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = { /* Contact support */ },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Primary.copy(alpha = 0.8f)
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Liên hệ hỗ trợ", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            // Customer Support Section
+            Card(
+                colors = CardDefaults.cardColors(containerColor = cardColor),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "Hỗ trợ khách hàng",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textPrimary,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(Primary.copy(alpha = 0.1f))
+                                .padding(12.dp)
+                        ) {
+                            Text("☎", fontSize = 20.sp)
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Gọi cho chúng tôi",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = textPrimary
+                            )
+                            Text(
+                                text = "1800-2024",
+                                fontSize = 12.sp,
+                                color = textSecondary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(Primary.copy(alpha = 0.1f))
+                                .padding(12.dp)
+                        ) {
+                            Text("💬", fontSize = 20.sp)
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Chat với chúng tôi",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = textPrimary
+                            )
+                            Text(
+                                text = "Hỗ trợ 24/7",
+                                fontSize = 12.sp,
+                                color = textSecondary
+                            )
+                        }
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun OrderStatusTimeline(
+    currentStatus: String,
+    cardColor: Color,
+    textPrimary: Color,
+    textSecondary: Color
+) {
+    val statuses = listOf("PENDING", "CONFIRMED", "SHIPPING", "DELIVERED")
+    val statusLabels = listOf("Đã đặt", "Đã xác nhận", "Đang giao", "Đã giao")
+    val currentIndex = statuses.indexOf(currentStatus.uppercase())
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = "Tiến độ đơn hàng",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = textPrimary,
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                statuses.forEachIndexed { index, status ->
+                    val isCompleted = index <= currentIndex
+                    val isCurrent = index == currentIndex
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        // Status Circle
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .background(
+                                    color = if (isCompleted) Primary else Color.Gray.copy(alpha = 0.3f),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isCompleted) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            } else {
+                                Text(
+                                    text = "${index + 1}",
+                                    color = Color.Gray,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        // Status Label
+                        Text(
+                            text = statusLabels[index],
+                            fontSize = 11.sp,
+                            color = if (isCurrent) Primary else textSecondary,
+                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+
+                    // Connector Line
+                    if (index < statuses.size - 1) {
+                        Box(
+                            modifier = Modifier
+                                .weight(0.3f)
+                                .height(2.dp)
+                                .background(
+                                    color = if (index < currentIndex) Primary else Color.Gray.copy(alpha = 0.3f)
+                                )
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -374,29 +631,5 @@ private fun BillingRow(
             fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal,
             color = valueColor
         )
-    }
-}
-
-@Composable
-private fun InfoRow(
-    label: String,
-    value: String,
-    labelColor: Color,
-    valueColor: Color
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            color = Color.Gray,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = value,
-            fontSize = 14.sp,
-            color = valueColor
-        )
-        Spacer(modifier = Modifier.height(8.dp))
     }
 }
