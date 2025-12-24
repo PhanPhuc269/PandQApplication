@@ -26,12 +26,16 @@ fun AddressListScreen(
     onNavigateBack: () -> Unit,
     onAddAddress: () -> Unit,
     onEditAddress: (String) -> Unit,
+    onSelectAddress: ((String) -> Unit)? = null, // Optional: called when user selects address for checkout
     viewModel: AddressListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val backgroundColor = Color(0xFFF8F6F6)
     val primaryColor = Color(0xFFec3713)
     val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Check if we're in selection mode (coming from checkout)
+    val isSelectionMode = onSelectAddress != null
 
     // Show error messages
     LaunchedEffect(uiState.error) {
@@ -152,6 +156,12 @@ fun AddressListScreen(
                         AddressCard(
                             address = address,
                             primaryColor = primaryColor,
+                            isSelectionMode = isSelectionMode,
+                            onSelect = {
+                                // Set as default first, then call callback
+                                viewModel.setDefaultAddress(address.id)
+                                onSelectAddress?.invoke(address.id)
+                            },
                             onEdit = { onEditAddress(address.id) },
                             onDelete = { viewModel.showDeleteDialog(address) }
                         )
@@ -188,11 +198,21 @@ fun AddressListScreen(
 fun AddressCard(
     address: AddressDto,
     primaryColor: Color,
+    isSelectionMode: Boolean = false,
+    onSelect: () -> Unit = {},
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (isSelectionMode) {
+                    Modifier.clickable { onSelect() }
+                } else {
+                    Modifier
+                }
+            ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)

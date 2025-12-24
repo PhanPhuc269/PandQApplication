@@ -10,4 +10,5 @@ interface AddressRepository {
     suspend fun createAddress(request: CreateAddressRequest): Result<AddressDto>
     suspend fun updateAddress(id: String, request: UpdateAddressRequest): Result<AddressDto>
     suspend fun deleteAddress(id: String): Result<Unit>
+    suspend fun setDefaultAddress(id: String): Result<Unit>
 }

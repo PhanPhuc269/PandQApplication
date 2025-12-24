@@ -23,6 +23,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.PUT
 import com.group1.pandqapplication.shared.data.remote.dto.UpdateAddressRequest
 import com.group1.pandqapplication.shared.data.remote.dto.UpdateUserRequest
 import com.group1.pandqapplication.shared.data.remote.dto.UserDto
@@ -142,6 +143,9 @@ interface AppApiService {
 
     @DELETE("api/v1/addresses/{id}")
     suspend fun deleteAddress(@retrofit2.http.Path("id") id: String)
+
+    @PUT("api/v1/addresses/{id}/default")
+    suspend fun setAddressDefault(@retrofit2.http.Path("id") id: String)
 
     // Order endpoints
     @GET("api/v1/orders/user/{userId}")

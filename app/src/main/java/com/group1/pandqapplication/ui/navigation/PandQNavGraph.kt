@@ -142,7 +142,7 @@ fun PandQNavGraph(
                     navController.popBackStack()
                 },
                 onEditAddressClick = {
-                    navController.navigate(Screen.ShippingAddress.route)
+                    navController.navigate(Screen.AddressList.route)
                 },
                 onPaymentSuccess = {
                     // Navigate to success screen and clear back stack to checkout
@@ -184,6 +184,10 @@ fun PandQNavGraph(
                 },
                 onEditAddress = { addressId ->
                     navController.navigate(Screen.AddEditAddress.createRoute(addressId))
+                },
+                onSelectAddress = { _ ->
+                    // After selecting address (and setting as default), pop back to checkout
+                    navController.popBackStack()
                 }
             )
         }

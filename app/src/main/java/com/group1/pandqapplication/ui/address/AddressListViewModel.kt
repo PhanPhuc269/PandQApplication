@@ -133,6 +133,29 @@ class AddressListViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Set an address as default for checkout selection
+     */
+    fun setDefaultAddress(addressId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            
+            addressRepository.setDefaultAddress(addressId)
+                .onSuccess {
+                    // Reload addresses to reflect the change
+                    loadAddresses()
+                }
+                .onFailure { exception ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Không thể đặt địa chỉ mặc định"
+                        )
+                    }
+                }
+        }
+    }
+
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }

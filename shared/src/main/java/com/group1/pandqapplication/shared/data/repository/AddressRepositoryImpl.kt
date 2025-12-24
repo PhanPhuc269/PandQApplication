@@ -54,4 +54,13 @@ class AddressRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun setDefaultAddress(id: String): Result<Unit> {
+        return try {
+            apiService.setAddressDefault(id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
