@@ -126,17 +126,6 @@ fun AccountScreen(
                     fontSize = 16.sp, 
                     color = Color(0xFF6B7280)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .height(40.dp)
-                        .widthIn(min = 200.dp)
-                ) {
-                    Text("Edit Profile", fontWeight = FontWeight.Bold)
-                }
             }
             
             // Email Verification Banner
