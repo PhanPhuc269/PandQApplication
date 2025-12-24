@@ -53,7 +53,7 @@ fun MainScreen(
                 }
                 composable(BottomNavItem.Orders.route) { 
                     OrdersScreen(
-                        onOrderClick = onOrderClick
+                        onOrderClick = { orderId -> onNavigateToOrder(orderId) }
                     ) 
                 }
                 composable(BottomNavItem.Notifications.route) { 
