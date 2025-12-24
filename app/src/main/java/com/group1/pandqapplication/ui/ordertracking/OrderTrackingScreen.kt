@@ -70,9 +70,14 @@ import com.group1.pandqapplication.shared.ui.theme.TextDarkSecondary
 import com.group1.pandqapplication.shared.ui.theme.TextLightPrimary
 import com.group1.pandqapplication.shared.ui.theme.TextLightSecondary
 
+import com.group1.pandqapplication.shared.data.remote.dto.OrderHistoryDto
+
 @Composable
 fun OrderTrackingScreen(
-    onBackClick: () -> Unit = {}
+    order: OrderHistoryDto? = null,
+    onBackClick: () -> Unit = {},
+    onDetailClick: () -> Unit = {},
+    onSupportClick: () -> Unit = {}
 ) {
     val isDarkTheme = false // You can hook this up to system theme
     
@@ -116,7 +121,7 @@ fun OrderTrackingScreen(
                     .padding(16.dp)
             ) {
                 Button(
-                    onClick = { /* Contact Support */ },
+                    onClick = onSupportClick,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -151,34 +156,35 @@ fun OrderTrackingScreen(
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Đơn hàng #123456",
+                            text = "Đơn hàng ${order?.id?.take(8) ?: "#123456"}",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = textPrimary
                         )
-                        Text(
-                            text = "24/08/2024",
-                            fontSize = 14.sp,
-                            color = textSecondary
-                        )
+                        Surface(
+                            color = Color(0xFF92400E),
+                            shape = RoundedCornerShape(50.dp),
+                            modifier = Modifier.padding(4.dp)
+                        ) {
+                            Text(
+                                text = order?.status?.replace("_", " ") ?: "Chờ xử lý",
+                                color = Color(0xFFFEF3C7),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row {
-                        Text(
-                            text = "Dự kiến giao hàng: ",
-                            fontSize = 14.sp,
-                            color = textSecondary
-                        )
-                        Text(
-                            text = "28/08/2024",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = textPrimary
-                        )
-                    }
+                    Text(
+                        text = "15/08/2023, 10:30 AM",
+                        fontSize = 14.sp,
+                        color = textSecondary
+                    )
                 }
             }
 
@@ -323,23 +329,16 @@ fun OrderTrackingScreen(
                         ) {
                             HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
                             
-                            ProductItem(
-                                imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuD2QLgAw-PbKaZBCry2SmZ-6Al3osT32sT83U8trPV2KBau97NH24hvyGHemPk4kCyBmTkS0bGQiW-i3oOZais9LHXsjg3f52HQ23ZuKYNOb2y4rJh8fxy3Aw4KHhC9lZNAWkg-nUHYhMdNQZaozH3hk5fdA4oWeQAuIIouc4KQrF1udwchHowVXsESI6jo67RJk1tmsqRlsmjHS331wcEFMZlq9eYzoIL_g9o5zB6aVgEhqnYOhhM1M-vXJclaPY1PG-RzNIw9kNg",
-                                name = "Smartphone Model X",
-                                quantity = 1,
-                                price = "15.000.000₫",
-                                textPrimary = textPrimary,
-                                textSecondary = textSecondary
-                            )
-                            
-                            ProductItem(
-                                imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDKLRtOQfHBkwMEYYlUfBvnQ_6DhpscO4aDKVefohRTPsLi2ZSHFnzBO2LdYylYEvoso-AtcdKFZbEvdLQd7ywfDosD-nWrZwpWNMM1inUfltWXg0ljMpKCmSA4hTFSpu5rioV3LqNEHp164ViuRJNWEavn4FUcihLUARWEkxuhaVh6ye3gD-isjmMOMw_EpOGV92dp96CheJZV2ywUeXD9GqzMRHtKg86sGRHRDKocokd3BuglNFB6quX95webZBaIvA2ZePadjCQ",
-                                name = "Tai nghe Pro",
-                                quantity = 1,
-                                price = "5.000.000₫",
-                                textPrimary = textPrimary,
-                                textSecondary = textSecondary
-                            )
+                            order?.items?.forEach { item ->
+                                ProductItem(
+                                    imageUrl = "",
+                                    name = item.productName,
+                                    quantity = item.quantity,
+                                    price = "${item.price}₫",
+                                    textPrimary = textPrimary,
+                                    textSecondary = textSecondary
+                                )
+                            }
 
                             HorizontalDivider(
                                 modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
@@ -357,11 +356,23 @@ fun OrderTrackingScreen(
                                     color = textPrimary
                                 )
                                 Text(
-                                    text = "20.000.000₫",
+                                    text = "${order?.finalAmount ?: "0"}₫",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = textPrimary
                                 )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = onDetailClick,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(44.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Xem chi tiết đơn hàng", fontWeight = FontWeight.Bold)
                             }
                         }
                     }

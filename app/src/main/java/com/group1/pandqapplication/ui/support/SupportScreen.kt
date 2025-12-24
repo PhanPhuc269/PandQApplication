@@ -2,8 +2,6 @@ package com.group1.pandqapplication.ui.support
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,29 +10,31 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ChatBubble
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,228 +43,430 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
-import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundDark
-import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundLight
-import com.group1.pandqapplication.shared.ui.theme.SupportSurfaceDark
-import com.group1.pandqapplication.shared.ui.theme.SupportSurfaceLight
-import com.group1.pandqapplication.shared.ui.theme.SupportTextPrimaryDark
-import com.group1.pandqapplication.shared.ui.theme.SupportTextPrimaryLight
-import com.group1.pandqapplication.shared.ui.theme.SupportTextSecondaryDark
-import com.group1.pandqapplication.shared.ui.theme.SupportTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.BackgroundDark
+import com.group1.pandqapplication.shared.ui.theme.BackgroundLight
+import com.group1.pandqapplication.shared.ui.theme.CardDark
+import com.group1.pandqapplication.shared.ui.theme.CardLight
+import com.group1.pandqapplication.shared.ui.theme.Primary
+import com.group1.pandqapplication.shared.ui.theme.TextDarkPrimary
+import com.group1.pandqapplication.shared.ui.theme.TextDarkSecondary
+import com.group1.pandqapplication.shared.ui.theme.TextLightPrimary
+import com.group1.pandqapplication.shared.ui.theme.TextLightSecondary
+
+data class FAQItem(
+    val question: String,
+    val answer: String
+)
+
+data class FAQCategory(
+    val title: String,
+    val items: List<FAQItem>
+)
 
 @Composable
 fun SupportScreen(
     onBackClick: () -> Unit = {}
 ) {
     val isDarkTheme = false
-    
-    val backgroundColor = if (isDarkTheme) RoleBackgroundDark else RoleBackgroundLight
-    val surfaceColor = if (isDarkTheme) SupportSurfaceDark else SupportSurfaceLight
-    val textPrimary = if (isDarkTheme) SupportTextPrimaryDark else SupportTextPrimaryLight
-    val textSecondary = if (isDarkTheme) SupportTextSecondaryDark else SupportTextSecondaryLight
+    val backgroundColor = if (isDarkTheme) BackgroundDark else BackgroundLight
+    val cardColor = if (isDarkTheme) CardDark else CardLight
+    val textPrimary = if (isDarkTheme) TextDarkPrimary else TextLightPrimary
+    val textSecondary = if (isDarkTheme) TextDarkSecondary else TextLightSecondary
+
+    val faqCategories = listOf(
+        FAQCategory(
+            title = "Tài khoản & Bảo mật",
+            items = listOf(
+                FAQItem(
+                    "Làm sao tôi có thể thay đổi mật khẩu?",
+                    "Bạn có thể thay đổi mật khẩu bằng cách vào phần Cài đặt > Bảo mật > Thay đổi mật khẩu."
+                ),
+                FAQItem(
+                    "Tài khoản của tôi bị khóa, phải làm sao?",
+                    "Liên hệ với bộ phận hỗ trợ qua email hoặc chat để được giải quyết trong 24 giờ."
+                ),
+                FAQItem(
+                    "Làm sao để bảo vệ tài khoản của tôi?",
+                    "Sử dụng mật khẩu mạnh, bật xác thực hai yếu tố, và không chia sẻ thông tin cá nhân."
+                )
+            )
+        ),
+        FAQCategory(
+            title = "Thanh toán & Khuyến mãi",
+            items = listOf(
+                FAQItem(
+                    "Có những phương thức thanh toán nào?",
+                    "Chúng tôi hỗ trợ thanh toán khi nhận hàng (COD), thẻ tín dụng, chuyển khoản ngân hàng, và ví điện tử."
+                ),
+                FAQItem(
+                    "Làm sao sử dụng mã giảm giá?",
+                    "Nhập mã giảm giá trong giỏ hàng trước khi thanh toán. Mã sẽ được tự động áp dụng."
+                ),
+                FAQItem(
+                    "Tôi có thể hoàn lại tiền không?",
+                    "Có, bạn có thể hoàn lại tiền nếu sản phẩm bị lỗi hoặc khác so với mô tả. Liên hệ hỗ trợ trong 7 ngày."
+                )
+            )
+        ),
+        FAQCategory(
+            title = "Giao hàng & Vận chuyển",
+            items = listOf(
+                FAQItem(
+                    "Thời gian giao hàng bao lâu?",
+                    "Thời gian giao hàng thường là 2-5 ngày tùy vào vị trí của bạn."
+                ),
+                FAQItem(
+                    "Làm sao để theo dõi đơn hàng?",
+                    "Bạn có thể theo dõi đơn hàng trong phần 'Đơn hàng của tôi' bằng cách nhấn vào từng đơn hàng."
+                ),
+                FAQItem(
+                    "Tôi có thể thay đổi địa chỉ giao hàng không?",
+                    "Bạn có thể thay đổi địa chỉ nếu đơn hàng chưa được giao. Liên hệ hỗ trợ ngay."
+                )
+            )
+        ),
+        FAQCategory(
+            title = "Bảo hành & Đổi trả",
+            items = listOf(
+                FAQItem(
+                    "Chính sách bảo hành là gì?",
+                    "Sản phẩm được bảo hành theo chính sách của nhà sản xuất từ 1-24 tháng."
+                ),
+                FAQItem(
+                    "Làm sao để đổi sản phẩm lỗi?",
+                    "Liên hệ hỗ trợ với hình ảnh sản phẩm lỗi. Chúng tôi sẽ sắp xếp đổi hoặc hoàn tiền."
+                ),
+                FAQItem(
+                    "Thời hạn đổi hàng là bao lâu?",
+                    "Bạn có 30 ngày kể từ ngày nhận hàng để yêu cầu đổi hàng lỗi."
+                )
+            )
+        )
+    )
+
+    var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(
         containerColor = backgroundColor,
         topBar = {
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(backgroundColor.copy(alpha = 0.8f))
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .background(cardColor.copy(alpha = 0.8f))
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back", tint = textPrimary)
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Primary
+                    )
                 }
                 Text(
-                    "Hỗ trợ",
-                    color = textPrimary,
+                    text = "Hỗ trợ",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                    style = androidx.compose.ui.text.TextStyle(textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    color = textPrimary,
+                    modifier = Modifier.align(Alignment.Center)
                 )
-                Spacer(modifier = Modifier.size(48.dp))
             }
         }
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Search Bar
-            item {
-                Box(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isDarkTheme) SupportSurfaceDark else Color.Black.copy(alpha = 0.05f))
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = textSecondary)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            "Tìm kiếm câu hỏi...",
-                            color = textSecondary,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
-            }
-            
-            // FAQ Section
-            item {
-                Text(
-                    "Câu hỏi thường gặp",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textPrimary,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                placeholder = {
+                    Text(
+                        "Tìm kiếm câu hỏi...",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        tint = Color.Gray
+                    )
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = cardColor,
+                    unfocusedContainerColor = cardColor,
+                    focusedIndicatorColor = Primary,
+                    unfocusedIndicatorColor = Color.Gray.copy(alpha = 0.2f)
+                ),
+                singleLine = true
+            )
+
+            // FAQ Categories
+            Text(
+                text = "Câu hỏi thường gặp",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = textPrimary
+            )
+
+            faqCategories.forEach { category ->
+                FAQCategoryCard(
+                    category = category,
+                    cardColor = cardColor,
+                    textPrimary = textPrimary,
+                    textSecondary = textSecondary
                 )
             }
+
+            // Contact Support Section
+            Spacer(modifier = Modifier.height(8.dp))
             
-            item {
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    FAQItem("Tài khoản & Bảo mật", "This section contains answers to questions about login, password reset...", surfaceColor, textPrimary, textSecondary)
-                    FAQItem("Thanh toán & Khuyến mãi", "This section contains answers to questions about payment methods...", surfaceColor, textPrimary, textSecondary)
-                    FAQItem("Giao hàng & Vận chuyển", "This section contains answers to questions about shipping times...", surfaceColor, textPrimary, textSecondary)
-                    FAQItem("Bảo hành & Đổi trả", "This section contains answers to questions about the return process...", surfaceColor, textPrimary, textSecondary)
-                }
-            }
-            
-            // Contact Section
-            item {
-                Text(
-                    "Bạn cần thêm trợ giúp?",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textPrimary,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
-                )
-            }
-            
-            item {
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    ContactItem(Icons.Default.ChatBubble, "Trò chuyện trực tiếp", "Get help right away", surfaceColor, textPrimary, textSecondary)
-                    ContactItem(Icons.Default.Mail, "Gửi Email", "We'll get back to you soon", surfaceColor, textPrimary, textSecondary)
-                    ContactItem(Icons.Default.Call, "Gọi tổng đài", "Available 8am - 10pm", surfaceColor, textPrimary, textSecondary)
-                }
-            }
-            
-            item { Spacer(modifier = Modifier.height(32.dp)) }
+            Text(
+                text = "Bạn cần thêm trợ giúp?",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = textPrimary
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Live Chat
+            ContactOption(
+                icon = Icons.Default.ChatBubble,
+                title = "Trò chuyện trực tiếp",
+                description = "Get help right away",
+                cardColor = cardColor,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary,
+                onClick = { /* Open Live Chat */ }
+            )
+
+            // Email Support
+            ContactOption(
+                icon = Icons.Default.Email,
+                title = "Gửi Email",
+                description = "We'll get back to you soon",
+                cardColor = cardColor,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary,
+                onClick = { /* Open Email */ }
+            )
+
+            // Phone Support
+            ContactOption(
+                icon = Icons.Default.Phone,
+                title = "Gọi tổng đài hỗ trợ",
+                description = "Available 8am - 10pm",
+                cardColor = cardColor,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary,
+                onClick = { /* Open Phone Dialer */ }
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
 
 @Composable
-fun FAQItem(
-    title: String,
-    content: String,
-    surfaceColor: Color,
+private fun FAQCategoryCard(
+    category: FAQCategory,
+    cardColor: Color,
     textPrimary: Color,
     textSecondary: Color
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { isExpanded = !isExpanded }
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = category.title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = textPrimary
+                )
+                Icon(
+                    imageVector = Icons.Default.ExpandMore,
+                    contentDescription = "Expand",
+                    tint = Primary,
+                    modifier = Modifier.rotate(if (isExpanded) 180f else 0f)
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column {
+                    HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
+                    
+                    category.items.forEach { item ->
+                        FAQItemContent(
+                            question = item.question,
+                            answer = item.answer,
+                            textPrimary = textPrimary,
+                            textSecondary = textSecondary
+                        )
+                        HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FAQItemContent(
+    question: String,
+    answer: String,
+    textPrimary: Color,
+    textSecondary: Color
+) {
+    var isAnswerExpanded by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(surfaceColor)
-            .clickable { expanded = !expanded }
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .clickable { isAnswerExpanded = !isAnswerExpanded }
+            .padding(16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             Text(
-                text = title,
+                text = question,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = textPrimary
+                fontWeight = FontWeight.SemiBold,
+                color = textPrimary,
+                modifier = Modifier.weight(1f)
             )
             Icon(
                 imageVector = Icons.Default.ExpandMore,
-                contentDescription = null,
-                tint = textSecondary,
-                modifier = Modifier.rotate(if (expanded) 180f else 0f)
+                contentDescription = "Expand Answer",
+                tint = Color.Gray,
+                modifier = Modifier
+                    .size(20.dp)
+                    .rotate(if (isAnswerExpanded) 180f else 0f)
             )
         }
-        
+
         AnimatedVisibility(
-            visible = expanded,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
+            visible = isAnswerExpanded,
+            enter = expandVertically(),
+            exit = shrinkVertically()
         ) {
-            Text(
-                text = content,
-                fontSize = 14.sp,
-                color = textSecondary,
-                modifier = Modifier.padding(top = 8.dp)
-            )
+            Column {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = answer,
+                    fontSize = 13.sp,
+                    color = textSecondary,
+                    lineHeight = 20.sp
+                )
+            }
         }
     }
 }
 
 @Composable
-fun ContactItem(
+private fun ContactOption(
     icon: ImageVector,
     title: String,
-    subtitle: String,
-    surfaceColor: Color,
+    description: String,
+    cardColor: Color,
     textPrimary: Color,
-    textSecondary: Color
+    textSecondary: Color,
+    onClick: () -> Unit
 ) {
-    Row(
+    Card(
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(surfaceColor)
-            .clickable { }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clickable(onClick = onClick)
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(40.dp)
-                .background(ProductPrimary.copy(alpha = 0.2f), CircleShape),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = ProductPrimary, modifier = Modifier.size(24.dp))
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
-            Text(subtitle, fontSize = 12.sp, color = textSecondary)
-        }
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = textSecondary)
-    }
-}
+            Box(
+                modifier = Modifier
+                    .background(color = Primary.copy(alpha = 0.1f), shape = RoundedCornerShape(8.dp))
+                    .padding(12.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = Primary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
-@Preview
-@Composable
-fun PreviewSupportScreen() {
-    SupportScreen()
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = textPrimary
+                )
+                Text(
+                    text = description,
+                    fontSize = 13.sp,
+                    color = textSecondary
+                )
+            }
+
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = "Open",
+                tint = Primary,
+                modifier = Modifier
+                    .size(24.dp)
+                    .rotate(-90f)
+            )
+        }
+    }
 }

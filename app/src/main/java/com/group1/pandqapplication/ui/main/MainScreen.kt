@@ -8,7 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.gson.Gson
 // import com.group1.pandqapplication.ui.common.AccountScreen
+import com.group1.pandqapplication.shared.data.remote.dto.OrderHistoryDto
 import com.group1.pandqapplication.ui.notification.NotificationsScreen
 // import com.group1.pandqapplication.ui.common.OrdersScreen
 import com.group1.pandqapplication.ui.components.BottomNavItem
@@ -17,6 +19,8 @@ import com.group1.pandqapplication.ui.home.HomeScreen
 import com.group1.pandqapplication.ui.navigation.Screen
 import com.group1.pandqapplication.ui.order.OrdersScreen
 import com.group1.pandqapplication.ui.product.ProductDetailScreen
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun MainScreen(
@@ -24,7 +28,7 @@ fun MainScreen(
     onCartClick: () -> Unit,
     onProductClick: () -> Unit,
     onSearchClick: () -> Unit,
-    onOrderClick: () -> Unit
+    onOrderClick: (OrderHistoryDto) -> Unit
 ) {
     val navController = rememberNavController()
 

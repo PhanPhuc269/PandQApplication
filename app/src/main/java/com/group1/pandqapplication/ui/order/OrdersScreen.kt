@@ -43,7 +43,7 @@ data class Order(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrdersScreen(
-    onOrderClick: () -> Unit = {},
+    onOrderClick: (OrderHistoryDto) -> Unit = {},
     viewModel: OrderHistoryViewModel = hiltViewModel(),
     userId: String = "" // Will be passed from parent
 ) {
@@ -216,7 +216,7 @@ fun OrdersScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.orders) { order ->
-                        OrderHistoryItem(order = order, onClick = onOrderClick)
+                        OrderHistoryItem(order = order, onClick = { onOrderClick(order) })
                     }
                     
                     // Load more button if available
