@@ -20,4 +20,10 @@ class OrderRepository @Inject constructor(
     } catch (e: Exception) {
         Result.failure(e)
     }
+
+    suspend fun getOrderDetail(orderId: String): OrderHistoryDto = try {
+        apiService.getOrderDetail(orderId)
+    } catch (e: Exception) {
+        throw e
+    }
 }

@@ -56,5 +56,11 @@ interface AppApiService {
         @Query("page") page: Int? = 0,
         @Query("size") size: Int? = 20
     ): PaginationResponseDto<OrderHistoryDto>
+
+    // Get order detail by ID
+    @GET("api/v1/orders/{orderId}")
+    suspend fun getOrderDetail(
+        @Path("orderId") orderId: String
+    ): OrderHistoryDto
 }
 

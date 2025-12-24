@@ -184,7 +184,7 @@ fun OrderTrackingScreen(
         }
         // Content State
         else if (uiState.order != null) {
-            val currentOrder = uiState.order
+            val currentOrder: OrderHistoryDto = uiState.order!!
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
