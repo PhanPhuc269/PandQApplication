@@ -48,8 +48,9 @@ import com.group1.pandqapplication.shared.ui.theme.SuccessTextSecondaryLight
 
 @Composable
 fun OrderSuccessScreen(
+    orderId: String,
     onCloseClick: () -> Unit = {},
-    onTrackOrderClick: () -> Unit = {},
+    onTrackOrderClick: (String) -> Unit = {},
     onContinueShoppingClick: () -> Unit = {}
 ) {
     val isDarkTheme = false
@@ -184,7 +185,7 @@ fun OrderSuccessScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = onTrackOrderClick,
+                    onClick = { onTrackOrderClick(orderId) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -218,5 +219,5 @@ fun OrderSuccessScreen(
 @Preview
 @Composable
 fun PreviewOrderSuccessScreen() {
-    OrderSuccessScreen()
+    OrderSuccessScreen(orderId = "preview-order-id")
 }

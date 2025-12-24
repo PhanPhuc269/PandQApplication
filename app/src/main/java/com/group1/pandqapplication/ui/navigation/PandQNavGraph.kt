@@ -71,8 +71,8 @@ fun PandQNavGraph(
                 onSearchClick = {
                     navController.navigate(Screen.Search.route)
                 },
-                onOrderClick = {
-                    navController.navigate(Screen.OrderTracking.route)
+                onOrderClick = { orderId ->
+                    navController.navigate(Screen.OrderTracking.createRoute(orderId))
                 },
                 onPersonalInfoClick = {
                     navController.navigate(Screen.PersonalInfo.route)
@@ -81,8 +81,7 @@ fun PandQNavGraph(
                     navController.navigate(Screen.AddressList.route)
                 },                    
                 onNavigateToOrder = { orderId ->
-                    // TODO: Pass orderId to OrderTracking screen when it supports dynamic order
-                    navController.navigate(Screen.OrderTracking.route)
+                    navController.navigate(Screen.OrderTracking.createRoute(orderId))
                 },
                 onNavigateToProduct = { productId ->
                     // TODO: Pass productId to ProductDetail screen when it supports dynamic product
@@ -144,20 +143,29 @@ fun PandQNavGraph(
                 onEditAddressClick = {
                     navController.navigate(Screen.AddressList.route)
                 },
-                onPaymentSuccess = {
+                onPaymentSuccess = { paidOrderId ->
                     // Navigate to success screen and clear back stack to checkout
-                    navController.navigate(Screen.OrderSuccess.route) {
+                    navController.navigate(Screen.OrderSuccess.createRoute(paidOrderId)) {
                         popUpTo(Screen.Checkout.route) { inclusive = true }
                     }
                 },
                 orderId = orderId
             )
         }
-        composable(Screen.OrderTracking.route) {
+        composable(
+            route = Screen.OrderTracking.route,
+            arguments = listOf(navArgument("orderId") { 
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId")
             OrderTrackingScreen(
                 onBackClick = {
                     navController.popBackStack()
-                }
+                },
+                orderId = orderId
             )
         }
         composable(Screen.ShippingAddress.route) {
@@ -221,16 +229,21 @@ fun PandQNavGraph(
                 }
         )
         }
-        composable(Screen.OrderSuccess.route) {
+        composable(
+            route = Screen.OrderSuccess.route,
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val successOrderId = backStackEntry.arguments?.getString("orderId") ?: ""
             com.group1.pandqapplication.ui.order.OrderSuccessScreen(
+                orderId = successOrderId,
                 onCloseClick = {
                     // Go back to home, clearing the payment flow from back stack
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 },
-                onTrackOrderClick = {
-                    navController.navigate(Screen.OrderTracking.route)
+                onTrackOrderClick = { orderId ->
+                    navController.navigate(Screen.OrderTracking.createRoute(orderId))
                 },
                 onContinueShoppingClick = {
                     navController.navigate(Screen.Home.route) {

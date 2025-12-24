@@ -72,7 +72,7 @@ enum class PaymentMethod {
 fun CheckoutScreen(
     onBackClick: () -> Unit = {},
     onEditAddressClick: () -> Unit = {},
-    onPaymentSuccess: () -> Unit = {},
+    onPaymentSuccess: (String) -> Unit = {},
     orderId: String,  // Required: Order ID from cart
     viewModel: CheckoutViewModel = hiltViewModel()
 ) {
@@ -121,7 +121,7 @@ fun CheckoutScreen(
     // Handle payment success
     LaunchedEffect(uiState.paymentSuccess) {
         if (uiState.paymentSuccess) {
-            onPaymentSuccess()
+            onPaymentSuccess(orderId)
             viewModel.resetPaymentState()
         }
     }

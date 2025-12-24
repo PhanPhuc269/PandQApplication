@@ -24,10 +24,10 @@ fun MainScreen(
     onCartClick: () -> Unit,
     onProductClick: (String) -> Unit,
     onSearchClick: () -> Unit,
-    onOrderClick: () -> Unit,
+    onOrderClick: (String) -> Unit, // orderId parameter
     onPersonalInfoClick: () -> Unit = {},
     onAddressListClick: () -> Unit = {},
-    onNavigateToOrder: (String?) -> Unit = { _ -> onOrderClick() }, // Navigate to order with optional orderId
+    onNavigateToOrder: (String?) -> Unit = { orderId -> orderId?.let { onOrderClick(it) } }, // Navigate to order with orderId
     onNavigateToProduct: (String?) -> Unit = { id -> id?.let { onProductClick(it) } }, // Navigate to product with optional productId
     onNavigateToPromotion: (String?) -> Unit = { _ -> } // Navigate to promotion
 ) {

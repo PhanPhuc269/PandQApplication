@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,13 +31,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,13 +54,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.group1.pandqapplication.shared.data.remote.dto.OrderDto
 import com.group1.pandqapplication.shared.ui.theme.BackgroundDark
 import com.group1.pandqapplication.shared.ui.theme.BackgroundLight
 import com.group1.pandqapplication.shared.ui.theme.CardDark
@@ -72,9 +74,22 @@ import com.group1.pandqapplication.shared.ui.theme.TextLightSecondary
 
 @Composable
 fun OrderTrackingScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    orderId: String? = null,
+    order: OrderDto? = null, // Can pass order directly from navigation
+    viewModel: OrderTrackingViewModel = hiltViewModel()
 ) {
-    val isDarkTheme = false // You can hook this up to system theme
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Load order from API or set from param
+    LaunchedEffect(orderId, order) {
+        when {
+            order != null -> viewModel.setOrder(order)
+            orderId != null -> viewModel.loadOrder(orderId)
+        }
+    }
+    
+    val isDarkTheme = false
     
     val backgroundColor = if (isDarkTheme) BackgroundDark else BackgroundLight
     val cardColor = if (isDarkTheme) CardDark else CardLight
@@ -133,241 +148,268 @@ fun OrderTrackingScreen(
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            // Order Summary Card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = cardColor),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Primary)
+                }
+            }
+            uiState.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Đơn hàng #123456",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = textPrimary
+                            text = uiState.error ?: "Đã xảy ra lỗi",
+                            color = Color.Gray,
+                            fontSize = 14.sp
                         )
-                        Text(
-                            text = "24/08/2024",
-                            fontSize = 14.sp,
-                            color = textSecondary
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row {
-                        Text(
-                            text = "Dự kiến giao hàng: ",
-                            fontSize = 14.sp,
-                            color = textSecondary
-                        )
-                        Text(
-                            text = "28/08/2024",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = textPrimary
-                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { orderId?.let { viewModel.loadOrder(it) } },
+                            colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                        ) {
+                            Text("Thử lại")
+                        }
                     }
                 }
             }
-
-            // Visual Progress Tracker
-            Card(
-                colors = CardDefaults.cardColors(containerColor = cardColor),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            uiState.order != null -> {
+                val currentOrder = uiState.order!!
+                
                 Column(
                     modifier = Modifier
-                        .padding(20.dp)
-                        .padding(start = 0.dp) // Adjust for custom drawing
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    TrackingStep(
-                        icon = Icons.Default.ReceiptLong,
-                        title = "Đã đặt hàng",
-                        subtitle = "Đơn hàng của bạn đã được tiếp nhận",
-                        isActive = true,
-                        isLast = false,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary
-                    )
-                    TrackingStep(
-                        icon = Icons.Default.Verified,
-                        title = "Đã xác nhận",
-                        subtitle = "Chúng tôi đang chuẩn bị đơn hàng",
-                        isActive = true,
-                        isLast = false,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary
-                    )
-                    TrackingStep(
-                        icon = Icons.Default.LocalShipping,
-                        title = "Đang vận chuyển",
-                        subtitle = "Đã giao cho đơn vị vận chuyển",
-                        isActive = true,
-                        isLast = false,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary
-                    )
-                    TrackingStep(
-                        icon = Icons.Default.Inventory2,
-                        title = "Đã giao hàng",
-                        subtitle = "Dự kiến giao trong hôm nay",
-                        isActive = false,
-                        isLast = true,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary
-                    )
-                }
-            }
-
-            // Status Updates Section
-            Card(
-                colors = CardDefaults.cardColors(containerColor = cardColor),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = "Cập nhật trạng thái",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    
-                    StatusUpdateItem(
-                        time = "10:30 AM",
-                        title = "Tài xế đang giao hàng",
-                        subtitle = "Đơn hàng của bạn sẽ sớm được giao",
-                        isActive = true,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        cardColor = cardColor
-                    )
-                    StatusUpdateItem(
-                        time = "08:15 AM",
-                        title = "Đơn hàng đã đến kho",
-                        subtitle = "Kho phân loại tại TP. Hồ Chí Minh",
-                        isActive = false,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        cardColor = cardColor
-                    )
-                    StatusUpdateItem(
-                        time = "02:00 AM",
-                        title = "Đơn hàng rời kho",
-                        subtitle = "Kho tổng tại Hà Nội",
-                        isActive = false,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        cardColor = cardColor
-                    )
-                }
-            }
-
-            // Order Details Section
-            var isExpanded by remember { mutableStateOf(false) }
-            val rotationState by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f,
-                label = "rotation"
-            )
-
-            Card(
-                colors = CardDefaults.cardColors(containerColor = cardColor),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { isExpanded = !isExpanded }
-                            .padding(20.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Order Summary Card
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = cardColor),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = "Xem chi tiết đơn hàng",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = textPrimary
-                        )
-                        Icon(
-                            imageVector = Icons.Default.ExpandMore,
-                            contentDescription = "Expand",
-                            tint = textSecondary,
-                            modifier = Modifier.rotate(rotationState)
-                        )
-                    }
-                    
-                    AnimatedVisibility(visible = isExpanded) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(width = 1.dp, color = Color.Gray.copy(alpha = 0.1f))
-                                .padding(horizontal = 20.dp, vertical = 16.dp)
-                        ) {
-                            HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
-                            
-                            ProductItem(
-                                imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuD2QLgAw-PbKaZBCry2SmZ-6Al3osT32sT83U8trPV2KBau97NH24hvyGHemPk4kCyBmTkS0bGQiW-i3oOZais9LHXsjg3f52HQ23ZuKYNOb2y4rJh8fxy3Aw4KHhC9lZNAWkg-nUHYhMdNQZaozH3hk5fdA4oWeQAuIIouc4KQrF1udwchHowVXsESI6jo67RJk1tmsqRlsmjHS331wcEFMZlq9eYzoIL_g9o5zB6aVgEhqnYOhhM1M-vXJclaPY1PG-RzNIw9kNg",
-                                name = "Smartphone Model X",
-                                quantity = 1,
-                                price = "15.000.000₫",
-                                textPrimary = textPrimary,
-                                textSecondary = textSecondary
-                            )
-                            
-                            ProductItem(
-                                imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDKLRtOQfHBkwMEYYlUfBvnQ_6DhpscO4aDKVefohRTPsLi2ZSHFnzBO2LdYylYEvoso-AtcdKFZbEvdLQd7ywfDosD-nWrZwpWNMM1inUfltWXg0ljMpKCmSA4hTFSpu5rioV3LqNEHp164ViuRJNWEavn4FUcihLUARWEkxuhaVh6ye3gD-isjmMOMw_EpOGV92dp96CheJZV2ywUeXD9GqzMRHtKg86sGRHRDKocokd3BuglNFB6quX95webZBaIvA2ZePadjCQ",
-                                name = "Tai nghe Pro",
-                                quantity = 1,
-                                price = "5.000.000₫",
-                                textPrimary = textPrimary,
-                                textSecondary = textSecondary
-                            )
-
-                            HorizontalDivider(
-                                modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
-                                color = Color.Gray.copy(alpha = 0.2f)
-                            )
-                            
+                        Column(modifier = Modifier.padding(20.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Tổng cộng",
+                                    text = "Đơn hàng #${currentOrder.id.take(8)}",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = textPrimary
                                 )
                                 Text(
-                                    text = "20.000.000₫",
+                                    text = OrderTrackingViewModel.formatDate(currentOrder.createdAt),
+                                    fontSize = 14.sp,
+                                    color = textSecondary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row {
+                                Text(
+                                    text = "Dự kiến giao hàng: ",
+                                    fontSize = 14.sp,
+                                    color = textSecondary
+                                )
+                                Text(
+                                    text = OrderTrackingViewModel.calculateEstimatedDelivery(currentOrder.createdAt),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = textPrimary
+                                )
+                            }
+                        }
+                    }
+
+                    // Visual Progress Tracker
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = cardColor),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(20.dp)
+                                .padding(start = 0.dp)
+                        ) {
+                            uiState.trackingSteps.forEachIndexed { index, step ->
+                                TrackingStep(
+                                    icon = when (step.iconType) {
+                                        TrackingIconType.ORDER_PLACED -> Icons.Default.ReceiptLong
+                                        TrackingIconType.CONFIRMED -> Icons.Default.Verified
+                                        TrackingIconType.SHIPPING -> Icons.Default.LocalShipping
+                                        TrackingIconType.DELIVERED -> Icons.Default.Inventory2
+                                    },
+                                    title = step.title,
+                                    subtitle = step.subtitle,
+                                    isActive = step.isActive,
+                                    isLast = index == uiState.trackingSteps.lastIndex,
+                                    textPrimary = textPrimary,
+                                    textSecondary = textSecondary
+                                )
+                            }
+                        }
+                    }
+
+                    // Status Updates Section
+                    if (uiState.statusUpdates.isNotEmpty()) {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = cardColor),
+                            shape = RoundedCornerShape(12.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(20.dp)) {
+                                Text(
+                                    text = "Cập nhật trạng thái",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = textPrimary,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                
+                                uiState.statusUpdates.forEach { update ->
+                                    StatusUpdateItem(
+                                        time = update.time,
+                                        title = update.title,
+                                        subtitle = update.subtitle,
+                                        isActive = update.isActive,
+                                        textPrimary = textPrimary,
+                                        textSecondary = textSecondary,
+                                        cardColor = cardColor
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Order Details Section
+                    var isExpanded by remember { mutableStateOf(false) }
+                    val rotationState by animateFloatAsState(
+                        targetValue = if (isExpanded) 180f else 0f,
+                        label = "rotation"
+                    )
+
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = cardColor),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { isExpanded = !isExpanded }
+                                    .padding(20.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Xem chi tiết đơn hàng",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = textPrimary
                                 )
+                                Icon(
+                                    imageVector = Icons.Default.ExpandMore,
+                                    contentDescription = "Expand",
+                                    tint = textSecondary,
+                                    modifier = Modifier.rotate(rotationState)
+                                )
+                            }
+                            
+                            AnimatedVisibility(visible = isExpanded) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .border(width = 1.dp, color = Color.Gray.copy(alpha = 0.1f))
+                                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                                ) {
+                                    HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
+                                    
+                                    // Display actual order items
+                                    currentOrder.items.forEach { item ->
+                                        ProductItem(
+                                            imageUrl = item.imageUrl ?: "",
+                                            name = item.productName,
+                                            quantity = item.quantity,
+                                            price = OrderTrackingViewModel.formatPrice(item.totalPrice),
+                                            textPrimary = textPrimary,
+                                            textSecondary = textSecondary
+                                        )
+                                    }
+
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
+                                        color = Color.Gray.copy(alpha = 0.2f)
+                                    )
+                                    
+                                    // Summary
+                                    SummaryRow("Tạm tính", OrderTrackingViewModel.formatPrice(currentOrder.totalAmount), textSecondary, textPrimary)
+                                    SummaryRow("Phí vận chuyển", OrderTrackingViewModel.formatPrice(currentOrder.shippingFee), textSecondary, textPrimary)
+                                    if (currentOrder.discountAmount > 0) {
+                                        SummaryRow("Giảm giá", "-${OrderTrackingViewModel.formatPrice(currentOrder.discountAmount)}", textSecondary, Primary)
+                                    }
+                                    
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "Tổng cộng",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = textPrimary
+                                        )
+                                        Text(
+                                            text = OrderTrackingViewModel.formatPrice(currentOrder.finalAmount),
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = textPrimary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SummaryRow(
+    label: String,
+    value: String,
+    labelColor: Color,
+    valueColor: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, fontSize = 14.sp, color = labelColor)
+        Text(text = value, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = valueColor)
     }
 }
 
@@ -387,7 +429,7 @@ fun TrackingStep(
             .drawBehind {
                 if (!isLast) {
                     drawLine(
-                        color = if (isActive) Color.LightGray else Color.LightGray, // Ideally use theme color
+                        color = if (isActive) Color.LightGray else Color.LightGray,
                         start = Offset(18.dp.toPx(), 40.dp.toPx()),
                         end = Offset(18.dp.toPx(), size.height),
                         strokeWidth = 2.dp.toPx(),
@@ -396,10 +438,9 @@ fun TrackingStep(
                 }
             }
     ) {
-        // Icon
         Box(
             modifier = Modifier
-                .padding(start = 2.dp) // Fine tune alignment
+                .padding(start = 2.dp)
                 .size(36.dp)
                 .background(
                     color = if (isActive) Primary else Color.Transparent,
@@ -467,7 +508,6 @@ fun StatusUpdateItem(
         
         Column {
             Row(verticalAlignment = Alignment.Top) {
-                // Dot
                 Box(
                     modifier = Modifier
                         .padding(top = 6.dp)
@@ -476,7 +516,7 @@ fun StatusUpdateItem(
                             color = if (isActive) Primary else Color.LightGray,
                             shape = CircleShape
                         )
-                        .border(4.dp, cardColor, CircleShape) // Ring effect
+                        .border(4.dp, cardColor, CircleShape)
                 )
                 
                 Spacer(modifier = Modifier.width(12.dp))
