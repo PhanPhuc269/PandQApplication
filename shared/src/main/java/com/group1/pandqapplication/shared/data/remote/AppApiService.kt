@@ -18,6 +18,7 @@ import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayCreateOrderRequ
 import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayCreateOrderResponse
 import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayStatusResponse
 import com.group1.pandqapplication.shared.data.remote.dto.ReviewDto
+import com.group1.pandqapplication.shared.data.remote.dto.OrderDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -141,6 +142,13 @@ interface AppApiService {
 
     @DELETE("api/v1/addresses/{id}")
     suspend fun deleteAddress(@retrofit2.http.Path("id") id: String)
+
+    // Order endpoints
+    @GET("api/v1/orders/user/{userId}")
+    suspend fun getOrdersByUserId(@Path("userId") userId: String): List<OrderDto>
+
+    @GET("api/v1/orders/{id}")
+    suspend fun getOrderById(@Path("id") orderId: String): OrderDto
 }
 
 
