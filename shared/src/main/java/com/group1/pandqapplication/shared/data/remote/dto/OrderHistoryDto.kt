@@ -34,5 +34,7 @@ data class OrderItemDto(
     val quantity: Int,
     val price: BigDecimal,
     @SerializedName("total_price")
-    val totalPrice: BigDecimal
+    val totalPrice: BigDecimal,
+    @SerializedName("image_url")
+    val imageUrl: String? = null
 )
