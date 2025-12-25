@@ -22,8 +22,40 @@ fun PandQNavGraph(
     navController: NavHostController = rememberNavController(),
     startDestination: String = Screen.Onboarding.route,
     destinationAfterSplash: String = Screen.Onboarding.route,
-    mainViewModel: MainViewModel = hiltViewModel()
+    mainViewModel: MainViewModel = hiltViewModel(),
+    pendingDeepLink: String? = null,
+    onDeepLinkHandled: () -> Unit = {}
 ) {
+    // Handle deep link from push notification
+    androidx.compose.runtime.LaunchedEffect(pendingDeepLink) {
+        pendingDeepLink?.let { deepLink ->
+            android.util.Log.d("DeepLink", "Processing deep link: $deepLink")
+            // Parse deep link format: pandq://orders/{orderId}
+            when {
+                deepLink.contains("orders/") -> {
+                    val orderId = deepLink.substringAfterLast("orders/")
+                    if (orderId.isNotEmpty()) {
+                        android.util.Log.d("DeepLink", "Navigating to order: $orderId")
+                        navController.navigate(Screen.OrderTracking.createRoute(orderId))
+                    }
+                }
+                deepLink.contains("products/") -> {
+                    val productId = deepLink.substringAfterLast("products/")
+                    if (productId.isNotEmpty()) {
+                        navController.navigate(Screen.ProductDetail.createRoute(productId))
+                    }
+                }
+                deepLink.contains("home") -> {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(navController.graph.startDestinationId)
+                        launchSingleTop = true
+                    }
+                }
+            }
+            onDeepLinkHandled()
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination
