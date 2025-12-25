@@ -80,7 +80,9 @@ fun LoginScreen(
     var isLoginTab by remember { mutableStateOf(true) } // true for Login, false for Register
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     // Google Sign-In
     val googleSignInClient = remember {
@@ -255,7 +257,38 @@ fun LoginScreen(
                         }
                     }
                 } else {
-                    Spacer(modifier = Modifier.height(24.dp)) // Extra space if no "Forgot Password"
+                    // Confirm Password field for Register
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Nhập lại mật khẩu", fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        placeholder = { Text("Nhập lại mật khẩu của bạn") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                Icon(
+                                    imageVector = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                    contentDescription = "Toggle password visibility"
+                                )
+                            }
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = primaryColor,
+                            unfocusedBorderColor = Color(0xFFCBD5E1),
+                            focusedContainerColor = Color(0xFFF1F5F9),
+                            unfocusedContainerColor = Color(0xFFF1F5F9)
+                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        isError = confirmPassword.isNotEmpty() && password != confirmPassword,
+                        supportingText = if (confirmPassword.isNotEmpty() && password != confirmPassword) {
+                            { Text("Mật khẩu không khớp", color = MaterialTheme.colorScheme.error) }
+                        } else null
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 // CTA Button
@@ -264,7 +297,13 @@ fun LoginScreen(
                         if (isLoginTab) {
                             viewModel.login(email, password)
                         } else {
-                            viewModel.register(email, password)
+                            if (password != confirmPassword) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Mật khẩu không khớp. Vui lòng kiểm tra lại.")
+                                }
+                            } else {
+                                viewModel.register(email, password)
+                            }
                         }
                     },
                     modifier = Modifier
