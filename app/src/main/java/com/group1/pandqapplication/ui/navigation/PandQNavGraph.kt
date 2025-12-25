@@ -92,6 +92,12 @@ fun PandQNavGraph(
                 onNavigateToPromotion = { promoId ->
                     // TODO: Navigate to promotion screen when available
                     // For now, stay on current screen
+                },
+                onSupportClick = {
+                    navController.navigate(Screen.Support.route)
+                },
+                onPolicyClick = {
+                    navController.navigate(Screen.Policy.route)
                 }
             )
         }
@@ -296,6 +302,13 @@ fun PandQNavGraph(
                 isSubmitting = uiState.isSubmittingReview,
                 errorMessage = uiState.reviewSubmitError,
                 onDismissError = { viewModel.clearReviewSubmitState() }
+            )                
+        }                
+        composable(Screen.Policy.route) {
+            com.group1.pandqapplication.ui.policy.PolicyScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
             )
         }
     }
