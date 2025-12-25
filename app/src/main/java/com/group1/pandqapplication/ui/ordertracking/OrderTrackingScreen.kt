@@ -75,6 +75,7 @@ import com.group1.pandqapplication.shared.ui.theme.TextLightSecondary
 @Composable
 fun OrderTrackingScreen(
     onBackClick: () -> Unit = {},
+    onSupportClick: () -> Unit = {},
     orderId: String? = null,
     order: OrderDto? = null, // Can pass order directly from navigation
     viewModel: OrderTrackingViewModel = hiltViewModel()
@@ -131,7 +132,7 @@ fun OrderTrackingScreen(
                     .padding(16.dp)
             ) {
                 Button(
-                    onClick = { /* Contact Support */ },
+                    onClick = onSupportClick,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -230,6 +231,31 @@ fun OrderTrackingScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     color = textPrimary
                                 )
+                            }
+                            
+                            // Status Badge for cancelled/failed orders
+                            if (currentOrder.status.uppercase() in listOf("CANCELLED", "FAILED", "RETURNED")) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            color = Color(0xFFFFEBEE),
+                                            shape = RoundedCornerShape(4.dp)
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = when (currentOrder.status.uppercase()) {
+                                            "CANCELLED" -> "Đã hủy"
+                                            "FAILED" -> "Thất bại"
+                                            "RETURNED" -> "Đã trả hàng"
+                                            else -> currentOrder.status
+                                        },
+                                        color = Color(0xFFD32F2F),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
                         }
                     }
@@ -342,20 +368,130 @@ fun OrderTrackingScreen(
                                 ) {
                                     HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
                                     
-                                    // Display actual order items
-                                    currentOrder.items.forEach { item ->
-                                        ProductItem(
-                                            imageUrl = item.imageUrl ?: "",
-                                            name = item.productName,
-                                            quantity = item.quantity,
-                                            price = OrderTrackingViewModel.formatPrice(item.totalPrice),
-                                            textPrimary = textPrimary,
-                                            textSecondary = textSecondary
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    
+                                    // Order ID
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "Mã đơn hàng",
+                                            fontSize = 14.sp,
+                                            color = textSecondary
                                         )
+                                        Text(
+                                            text = "#${currentOrder.id.take(8).uppercase()}",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = textPrimary
+                                        )
+                                    }
+                                    
+                                    // Order Date
+                                    if (!currentOrder.createdAt.isNullOrBlank()) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "Ngày đặt hàng",
+                                                fontSize = 14.sp,
+                                                color = textSecondary
+                                            )
+                                            Text(
+                                                text = OrderTrackingViewModel.formatDate(currentOrder.createdAt),
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = textPrimary
+                                            )
+                                        }
+                                    }
+                                    
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = 12.dp),
+                                        color = Color.Gray.copy(alpha = 0.2f)
+                                    )
+                                    
+                                    // Section title: Products
+                                    Text(
+                                        text = "Sản phẩm",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = textPrimary,
+                                        modifier = Modifier.padding(bottom = 12.dp)
+                                    )
+                                    
+                                    // Display actual order items
+                                    if (currentOrder.items.isEmpty()) {
+                                        Text(
+                                            text = "Không có thông tin sản phẩm",
+                                            fontSize = 14.sp,
+                                            color = textSecondary,
+                                            modifier = Modifier.padding(vertical = 8.dp)
+                                        )
+                                    } else {
+                                        currentOrder.items.forEach { item ->
+                                            ProductItem(
+                                                imageUrl = item.imageUrl ?: "",
+                                                name = item.productName,
+                                                quantity = item.quantity,
+                                                price = OrderTrackingViewModel.formatPrice(item.totalPrice),
+                                                textPrimary = textPrimary,
+                                                textSecondary = textSecondary
+                                            )
+                                        }
                                     }
 
                                     HorizontalDivider(
                                         modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
+                                        color = Color.Gray.copy(alpha = 0.2f)
+                                    )
+                                    
+                                    // Shipping Address
+                                    if (!currentOrder.shippingAddress.isNullOrBlank()) {
+                                        Text(
+                                            text = "Địa chỉ giao hàng",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = textPrimary
+                                        )
+                                        Text(
+                                            text = currentOrder.shippingAddress ?: "",
+                                            fontSize = 13.sp,
+                                            color = textSecondary,
+                                            modifier = Modifier.padding(bottom = 12.dp)
+                                        )
+                                    }
+                                    
+                                    // Payment Method
+                                    if (!currentOrder.paymentMethod.isNullOrBlank()) {
+                                        Row(
+                                            modifier = Modifier.padding(bottom = 12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Thanh toán: ",
+                                                fontSize = 14.sp,
+                                                color = textSecondary
+                                            )
+                                            Text(
+                                                text = when (currentOrder.paymentMethod?.uppercase()) {
+                                                    "COD" -> "Thanh toán khi nhận hàng"
+                                                    "ZALOPAY" -> "ZaloPay"
+                                                    "SEPAY" -> "SePay"
+                                                    "MOMO" -> "MoMo"
+                                                    else -> currentOrder.paymentMethod ?: ""
+                                                },
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = textPrimary
+                                            )
+                                        }
+                                    }
+                                    
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = 8.dp),
                                         color = Color.Gray.copy(alpha = 0.2f)
                                     )
                                     
@@ -554,15 +690,29 @@ fun ProductItem(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = name,
+        Box(
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color.Gray.copy(alpha = 0.1f)),
-            contentScale = ContentScale.Crop
-        )
+            contentAlignment = Alignment.Center
+        ) {
+            if (imageUrl.isNotBlank()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = name,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = "📦",
+                    fontSize = 24.sp
+                )
+            }
+        }
         
         Spacer(modifier = Modifier.width(16.dp))
         
