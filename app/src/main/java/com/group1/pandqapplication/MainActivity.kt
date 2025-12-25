@@ -9,6 +9,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
@@ -25,10 +27,16 @@ import vn.zalopay.sdk.ZaloPaySDK
 class MainActivity : ComponentActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
+    
+    // Deep link from push notification
+    private var pendingDeepLink by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // Handle deep link from notification if app was launched from notification
+        handleNotificationDeepLink(intent)
         
         setContent {
             val networkStatus by mainViewModel.networkStatus.collectAsState()
@@ -45,7 +53,9 @@ class MainActivity : ComponentActivity() {
                     
                     PandQNavGraph(
                         startDestination = startDestination,
-                        destinationAfterSplash = destinationAfterSplash
+                        destinationAfterSplash = destinationAfterSplash,
+                        pendingDeepLink = pendingDeepLink,
+                        onDeepLinkHandled = { pendingDeepLink = null }
                     )
 
                     if (networkStatus == ConnectivityObserver.Status.Unavailable || 
@@ -63,5 +73,19 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         ZaloPaySDK.getInstance().onResult(intent)
+        
+        // Also handle deep link if app is already open and notification is clicked
+        handleNotificationDeepLink(intent)
+    }
+    
+    /**
+     * Parse notification intent and extract deep link URL
+     * Format: pandq://orders/{orderId}
+     */
+    private fun handleNotificationDeepLink(intent: Intent?) {
+        intent?.getStringExtra("target_url")?.let { targetUrl ->
+            Log.d("DeepLink", "Received deep link from notification: $targetUrl")
+            pendingDeepLink = targetUrl
+        }
     }
 }
