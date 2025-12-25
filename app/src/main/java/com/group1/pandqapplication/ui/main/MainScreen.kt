@@ -27,6 +27,8 @@ fun MainScreen(
     onOrderClick: (String) -> Unit, // orderId parameter
     onPersonalInfoClick: () -> Unit = {},
     onAddressListClick: () -> Unit = {},
+    onSupportClick: () -> Unit = {},
+    onPolicyClick: () -> Unit = {},
     onNavigateToOrder: (String?) -> Unit = { orderId -> orderId?.let { onOrderClick(it) } }, // Navigate to order with orderId
     onNavigateToProduct: (String?) -> Unit = { id -> id?.let { onProductClick(it) } }, // Navigate to product with optional productId
     onNavigateToPromotion: (String?) -> Unit = { _ -> } // Navigate to promotion
@@ -90,7 +92,9 @@ fun MainScreen(
                     com.group1.pandqapplication.ui.account.AccountScreen(
                         onLogout = onLogout,
                         onNavigateToPersonalInfo = onPersonalInfoClick,
-                        onNavigateToAddressList = onAddressListClick
+                        onNavigateToAddressList = onAddressListClick,
+                        onNavigateToSupport = onSupportClick,
+                        onNavigateToPolicy = onPolicyClick
                     )
                 }
             }

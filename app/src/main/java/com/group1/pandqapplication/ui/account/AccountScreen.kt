@@ -38,7 +38,9 @@ fun AccountScreen(
     onLogout: () -> Unit,
     viewModel: AccountViewModel = hiltViewModel(),
     onNavigateToPersonalInfo: () -> Unit = {},
-    onNavigateToAddressList: () -> Unit = {}
+    onNavigateToAddressList: () -> Unit = {},
+    onNavigateToSupport: () -> Unit = {},
+    onNavigateToPolicy: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val backgroundColor = Color(0xFFF8F6F6)
@@ -212,8 +214,6 @@ fun AccountScreen(
                     primaryColor = primaryColor,
                     onClick = onNavigateToAddressList
                 )
-                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
-                SectionItem(icon = Icons.Outlined.ReceiptLong, label = "Lịch sử đơn hàng", primaryColor = primaryColor)
             }
             
             // Settings Section
@@ -227,7 +227,19 @@ fun AccountScreen(
             // Support Section
             Spacer(modifier = Modifier.height(20.dp))
             SectionContainer {
-                SectionItem(icon = Icons.Outlined.HelpOutline, label = "Hỗ trợ", primaryColor = primaryColor)
+                SectionItem(
+                    icon = Icons.Outlined.HelpOutline, 
+                    label = "Hỗ trợ", 
+                    primaryColor = primaryColor,
+                    onClick = onNavigateToSupport
+                )
+                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                SectionItem(
+                    icon = Icons.Outlined.Description, 
+                    label = "Chính sách & Điều khoản", 
+                    primaryColor = primaryColor,
+                    onClick = onNavigateToPolicy
+                )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 SectionItem(
                     icon = Icons.Filled.Logout, 

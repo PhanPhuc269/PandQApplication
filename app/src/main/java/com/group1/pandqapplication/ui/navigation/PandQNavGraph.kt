@@ -90,6 +90,12 @@ fun PandQNavGraph(
                 onNavigateToPromotion = { promoId ->
                     // TODO: Navigate to promotion screen when available
                     // For now, stay on current screen
+                },
+                onSupportClick = {
+                    navController.navigate(Screen.Support.route)
+                },
+                onPolicyClick = {
+                    navController.navigate(Screen.Policy.route)
                 }
             )
         }
@@ -249,6 +255,20 @@ fun PandQNavGraph(
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
+                }
+            )
+        }
+        composable(Screen.Support.route) {
+            com.group1.pandqapplication.ui.support.SupportScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(Screen.Policy.route) {
+            com.group1.pandqapplication.ui.policy.PolicyScreen(
+                onBackClick = {
+                    navController.popBackStack()
                 }
             )
         }

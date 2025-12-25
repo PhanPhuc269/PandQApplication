@@ -108,7 +108,7 @@ fun HomeScreen(
                     modifier = Modifier.size(28.dp)
                 )
                 Text(
-                    text = "ElectroStore",
+                    text = "PandQ",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF111827)
