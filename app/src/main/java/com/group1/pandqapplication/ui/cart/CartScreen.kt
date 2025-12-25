@@ -19,9 +19,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,17 +50,17 @@ fun CartScreen(
     onBackClick: () -> Unit,
     onCheckoutClick: (orderId: String) -> Unit,
     userId: String = "",
+    onLoginRequired: () -> Unit = {},
     viewModel: CartViewModel = hiltViewModel()
 ) {
     val primaryColor = Color(0xFFec3713)
     val backgroundColor = Color(0xFFF8F6F6)
     val uiState by viewModel.uiState.collectAsState()
+    var showLoginDialog by remember { mutableStateOf(false) }
 
-    // Load cart when screen appears
+    // Load cart when screen appears (for both guest and logged-in users)
     LaunchedEffect(userId) {
-        if (userId.isNotEmpty()) {
-            viewModel.loadCart(userId)
-        }
+        viewModel.loadCart(userId)
     }
 
     val totalPrice = uiState.cart?.items?.sumOf { it.price * it.quantity } ?: 0.0
@@ -119,8 +123,12 @@ fun CartScreen(
                        Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick = { 
-                                uiState.cart?.id?.let { orderId ->
-                                    onCheckoutClick(orderId)
+                                if (userId.isEmpty()) {
+                                    showLoginDialog = true
+                                } else {
+                                    uiState.cart?.id?.let { orderId ->
+                                        onCheckoutClick(orderId)
+                                    }
                                 }
                             },
                             enabled = uiState.cart?.id != null,
@@ -156,7 +164,7 @@ fun CartScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Lỗi: ${uiState.error}", color = Color.Red)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { if (userId.isNotEmpty()) viewModel.loadCart(userId) }) {
+                        Button(onClick = { viewModel.loadCart(userId) }) {
                             Text("Thử lại")
                         }
                     }
@@ -194,6 +202,121 @@ fun CartScreen(
                             }
                         )
                         HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                    }
+                }
+            }
+        }
+    }
+
+    // Login confirmation dialog for guests
+    if (showLoginDialog) {
+        Dialog(
+            onDismissRequest = { showLoginDialog = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .background(Color.White, shape = RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(16.dp))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Icon
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(primaryColor.copy(alpha = 0.1f), shape = CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Login",
+                            tint = primaryColor,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Title
+                    Text(
+                        "Yêu cầu đăng nhập",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Message
+                    Text(
+                        "Vui lòng đăng nhập để tiếp tục thanh toán và bảo vệ đơn hàng của bạn",
+                        fontSize = 14.sp,
+                        color = Color(0xFF666666),
+                        textAlign = TextAlign.Center,
+                        lineHeight = 20.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    // Divider
+                    HorizontalDivider(
+                        color = Color(0xFFEEEEEE),
+                        thickness = 1.dp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Login Button
+                    Button(
+                        onClick = {
+                            showLoginDialog = false
+                            onLoginRequired()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = primaryColor
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 4.dp,
+                            pressedElevation = 8.dp
+                        )
+                    ) {
+                        Text(
+                            "Đăng nhập",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                            color = Color.White
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Cancel Button
+                    OutlinedButton(
+                        onClick = { showLoginDialog = false },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.5.dp, primaryColor)
+                    ) {
+                        Text(
+                            "Hủy",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                            color = primaryColor
+                        )
                     }
                 }
             }

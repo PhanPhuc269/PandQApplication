@@ -3,8 +3,12 @@ package com.group1.pandqapplication.ui.product
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.group1.pandqapplication.data.repository.ProductRepository
 import com.group1.pandqapplication.shared.data.repository.AuthRepository
+import com.group1.pandqapplication.shared.data.repository.GuestCartRepository
+import com.group1.pandqapplication.shared.data.repository.GuestCartRepositoryImpl
 import com.group1.pandqapplication.shared.data.remote.ApiService
 import com.group1.pandqapplication.shared.data.remote.dto.AddToCartRequest
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDetailDto
@@ -39,13 +43,17 @@ class ProductDetailViewModel @Inject constructor(
     private val repository: ProductRepository,
     private val apiService: ApiService,
     private val authRepository: AuthRepository,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
     val uiState: StateFlow<ProductDetailUiState> = _uiState.asStateFlow()
 
     private val productId: String = savedStateHandle.get<String>("productId") ?: ""
+    private val guestCartRepository: GuestCartRepository by lazy {
+        GuestCartRepositoryImpl(context)
+    }
 
     init {
         if (productId.isNotEmpty()) {
@@ -186,21 +194,51 @@ class ProductDetailViewModel @Inject constructor(
                 addToCartSuccess = false
             )
             try {
-                val request = AddToCartRequest(
-                    userId = userId,
-                    productId = productId,
-                    quantity = _uiState.value.quantity
-                )
-                val response = apiService.addToCart(request)
-                if (response.isSuccessful) {
-                    _uiState.value = _uiState.value.copy(
-                        addToCartSuccess = true,
-                        quantity = 1  // Reset quantity after adding
-                    )
+                // If user is guest (empty userId)
+                if (userId.isEmpty()) {
+                    // Add to local guest cart
+                    val product = _uiState.value.product
+                    if (product != null) {
+                        try {
+                            guestCartRepository.addToGuestCart(
+                                productId = productId,
+                                productName = product.name,
+                                quantity = _uiState.value.quantity,
+                                price = product.price.toDouble(),
+                                imageUrl = product.images?.firstOrNull()?.imageUrl
+                            )
+                            _uiState.value = _uiState.value.copy(
+                                addToCartSuccess = true,
+                                quantity = 1  // Reset quantity after adding
+                            )
+                        } catch (e: Exception) {
+                            _uiState.value = _uiState.value.copy(
+                                addToCartError = "Lỗi thêm vào giỏ hàng: ${e.message}"
+                            )
+                        }
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            addToCartError = "Không thể tải thông tin sản phẩm"
+                        )
+                    }
                 } else {
-                    _uiState.value = _uiState.value.copy(
-                        addToCartError = response.message() ?: "Không thể thêm vào giỏ hàng"
+                    // Add to server cart for logged-in user
+                    val request = AddToCartRequest(
+                        userId = userId,
+                        productId = productId,
+                        quantity = _uiState.value.quantity
                     )
+                    val response = apiService.addToCart(request)
+                    if (response.isSuccessful) {
+                        _uiState.value = _uiState.value.copy(
+                            addToCartSuccess = true,
+                            quantity = 1  // Reset quantity after adding
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            addToCartError = response.message() ?: "Không thể thêm vào giỏ hàng"
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -229,3 +267,8 @@ class ProductDetailViewModel @Inject constructor(
         loadReviews()
     }
 }
+
+
+
+
+

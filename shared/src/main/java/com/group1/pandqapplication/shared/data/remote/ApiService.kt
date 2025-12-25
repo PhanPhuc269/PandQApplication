@@ -50,6 +50,12 @@ interface ApiService {
     @POST("api/v1/orders/cart/decrease")
     suspend fun decreaseQuantity(@Body request: AddToCartRequest): Response<OrderDto>
 
+    @POST("api/v1/orders/cart/merge/{userId}")
+    suspend fun mergeGuestCart(
+        @Path("userId") userId: String,
+        @Body guestCartItems: List<AddToCartRequest>
+    ): Response<OrderDto>
+
     // User endpoints
     @GET("api/v1/users/{id}")
     suspend fun getUserById(@Path("id") userId: String): UserResponseDto

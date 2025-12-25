@@ -148,7 +148,13 @@ fun PandQNavGraph(
                 onCheckoutClick = { orderId ->
                     navController.navigate(Screen.Checkout.createRoute(orderId))
                 },
-                userId = mainViewModel.getCurrentUserId()
+                userId = mainViewModel.getCurrentUserId(),
+                onLoginRequired = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Cart.route) { saveState = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
         composable(
@@ -169,7 +175,14 @@ fun PandQNavGraph(
                         popUpTo(Screen.Checkout.route) { inclusive = true }
                     }
                 },
-                orderId = orderId
+                onLoginRequired = {
+                    // Navigate to login when guest tries to checkout
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Checkout.route) { inclusive = true }
+                    }
+                },
+                orderId = orderId,
+                userId = mainViewModel.getCurrentUserId()
             )
         }
         composable(

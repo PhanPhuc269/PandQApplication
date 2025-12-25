@@ -73,12 +73,24 @@ fun CheckoutScreen(
     onBackClick: () -> Unit = {},
     onEditAddressClick: () -> Unit = {},
     onPaymentSuccess: (String) -> Unit = {},
+    onLoginRequired: () -> Unit = {},
     orderId: String,  // Required: Order ID from cart
+    userId: String = "", // Current user ID (empty if guest)
     viewModel: CheckoutViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Check if user is guest - redirect to login
+    LaunchedEffect(userId) {
+        if (userId.isEmpty()) {
+            // User is guest, must login to checkout
+            snackbarHostState.showSnackbar("Vui lòng đăng nhập để thanh toán")
+            onLoginRequired()
+            return@LaunchedEffect
+        }
+    }
     
     // Load payment details when screen appears
     LaunchedEffect(orderId) {

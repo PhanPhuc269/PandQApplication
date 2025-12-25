@@ -89,7 +89,7 @@ fun ProductDetailScreen(
                         onDecrease = { viewModel.decreaseQuantity() },
                         primaryColor = primaryColor,
                         onCartClick = onCartClick,
-                        onAddToCart = { if (userId.isNotEmpty()) viewModel.addToCart(userId) }
+                        onAddToCart = { viewModel.addToCart(userId) }
                     )
                 }
             }
