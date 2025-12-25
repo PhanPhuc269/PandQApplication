@@ -295,10 +295,22 @@ class CheckoutViewModel @Inject constructor(
                 if (response.returnCode == 1 && response.isPaid == true) {
                     // Payment confirmed!
                     handlePaymentResult(PaymentResult.Success)
+                } else if (response.returnCode == 0) {
+                    // Transaction not found or error
+                    _uiState.update { 
+                        it.copy(paymentError = response.returnMessage ?: "Không tìm thấy giao dịch") 
+                    }
+                } else {
+                    // Not paid yet - show feedback to user
+                    _uiState.update { 
+                        it.copy(paymentError = "Chưa nhận được thanh toán. Vui lòng quét mã QR để thanh toán.") 
+                    }
                 }
-                // If not paid yet, do nothing - will retry automatically
             } catch (e: Exception) {
-                // Ignore errors during status check
+                // Network error during status check
+                _uiState.update { 
+                    it.copy(paymentError = "Lỗi kiểm tra: ${e.message}") 
+                }
             }
         }
     }
