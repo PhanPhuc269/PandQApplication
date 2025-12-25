@@ -43,8 +43,11 @@ fun WriteReviewScreen(
     product: ProductDetailDto?,
     onBackClick: () -> Unit,
     onSubmitClick: (Int, String, List<String>) -> Unit,
-    onUploadImage: (java.io.File, (Result<String>) -> Unit) -> Unit = { _, _ -> }, // Keep for compatibility but not used
-    primaryColor: Color = Color(0xFF007AFF) // Tech blue from reference
+    onUploadImage: (java.io.File, (Result<String>) -> Unit) -> Unit = { _, _ -> },
+    primaryColor: Color = Color(0xFF007AFF),
+    isSubmitting: Boolean = false,
+    errorMessage: String? = null,
+    onDismissError: () -> Unit = {}
 ) {
     var rating by remember { mutableIntStateOf(5) }
     var comment by remember { mutableStateOf("") }
@@ -53,7 +56,6 @@ fun WriteReviewScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // Use Cloudinary for direct upload - free tier, no billing required!
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: android.net.Uri? ->
@@ -62,7 +64,6 @@ fun WriteReviewScreen(
             isUploading = true
             scope.launch {
                 try {
-                    // Convert Uri to File first
                     val file = uriToFile(context, uri)
                     if (file != null && file.exists() && file.length() > 0) {
                         Log.d(TAG, "Uploading to Cloudinary... file size: ${file.length()} bytes")
@@ -92,11 +93,30 @@ fun WriteReviewScreen(
             Log.d(TAG, "User cancelled image selection")
         }
     }
-    // Mock image for demo when clicking add
-    val mockImages = listOf(
-        "https://images.unsplash.com/photo-1517336714731-489689fd1ca4?q=80&w=1000&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=1000&auto=format&fit=crop"
-    )
+
+    // Error Alert Dialog
+    if (errorMessage != null) {
+        AlertDialog(
+            onDismissRequest = onDismissError,
+            confirmButton = {
+                TextButton(onClick = onDismissError) {
+                    Text("Đã hiểu", color = primaryColor)
+                }
+            },
+            icon = {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = null,
+                    tint = Color(0xFFDC2626),
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = { Text("Không thể đánh giá", fontWeight = FontWeight.Bold) },
+            text = { Text(errorMessage) },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -105,9 +125,7 @@ fun WriteReviewScreen(
             .padding(top = 60.dp)
     ) {
         // 1. Top App Bar
-        Surface(
-            shadowElevation = 1.dp
-        ) {
+        Surface(shadowElevation = 1.dp) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -131,13 +149,23 @@ fun WriteReviewScreen(
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF333333)
                 )
-                Text(
-                    text = "Gửi",
-                    fontSize = 16.sp,
-                    color = primaryColor,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { onSubmitClick(rating, comment, imageUrls) }
-                )
+                if (isSubmitting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = primaryColor,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Gửi",
+                        fontSize = 16.sp,
+                        color = primaryColor,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.clickable {
+                            if (!isSubmitting) onSubmitClick(rating, comment, imageUrls)
+                        }
+                    )
+                }
             }
         }
 
@@ -145,7 +173,7 @@ fun WriteReviewScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
-                .weight(1f) // Push bottom button down if needed, but here "Gửi" is on top
+                .weight(1f)
         ) {
             // 2. Product Info Card
             if (product != null) {
@@ -175,7 +203,7 @@ fun WriteReviewScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Màu: Đen, RAM: 16GB", // Placeholder specs
+                            text = "Màu: Đen, RAM: 16GB",
                             fontSize = 14.sp,
                             color = Color(0xFF8E8E93)
                         )
@@ -197,9 +225,7 @@ fun WriteReviewScreen(
                     color = Color(0xFF333333)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     (1..5).forEach { star ->
                         Icon(
                             imageVector = Icons.Filled.Star,
@@ -274,7 +300,7 @@ fun WriteReviewScreen(
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -290,7 +316,6 @@ fun WriteReviewScreen(
                                 .fillMaxSize()
                                 .clip(RoundedCornerShape(8.dp))
                         )
-                        // Delete button - improved styling
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
@@ -310,24 +335,24 @@ fun WriteReviewScreen(
                         }
                     }
                 }
-                
-                // Add Image Button
+
                 if (imageUrls.size < 5) {
                     item {
                         Column(
                             modifier = Modifier
                                 .aspectRatio(1f)
                                 .clip(RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(8.dp)) // Dashed border simulated
+                                .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(8.dp))
                                 .background(Color.White)
-                                .clickable {
-                                    launcher.launch("image/*")
-                                },
+                                .clickable { launcher.launch("image/*") },
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             if (isUploading) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = primaryColor)
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = primaryColor
+                                )
                             } else {
                                 Icon(
                                     Icons.Filled.AddPhotoAlternate,
@@ -349,21 +374,30 @@ fun WriteReviewScreen(
             }
         }
 
-        // Bottom Button (Alternative CTA)
+        // Bottom Button
         Surface(
             color = Color.White,
             shadowElevation = 8.dp
         ) {
             Box(modifier = Modifier.padding(16.dp)) {
                 Button(
-                    onClick = { onSubmitClick(rating, comment, imageUrls) },
+                    onClick = { if (!isSubmitting) onSubmitClick(rating, comment, imageUrls) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
+                    enabled = !isSubmitting
                 ) {
-                    Text("Gửi đánh giá", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    if (isSubmitting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Gửi đánh giá", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }

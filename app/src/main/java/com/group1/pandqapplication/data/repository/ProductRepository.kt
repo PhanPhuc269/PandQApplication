@@ -11,6 +11,8 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
+import retrofit2.HttpException
+import org.json.JSONObject
 
 @Singleton
 class ProductRepository @Inject constructor(
@@ -55,6 +57,16 @@ class ProductRepository @Inject constructor(
             )
             val review = apiService.createReview(request)
             Result.success(review)
+        } catch (e: HttpException) {
+            // Parse error message from response body
+            val errorBody = e.response()?.errorBody()?.string()
+            val errorMessage = try {
+                val json = JSONObject(errorBody ?: "{}")
+                json.optString("error", "Không thể gửi đánh giá. Vui lòng thử lại.")
+            } catch (ex: Exception) {
+                "Không thể gửi đánh giá. Vui lòng thử lại."
+            }
+            Result.failure(Exception(errorMessage))
         } catch (e: Exception) {
             Result.failure(e)
         }

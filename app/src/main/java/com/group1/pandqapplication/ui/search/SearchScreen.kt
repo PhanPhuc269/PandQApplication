@@ -571,11 +571,15 @@ fun ProductGridItem(
             lineHeight = 18.sp
         )
 
-        // Rating
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-            Icon(Icons.Filled.Star, contentDescription = null, tint = Color(0xFFFACC15), modifier = Modifier.size(16.dp))
-            Text(product.rating.toString(), fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color(0xFF4B5563), modifier = Modifier.padding(horizontal = 4.dp))
-            Text(product.reviews, fontSize = 12.sp, color = Color(0xFF9CA3AF))
+        // Rating - only show if product has reviews
+        if (product.rating > 0) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                Icon(Icons.Filled.Star, contentDescription = null, tint = Color(0xFFFACC15), modifier = Modifier.size(16.dp))
+                Text(product.rating.toString(), fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color(0xFF4B5563), modifier = Modifier.padding(horizontal = 4.dp))
+                Text(product.reviews, fontSize = 12.sp, color = Color(0xFF9CA3AF))
+            }
+        } else {
+            Spacer(modifier = Modifier.height(4.dp))
         }
 
         // Price

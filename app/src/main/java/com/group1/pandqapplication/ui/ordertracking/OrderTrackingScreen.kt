@@ -78,7 +78,8 @@ fun OrderTrackingScreen(
     onSupportClick: () -> Unit = {},
     orderId: String? = null,
     order: OrderDto? = null, // Can pass order directly from navigation
-    viewModel: OrderTrackingViewModel = hiltViewModel()
+    viewModel: OrderTrackingViewModel = hiltViewModel(),
+    onReviewClick: (String, String) -> Unit = { _, _ -> } // productId, productName
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
@@ -104,6 +105,7 @@ fun OrderTrackingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(cardColor.copy(alpha = 0.8f))
+                    .padding(top = 48.dp)
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 IconButton(
@@ -126,25 +128,54 @@ fun OrderTrackingScreen(
             }
         },
         bottomBar = {
+            val currentOrder = uiState.order
+            // Only COMPLETED orders can be reviewed
+            val canReview = currentOrder != null && 
+                currentOrder.status.uppercase() == "COMPLETED"
+            
             Box(
                 modifier = Modifier
                     .background(cardColor.copy(alpha = 0.8f))
                     .padding(16.dp)
             ) {
-                Button(
-                    onClick = onSupportClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = "Liên hệ hỗ trợ",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                if (canReview && currentOrder != null) {
+                    // Show single review button for the order (reviews first product)
+                    val firstItem = currentOrder.items.firstOrNull()
+                    if (firstItem != null) {
+                        Button(
+                            onClick = { 
+                                onReviewClick(firstItem.productId, firstItem.productName)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "Đánh giá đơn hàng",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = onSupportClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "Liên hệ hỗ trợ",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
