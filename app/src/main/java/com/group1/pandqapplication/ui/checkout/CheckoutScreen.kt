@@ -192,6 +192,9 @@ fun CheckoutScreen(
             }
         },
         bottomBar = {
+            // Check if address is available
+            val hasAddress = uiState.paymentDetails?.shippingAddress?.isNotBlank() == true
+            
             Box(
                 modifier = Modifier
                     .background(surfaceColor.copy(alpha = 0.8f))
@@ -199,13 +202,20 @@ fun CheckoutScreen(
             ) {
                 Button(
                     onClick = { 
-                        viewModel.initiatePayment(orderId)
+                        if (!hasAddress) {
+                            // Show error if no address
+                            viewModel.setPaymentError("Vui lòng thêm địa chỉ giao hàng trước khi thanh toán")
+                        } else {
+                            viewModel.initiatePayment(orderId)
+                        }
                     },
                     enabled = !uiState.isProcessingPayment && uiState.paymentDetails != null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = CheckoutPrimary),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (hasAddress) CheckoutPrimary else CheckoutPrimary.copy(alpha = 0.5f)
+                    ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     if (uiState.isProcessingPayment) {
