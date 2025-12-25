@@ -122,14 +122,14 @@ fun WriteReviewScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF9F9F9))
-            .padding(top = 60.dp)
+            .statusBarsPadding()
     ) {
         // 1. Top App Bar
         Surface(shadowElevation = 1.dp) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -105,8 +106,8 @@ fun OrderTrackingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(cardColor.copy(alpha = 0.8f))
-                    .padding(top = 48.dp)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 IconButton(
                     onClick = onBackClick,
