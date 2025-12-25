@@ -1,5 +1,6 @@
 package com.group1.pandqapplication.ui.search
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.shared.data.remote.dto.ProductSearchDto
@@ -49,17 +50,26 @@ data class SearchUiState(
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
     private val _searchQueryFlow = MutableStateFlow("")
+    
+    // Get categoryId from navigation argument
+    private val initialCategoryId: String? = savedStateHandle.get<String>("categoryId")
 
     init {
         // Load categories
         loadCategories()
+        
+        // Set initial category from navigation if provided
+        if (initialCategoryId != null) {
+            _uiState.update { it.copy(selectedCategoryId = initialCategoryId) }
+        }
         
         // Debounce search query changes
         _searchQueryFlow
@@ -77,6 +87,16 @@ class SearchViewModel @Inject constructor(
             try {
                 val categories = productRepository.getCategories()
                 _uiState.update { it.copy(categories = categories) }
+                
+                // Update active filters if initial category was provided
+                if (initialCategoryId != null) {
+                    val selectedCategory = categories.find { it.id == initialCategoryId }
+                    if (selectedCategory != null) {
+                        _uiState.update { 
+                            it.copy(activeFilters = listOf(selectedCategory.name)) 
+                        }
+                    }
+                }
             } catch (e: Exception) {
                 // Categories failed to load, continue without them
             }

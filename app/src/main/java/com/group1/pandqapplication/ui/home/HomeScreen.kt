@@ -77,6 +77,7 @@ fun HomeScreen(
     onLogout: () -> Unit,
     onProductClick: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onCategoryClick: (String) -> Unit = {},
     onCartClick: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -298,13 +299,10 @@ fun HomeScreen(
                                     items(uiState.categories) { category ->
                                         CategoryItem(
                                             category = category,
-                                            isSelected = uiState.selectedCategoryId == category.id,
+                                            isSelected = false,
                                             onClick = {
-                                                if (uiState.selectedCategoryId == category.id) {
-                                                    viewModel.clearCategoryFilter()
-                                                } else {
-                                                    viewModel.selectCategory(category.id, category.name)
-                                                }
+                                                // Navigate to search with category filter
+                                                onCategoryClick(category.id)
                                             }
                                         )
                                     }

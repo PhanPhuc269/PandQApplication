@@ -8,7 +8,15 @@ sealed class Screen(val route: String) {
         fun createRoute(productId: String) = "product_detail/$productId"
     }
     data object Cart : Screen("cart_screen")
-    data object Search : Screen("search_screen")
+    data object Search : Screen("search_screen?categoryId={categoryId}") {
+        fun createRoute(categoryId: String? = null): String {
+            return if (categoryId != null) {
+                "search_screen?categoryId=$categoryId"
+            } else {
+                "search_screen"
+            }
+        }
+    }
     data object Splash : Screen("splash")
     data object Checkout : Screen("checkout/{orderId}") {
         fun createRoute(orderId: String) = "checkout/$orderId"

@@ -24,6 +24,7 @@ fun MainScreen(
     onCartClick: () -> Unit,
     onProductClick: (String) -> Unit,
     onSearchClick: () -> Unit,
+    onCategoryClick: (String) -> Unit = {},
     onOrderClick: (String) -> Unit, // orderId parameter
     onPersonalInfoClick: () -> Unit = {},
     onAddressListClick: () -> Unit = {},
@@ -50,6 +51,7 @@ fun MainScreen(
                         onLogout = onLogout,
                         onProductClick = onProductClick,
                         onSearchClick = onSearchClick,
+                        onCategoryClick = onCategoryClick,
                         onCartClick = onCartClick
                     )
                 }

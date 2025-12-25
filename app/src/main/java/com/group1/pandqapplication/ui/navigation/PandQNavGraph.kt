@@ -71,7 +71,10 @@ fun PandQNavGraph(
                     navController.navigate(Screen.ProductDetail.createRoute(productId))
                 },
                 onSearchClick = {
-                    navController.navigate(Screen.Search.route)
+                    navController.navigate(Screen.Search.createRoute())
+                },
+                onCategoryClick = { categoryId ->
+                    navController.navigate(Screen.Search.createRoute(categoryId))
                 },
                 onOrderClick = { orderId ->
                     navController.navigate(Screen.OrderTracking.createRoute(orderId))
@@ -101,7 +104,16 @@ fun PandQNavGraph(
                 }
             )
         }
-        composable(Screen.Search.route) {
+        composable(
+            route = Screen.Search.route,
+            arguments = listOf(
+                navArgument("categoryId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
             com.group1.pandqapplication.ui.search.SearchScreen(
                 onBackClick = {
                     navController.popBackStack()
