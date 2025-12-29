@@ -382,18 +382,23 @@ fun QuickActionsSection(actions: List<QuickAction>, onActionClick: (String) -> U
             modifier = Modifier.padding(bottom = 12.dp)
         )
         
-        // Grid of 2 columns
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            val rows = actions.chunked(2)
+        // Grid of 3 columns for compact modern look
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            val rows = actions.chunked(3)
             rows.forEach { rowItems ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     rowItems.forEach { action ->
                         Box(modifier = Modifier.weight(1f)) {
                             QuickActionCard(action) { onActionClick(action.title) }
                         }
+                        
+                    }
+                    // Fill empty slots if row has less than 3 items
+                    repeat(3 - rowItems.size) {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -403,30 +408,56 @@ fun QuickActionsSection(actions: List<QuickAction>, onActionClick: (String) -> U
 
 @Composable
 fun QuickActionCard(action: QuickAction, onClick: () -> Unit) {
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
-            .border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(action.color.copy(alpha = 0.1f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(action.icon, contentDescription = null, tint = action.color, modifier = Modifier.size(28.dp))
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = action.title,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onSurface
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp,
+        border = androidx.compose.foundation.BorderStroke(
+            0.5.dp,
+            Color.LightGray.copy(alpha = 0.2f)
         )
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 14.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                action.color.copy(alpha = 0.15f),
+                                action.color.copy(alpha = 0.05f)
+                            )
+                        ),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    action.icon, 
+                    contentDescription = null, 
+                    tint = action.color, 
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = action.title,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 11.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 package com.group1.pandqapplication.admin
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import kotlinx.coroutines.launch
@@ -50,7 +50,7 @@ import com.group1.pandqapplication.admin.ui.shipping.ShippingManagementScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class AdminActivity : ComponentActivity() {
+class AdminActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -60,25 +60,37 @@ class AdminActivity : ComponentActivity() {
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
 
+                // Disable drawer when on login screen
+                val isLoggedIn = currentRoute != AdminScreen.Login.route
+
                 ModalNavigationDrawer(
                     drawerState = drawerState,
+                    gesturesEnabled = isLoggedIn, // Disable swipe gesture on login screen
                     drawerContent = {
-                        ModalDrawerSheet {
-                            AdminDrawerContent(
-                                currentRoute = currentRoute,
-                                onNavigate = { route ->
-                                    currentRoute = route
-                                    navController.navigate(route) {
-                                        popUpTo(AdminScreen.Dashboard.route) {
-                                            saveState = true
+                        if (isLoggedIn) { // Only show drawer content when logged in
+                            ModalDrawerSheet {
+                                AdminDrawerContent(
+                                    currentRoute = currentRoute,
+                                    onNavigate = { route ->
+                                        currentRoute = route
+                                        navController.navigate(route) {
+                                            popUpTo(AdminScreen.Dashboard.route) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
-                                        launchSingleTop = true
-                                        restoreState = true
+                                        scope.launch { drawerState.close() }
+                                    },
+                                    onLogout = { 
+                                        // Navigate back to login
+                                        currentRoute = AdminScreen.Login.route
+                                        navController.navigate(AdminScreen.Login.route) {
+                                            popUpTo(0) { inclusive = true }
+                                        }
                                     }
-                                    scope.launch { drawerState.close() }
-                                },
-                                onLogout = { /* Handle logout */ }
-                            )
+                                )
+                            }
                         }
                     }
                 ) {
@@ -190,6 +202,7 @@ class AdminActivity : ComponentActivity() {
                         composable(AdminScreen.Login.route) {
                             com.group1.pandqapplication.admin.ui.login.AdminLoginScreen(
                                 onLoginSuccess = {
+                                    currentRoute = AdminScreen.Dashboard.route
                                     navController.navigate(AdminScreen.Dashboard.route) {
                                         popUpTo(AdminScreen.Login.route) { inclusive = true }
                                     }

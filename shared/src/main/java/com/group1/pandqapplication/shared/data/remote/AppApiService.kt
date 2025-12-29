@@ -153,6 +153,39 @@ interface AppApiService {
 
     @GET("api/v1/orders/{id}")
     suspend fun getOrderById(@Path("id") orderId: String): OrderDto
+
+    // Admin Auth endpoints
+    @GET("api/v1/auth/verify-admin")
+    suspend fun verifyAdmin(): VerifyAdminResponse
+
+    @GET("api/v1/auth/me")
+    suspend fun getCurrentAuthUser(): AdminUserInfo
 }
 
+/**
+ * Response from admin verification endpoint.
+ */
+data class VerifyAdminResponse(
+    @com.google.gson.annotations.SerializedName("isAdmin")
+    val isAdmin: Boolean = false,
+    @com.google.gson.annotations.SerializedName("message")
+    val message: String = "",
+    @com.google.gson.annotations.SerializedName("user")
+    val user: AdminUserInfo? = null
+)
 
+/**
+ * Admin user info from backend.
+ */
+data class AdminUserInfo(
+    @com.google.gson.annotations.SerializedName("id")
+    val id: String = "",
+    @com.google.gson.annotations.SerializedName("email")
+    val email: String = "",
+    @com.google.gson.annotations.SerializedName("fullName")
+    val fullName: String? = null,
+    @com.google.gson.annotations.SerializedName("avatarUrl")
+    val avatarUrl: String? = null,
+    @com.google.gson.annotations.SerializedName("role")
+    val role: String = ""
+)
