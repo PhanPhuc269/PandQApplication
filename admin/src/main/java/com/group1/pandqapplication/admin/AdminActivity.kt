@@ -23,6 +23,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.group1.pandqapplication.admin.data.AdminUserManager
 import com.group1.pandqapplication.admin.ui.analysis.SalesAnalysisScreen
 import com.group1.pandqapplication.admin.ui.components.AdminDrawerContent
 import com.group1.pandqapplication.admin.ui.navigation.AdminScreen
@@ -48,9 +51,14 @@ import com.group1.pandqapplication.admin.ui.setting.AdminSettingsScreen
 import com.group1.pandqapplication.admin.ui.customer.CustomerListScreen
 import com.group1.pandqapplication.admin.ui.shipping.ShippingManagementScreen
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class AdminActivity : FragmentActivity() {
+    
+    @Inject
+    lateinit var adminUserManager: AdminUserManager
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -59,9 +67,22 @@ class AdminActivity : FragmentActivity() {
                 var currentRoute by remember { mutableStateOf(AdminScreen.Login.route) }
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
+                
+                // Collect user data from AdminUserManager
+                val currentUser by adminUserManager.currentUser.collectAsState()
+                val userName = currentUser?.fullName ?: "Admin"
+                val userRole = currentUser?.role ?: "Administrator"
+                val avatarUrl = currentUser?.avatarUrl
 
                 // Disable drawer when on login screen
                 val isLoggedIn = currentRoute != AdminScreen.Login.route
+                
+                // Load user data when logged in
+                LaunchedEffect(isLoggedIn) {
+                    if (isLoggedIn && currentUser == null) {
+                        adminUserManager.loadCurrentUser()
+                    }
+                }
 
                 ModalNavigationDrawer(
                     drawerState = drawerState,
@@ -83,12 +104,16 @@ class AdminActivity : FragmentActivity() {
                                         scope.launch { drawerState.close() }
                                     },
                                     onLogout = { 
-                                        // Navigate back to login
+                                        // Clear user data and navigate back to login
+                                        adminUserManager.clearUser()
                                         currentRoute = AdminScreen.Login.route
                                         navController.navigate(AdminScreen.Login.route) {
                                             popUpTo(0) { inclusive = true }
                                         }
-                                    }
+                                    },
+                                    userName = userName,
+                                    userRole = userRole,
+                                    avatarUrl = avatarUrl
                                 )
                             }
                         }
@@ -127,7 +152,9 @@ class AdminActivity : FragmentActivity() {
                                 onNavigateToAnalytics = { navController.navigate(AdminScreen.Analytics.route) },
                                 onNavigateToSettings = { navController.navigate(AdminScreen.Settings.route) },
                                 onNavigateToCustomer = { navController.navigate(AdminScreen.CustomerList.route) },
-                                onNavigateToShipping = { navController.navigate(AdminScreen.ShippingManagement.route) }
+                                onNavigateToShipping = { navController.navigate(AdminScreen.ShippingManagement.route) },
+                                userName = userName,
+                                avatarUrl = avatarUrl
                             )
                         }
                         composable(AdminScreen.Orders.route) {
@@ -181,11 +208,26 @@ class AdminActivity : FragmentActivity() {
                         composable(AdminScreen.Profile.route) {
                             AdminProfileScreen(
                                 onBackClick = { navController.popBackStack() },
-                                onNavigateToSettings = { navController.navigate(AdminScreen.Settings.route) }
+                                onNavigateToSettings = { navController.navigate(AdminScreen.Settings.route) },
+                                onChangePassword = { navController.navigate(AdminScreen.ChangePassword.route) },
+                                onLogout = {
+                                    adminUserManager.clearUser()
+                                    currentRoute = AdminScreen.Login.route
+                                    navController.navigate(AdminScreen.Login.route) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
                             )
                         }
                         composable(AdminScreen.Settings.route) {
-                            AdminSettingsScreen(onBackClick = { navController.popBackStack() })
+                            AdminSettingsScreen(
+                                onBackClick = { navController.popBackStack() },
+                                onEditProfile = { navController.navigate(AdminScreen.Profile.route) },
+                                onChangePassword = { navController.navigate(AdminScreen.ChangePassword.route) },
+                                userName = userName,
+                                userRole = userRole,
+                                avatarUrl = avatarUrl
+                            )
                         }
                         composable(AdminScreen.CustomerList.route) {
                             CustomerListScreen(onBackClick = { navController.popBackStack() })
@@ -206,7 +248,17 @@ class AdminActivity : FragmentActivity() {
                                     navController.navigate(AdminScreen.Dashboard.route) {
                                         popUpTo(AdminScreen.Login.route) { inclusive = true }
                                     }
+                                    // Load user data after login
+                                    scope.launch {
+                                        adminUserManager.loadCurrentUser(forceRefresh = true)
+                                    }
                                 }
+                            )
+                        }
+                        composable(AdminScreen.ChangePassword.route) {
+                            com.group1.pandqapplication.admin.ui.profile.ChangePasswordScreen(
+                                onBackClick = { navController.popBackStack() },
+                                onSuccess = { navController.popBackStack() }
                             )
                         }
 

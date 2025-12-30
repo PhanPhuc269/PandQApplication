@@ -1,6 +1,7 @@
 package com.group1.pandqapplication.admin.di
 
 import com.google.firebase.auth.FirebaseAuth
+import com.group1.pandqapplication.admin.data.AdminUserManager
 import com.group1.pandqapplication.admin.data.repository.AdminAuthRepository
 import com.group1.pandqapplication.admin.data.repository.AdminAuthRepositoryImpl
 import com.group1.pandqapplication.shared.data.remote.AppApiService
@@ -24,5 +25,13 @@ object AdminModule {
         apiService: AppApiService
     ): AdminAuthRepository {
         return AdminAuthRepositoryImpl(firebaseAuth, apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAdminUserManager(
+        apiService: AppApiService
+    ): AdminUserManager {
+        return AdminUserManager(apiService)
     }
 }

@@ -28,7 +28,10 @@ import com.group1.pandqapplication.admin.ui.navigation.AdminScreen
 fun AdminDrawerContent(
     currentRoute: String,
     onNavigate: (String) -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    userName: String = "Admin",
+    userRole: String = "Administrator",
+    avatarUrl: String? = null
 ) {
     val scrollState = rememberScrollState()
     val primaryColor = Color(0xFFec3713) // From HTML config
@@ -48,7 +51,7 @@ fun AdminDrawerContent(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box {
                     AsyncImage(
-                        model = "https://lh3.googleusercontent.com/aida-public/AB6AXuAJojKOb2GiyE7j2Lwb7WD_s4z-h8qk2nv9TOdIMcjcfrKhCzZM8EpcwCzjXaR5EiJLbusTxLLWjWg0QHpzBeA4vi6pkC8jxTh67LFqIyBZELE3YLPzcuNX5WEoI4JZrAQDPCSeCkNmdeVC9oLRNQin9pr4qFEZouMgzFKlMFcMqqoXRuUg2JbsZA-iSypNb5iKTtHa7E3EkNbPzAFaqY5pNFWwRwPbroeQcy6VO7Je3NGAQytitl8yHwZl16ku8acOvon5bPJhnQY",
+                        model = avatarUrl ?: "https://ui-avatars.com/api/?name=${userName.replace(" ", "+")}&size=128&background=ec3713&color=fff",
                         contentDescription = "Profile",
                         modifier = Modifier
                             .size(48.dp)
@@ -67,7 +70,7 @@ fun AdminDrawerContent(
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Text(
-                        text = "Nguyen Van A",
+                        text = userName,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -77,7 +80,7 @@ fun AdminDrawerContent(
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         Text(
-                            text = "Store Manager",
+                            text = userRole,
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             color = Color.Gray

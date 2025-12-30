@@ -37,4 +37,5 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object CustomerList : AdminScreen("customer_list", "Customer List", Icons.Default.ManageAccounts)
     object ShippingManagement : AdminScreen("shipping_management", "Shipping Management", Icons.Default.LocalShipping)
     object Login : AdminScreen("login", "Login", Icons.Default.Login)
+    object ChangePassword : AdminScreen("change_password", "Change Password", Icons.Default.ManageAccounts)
 }
