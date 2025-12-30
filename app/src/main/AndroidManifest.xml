@@ -39,7 +39,25 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="pandqapp" android:host="payment" />
+                <data android:scheme="pandqapp" android:host="products" />
             </intent-filter>
+
+            <!-- Deep link: https://pandq.com -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="pandq.com" />
+            </intent-filter>
+            
+            <!-- Deep link: https://www.pandq.com -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="www.pandq.com" />
+            </intent-filter>
+
         </activity>
 
         <!-- Firebase Cloud Messaging Service -->

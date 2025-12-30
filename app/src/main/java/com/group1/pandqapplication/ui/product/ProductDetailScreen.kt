@@ -303,6 +303,7 @@ fun ProductImageHeader(
         }
         
         // Top Bar Overlay
+        val context = androidx.compose.ui.platform.LocalContext.current
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -329,7 +330,11 @@ fun ProductImageHeader(
                     Icon(Icons.Filled.ShoppingBag, contentDescription = "Cart", tint = Color.White)
                 }
                 IconButton(
-                    onClick = {},
+                    onClick = {
+                         val productName = product.name // Capture for lambda
+                         val productId = product.id
+                         shareProduct(context, productId, productName)
+                    },
                     modifier = Modifier
                         .size(40.dp)
                         .background(Color.White.copy(alpha = 0.2f), CircleShape)
@@ -347,6 +352,21 @@ fun ProductImageHeader(
             }
         }
     }
+}
+
+private fun shareProduct(context: android.content.Context, productId: String, productName: String) {
+    // Use https scheme so links are recognized as clickable in Messenger/Zalo
+    val deepLink = "https://pandq.com/products/$productId"
+    val shareText = "Xem sản phẩm $productName tại TechShop: $deepLink"
+    
+    val sendIntent = android.content.Intent().apply {
+        action = android.content.Intent.ACTION_SEND
+        putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+        type = "text/plain"
+    }
+    
+    val shareIntent = android.content.Intent.createChooser(sendIntent, "Chia sẻ sản phẩm qua")
+    context.startActivity(shareIntent)
 }
 
 @Composable

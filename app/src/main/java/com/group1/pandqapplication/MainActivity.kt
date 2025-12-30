@@ -35,8 +35,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        // Handle deep link from notification if app was launched from notification
-        handleNotificationDeepLink(intent)
+        // Handle deep link from notification or external link
+        handleDeepLink(intent)
         
         setContent {
             val networkStatus by mainViewModel.networkStatus.collectAsState()
@@ -74,16 +74,32 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         ZaloPaySDK.getInstance().onResult(intent)
         
-        // Also handle deep link if app is already open and notification is clicked
-        handleNotificationDeepLink(intent)
+        // Also handle deep link if app is already open and new intent arrives
+        handleDeepLink(intent)
     }
     
     /**
      * Parse notification intent and extract deep link URL
      * Format: pandq://orders/{orderId}
      */
-    private fun handleNotificationDeepLink(intent: Intent?) {
-        intent?.getStringExtra("target_url")?.let { targetUrl ->
+    /**
+     * Parse intent to extract deep link URL from either:
+     * 1. Standard Android Deep Link (intent.data) - e.g. https://pandq.com/products/123
+     * 2. Notification Extra (intent.getStringExtra) - e.g. pandq://orders/123
+     */
+    private fun handleDeepLink(intent: Intent?) {
+        if (intent == null) return
+
+        // 1. Try standard data URI first (from web/share link)
+        if (intent.action == Intent.ACTION_VIEW && intent.data != null) {
+            val data = intent.dataString
+            Log.d("DeepLink", "Received standard deep link: $data")
+            pendingDeepLink = data
+            return
+        }
+
+        // 2. Try notification extra (from FCM)
+        intent.getStringExtra("target_url")?.let { targetUrl ->
             Log.d("DeepLink", "Received deep link from notification: $targetUrl")
             pendingDeepLink = targetUrl
         }
