@@ -63,8 +63,9 @@ fun PandQNavGraph(
         composable(Screen.Splash.route) {
             com.group1.pandqapplication.ui.splash.SplashScreen(
                 navController = navController,
-                onInitializationComplete = {
-                    navController.navigate(destinationAfterSplash) {
+                onInitializationComplete = { isFirstLaunch ->
+                    val targetDestination = if (isFirstLaunch) Screen.Onboarding.route else Screen.Login.route
+                    navController.navigate(targetDestination) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
                 }
@@ -133,6 +134,9 @@ fun PandQNavGraph(
                 },
                 onPolicyClick = {
                     navController.navigate(Screen.Policy.route)
+                },
+                onUserGuideClick = {
+                    navController.navigate(Screen.UserGuide.route)
                 }
             )
         }
@@ -363,6 +367,13 @@ fun PandQNavGraph(
         }                
         composable(Screen.Policy.route) {
             com.group1.pandqapplication.ui.policy.PolicyScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(Screen.UserGuide.route) {
+            com.group1.pandqapplication.ui.guide.UserGuideScreen(
                 onBackClick = {
                     navController.popBackStack()
                 }

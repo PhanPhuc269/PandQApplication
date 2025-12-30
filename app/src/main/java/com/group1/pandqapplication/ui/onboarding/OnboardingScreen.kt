@@ -2,6 +2,7 @@ package com.group1.pandqapplication.ui.onboarding
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,36 +37,66 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 
 data class OnboardingPage(
     val title: String,
     val description: String,
-    val imageUrl: String
+    val imageUrl: String,
+    val steps: List<String> = emptyList()
 )
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun OnboardingScreen(
-    onFinish: () -> Unit
+fun GuidePager(
+    onFinish: () -> Unit,
+    isReviewMode: Boolean = false
 ) {
     val primaryColor = Color(0xFFec3713)
     val pages = listOf(
         OnboardingPage(
             title = "Chào mừng đến với TechShop!",
-            description = "Khám phá hàng ngàn sản phẩm điện tử mới nhất ngay trong tầm tay bạn.",
+            description = "Ứng dụng mua sắm đồ điện tử hàng đầu.",
+            steps = listOf(
+                "Đồng ý với Điều khoản dịch vụ & Chính sách quyền riêng tư.",
+                "Khám phá hàng ngàn sản phẩm công nghệ.",
+                "Trải nghiệm mua sắm an toàn và tiện lợi."
+            ),
             imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuBMCGdV_NsqxlXWNhWjWxYffYNuLUl4GHiB6W2p1xDI9Pr9bxgxOSdvUYKSa4Y7s3_dPqOtcvnScYiy9njJpZOQhE_PebmoMG8gUNzmjhWl6uEHqLOMoaBA8qwrw3IXmaYPjJ2SMyiwhwPnRDmXLFuGetVIxTwfmVjDBcu84hps2c9_j0T9JsdOhDQTz4GQq0bmBXhfyqncWdZ7-Q_a0F6Q1qAhAnsCRwz7LidGPGayCSdTBnJ4kXZTgkGbUJPmyxBVtlDf_YBW-IE"
         ),
         OnboardingPage(
-            title = "Mua sắm dễ dàng",
-            description = "Trải nghiệm mua sắm mượt mà, thanh toán an toàn và giao hàng nhanh chóng.",
-            imageUrl = "https://images.unsplash.com/photo-1542370285-d83025c556f2?q=80&w=2680&auto=format&fit=crop" // Placeholder
+            title = "Tìm kiếm & Xem sản phẩm",
+            description = "Dễ dàng tìm kiếm sản phẩm yêu thích.",
+            steps = listOf(
+                "1. Nhấn vào biểu tượng tìm kiếm ở trang chủ.",
+                "2. Nhập tên sản phẩm hoặc chọn danh mục.",
+                "3. Sử dụng bộ lọc để tìm sản phẩm ưng ý.",
+                "4. Nhấn vào sản phẩm để xem chi tiết."
+            ),
+            imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuAOGmT6XSrSXQi-5x0NluBBrZBvph3oaww0EpTDVYR2ybFzokcIuW-iL_8oFMtoLEk1rksmdQbXRZljJQqlj3hAQ5FWUu_Q6IRDfMgo19CDOnGc8GatoDavcm_8_i1O46JWOl_CyFzrwu76JB9NP-aFbyfHg4883Wr4ocDK9KzDSad5qJRPQ2sSkKFKD38qIgyGPs-L2Mjj1Y1TU7TOtyEe-64cpGRPwkIxv-Rx4MKUgl0fWUCf5RzWWUpvMYfKKDAyEU2sf5ZSrMY"
         ),
         OnboardingPage(
-            title = "Hỗ trợ 24/7",
-            description = "Chúng tôi luôn sẵn sàng hỗ trợ bạn mọi lúc, mọi nơi.",
-            imageUrl = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2670&auto=format&fit=crop" // Placeholder
+            title = "Giỏ hàng & Thanh toán",
+            description = "Thanh toán nhanh chóng và an toàn.",
+            steps = listOf(
+                "1. Chọn 'Thêm vào giỏ' tại trang chi tiết.",
+                "2. Vào giỏ hàng để kiểm tra sản phẩm.",
+                "3. Chọn phương thức thanh toán và địa chỉ.",
+                "4. Xác nhận đặt hàng."
+            ),
+            imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDUoXuiDDcy7hwiRsdmKgvX2_GUk_FoY9JsT0i6FuWC99WVFbReei0xHZGyk2q-9eKR8R8rbWUiGLlS37z02whcsqdrrgWeQpeIfvXucdp0x3d3f0QtH0fZ7ql3TVfm41qN9wyzddSmk7QXFLHY5SYaaFf6LNCB80YxTOG27aETXHm4lNW-CPBADlo_G1bjKg1HicD7EAZzVjtAaHU1gYi-IYT6tPzRKidd58uE-B5dgOpit76lHpB4uT46FX5oWMiZEm42Y4Z1KKU"
+        ),
+         OnboardingPage(
+            title = "Theo dõi đơn hàng",
+            description = "Cập nhật trạng thái đơn hàng liên tục.",
+            steps = listOf(
+                "1. Vào mục 'Đơn mua' trong tài khoản.",
+                "2. Chọn đơn hàng cần theo dõi.",
+                "3. Xem chi tiết hành trình vận chuyển.",
+                "4. Đánh giá sản phẩm khi nhận hàng."
+            ),
+            imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCzAw-DAkrH7q0Hc833qfYAdjt6Mo5Ak4uhhqWIz-24wjdhFiluPKilyig1WEV0WSqAtF_i0u82_3WfQjbCSLrxyEIWyJrrTCvWyutpMA1l9Nc4E4ABSy6Tl7TtWsKRlRXkVv2hO8jqp4nMERrBEZASDntKkTO7PRA-Gsi-uRv0wRm4nCge7w0YnSu77w6bM74thVAXInp4it7LyohfoJj4Kqfg3aM0IlR_FInavgPnStyOS9t7E5oWNwQNVOZaHpRSY58_4RmhIQQ"
         )
     )
 
@@ -87,13 +118,25 @@ fun OnboardingScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onFinish) {
-                    Text(
-                        text = "Bỏ qua",
-                        color = primaryColor,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                if (!isReviewMode) {
+                    TextButton(onClick = onFinish) {
+                        Text(
+                            text = "Bỏ qua",
+                            color = primaryColor,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                } else {
+                    // Placeholder for spacing or a Close button if desired at top
+                     TextButton(onClick = onFinish) {
+                        Text(
+                            text = "Đóng",
+                            color = Color.Gray,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
 
@@ -108,7 +151,7 @@ fun OnboardingScreen(
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.Top // Push content to top
                 ) {
                     // Image
                     AsyncImage(
@@ -116,32 +159,75 @@ fun OnboardingScreen(
                         contentDescription = null,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(320.dp)
+                            .height(280.dp) // Slightly smaller to fit steps
                             .clip(RoundedCornerShape(8.dp))
                             .background(Color.Transparent),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Fit
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     
                     // Headline
                     Text(
                         text = page.title,
-                        fontSize = 28.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1F2937),
-                        textAlign = TextAlign.Center,
-                        lineHeight = 32.sp
+                        textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     
-                    // Body
+                    // Description
                     Text(
                         text = page.description,
                         fontSize = 16.sp,
                         color = Color(0xFF4B5563),
-                        textAlign = TextAlign.Center,
-                        lineHeight = 24.sp
+                        textAlign = TextAlign.Center
                     )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Steps
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp), // Add horizontal padding
+                        verticalArrangement = Arrangement.spacedBy(16.dp) // Increase spacing
+                    ) {
+                        page.steps.forEachIndexed { index, step ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Top // Align top for multi-line text
+                            ) {
+                                // Styled Step Badge
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp) // Reduced size as requested
+                                        .background(primaryColor, CircleShape), // Solid Primary Background
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${index + 1}",
+                                        color = Color.White, // White Text
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                
+                                Spacer(modifier = Modifier.width(16.dp))
+                                
+                                // Step Text
+                                Text(
+                                    text = step.replaceFirst(Regex("^\\d+\\.\\s*"), ""), 
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF374151),
+                                    lineHeight = 24.sp,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterVertically)
+                                        .weight(1f) // Ensure text wraps correctly within available space
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -185,8 +271,13 @@ fun OnboardingScreen(
                         .clip(RoundedCornerShape(12.dp)),
                     colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
                 ) {
+                    val buttonText = if (pagerState.currentPage == pages.size - 1) {
+                        if (isReviewMode) "Đóng" else "Bắt đầu ngay"
+                    } else {
+                        "Tiếp tục"
+                    }
                     Text(
-                        text = if (pagerState.currentPage == pages.size - 1) "Bắt đầu" else "Tiếp tục",
+                        text = buttonText,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -195,6 +286,22 @@ fun OnboardingScreen(
         }
     }
 }
+
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun OnboardingScreen(
+    onFinish: () -> Unit,
+    viewModel: OnboardingViewModel = hiltViewModel()
+) {
+    GuidePager(
+        onFinish = {
+            viewModel.completeOnboarding { onFinish() }
+        },
+        isReviewMode = false
+    )
+}
+
 
 @Preview(showBackground = true)
 @Composable

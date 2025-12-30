@@ -50,5 +50,6 @@ sealed class Screen(val route: String) {
     data object WriteReview : Screen("write_review/{productId}") {
         fun createRoute(productId: String) = "write_review/$productId"
     }
+    data object UserGuide : Screen("user_guide")
     data object Policy : Screen("policy")
 }

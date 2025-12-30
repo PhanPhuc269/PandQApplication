@@ -30,6 +30,7 @@ fun MainScreen(
     onAddressListClick: () -> Unit = {},
     onSupportClick: () -> Unit = {},
     onPolicyClick: () -> Unit = {},
+    onUserGuideClick: () -> Unit = {}, // Added param
     onNavigateToOrder: (String?) -> Unit = { orderId -> orderId?.let { onOrderClick(it) } }, // Navigate to order with orderId
     onNavigateToProduct: (String?) -> Unit = { id -> id?.let { onProductClick(it) } }, // Navigate to product with optional productId
     onNavigateToPromotion: (String?) -> Unit = { _ -> } // Navigate to promotion
@@ -96,6 +97,7 @@ fun MainScreen(
                         onNavigateToPersonalInfo = onPersonalInfoClick,
                         onNavigateToAddressList = onAddressListClick,
                         onNavigateToSupport = onSupportClick,
+                        onNavigateToUserGuide = onUserGuideClick,
                         onNavigateToPolicy = onPolicyClick
                     )
                 }
