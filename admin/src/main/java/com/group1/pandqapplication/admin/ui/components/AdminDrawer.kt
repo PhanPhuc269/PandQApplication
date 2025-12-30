@@ -97,6 +97,7 @@ fun AdminDrawerContent(
             modifier = Modifier
                 .padding(horizontal = 12.dp, vertical = 16.dp)
                 .weight(1f) // Push footer down
+                .verticalScroll(rememberScrollState())
         ) {
             
             // Primary Modules
@@ -178,6 +179,13 @@ fun AdminDrawerContent(
                 icon = Icons.Default.LocalOffer,
                 isSelected = currentRoute == AdminScreen.Promotions.route,
                 onClick = { onNavigate(AdminScreen.Promotions.route) },
+                primaryColor = primaryColor
+            )
+            DrawerItem(
+                label = "Notifications",
+                icon = Icons.Default.Notifications,
+                isSelected = currentRoute == AdminScreen.NotificationTemplates.route,
+                onClick = { onNavigate(AdminScreen.NotificationTemplates.route) },
                 primaryColor = primaryColor
             )
 

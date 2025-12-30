@@ -97,6 +97,10 @@ dependencies {
     
     // OkHttp for Cloudinary upload
     implementation(libs.okhttp)
+    
+    // Retrofit & Gson for AdminApiService
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

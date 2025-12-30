@@ -261,6 +261,11 @@ class AdminActivity : FragmentActivity() {
                                 onSuccess = { navController.popBackStack() }
                             )
                         }
+                        composable(AdminScreen.NotificationTemplates.route) {
+                            com.group1.pandqapplication.admin.ui.notification.NotificationTemplateScreen(
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
 
                     }
                 }

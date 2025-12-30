@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class AdminScreen(val route: String, val title: String, val icon: ImageVector) {
@@ -38,4 +39,5 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object ShippingManagement : AdminScreen("shipping_management", "Shipping Management", Icons.Default.LocalShipping)
     object Login : AdminScreen("login", "Login", Icons.Default.Login)
     object ChangePassword : AdminScreen("change_password", "Change Password", Icons.Default.ManageAccounts)
+    object NotificationTemplates : AdminScreen("notification_templates", "Notifications", Icons.Default.Notifications)
 }
