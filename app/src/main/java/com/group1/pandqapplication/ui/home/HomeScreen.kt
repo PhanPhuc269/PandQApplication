@@ -302,7 +302,7 @@ fun HomeScreen(
                                             isSelected = false,
                                             onClick = {
                                                 // Navigate to search with category filter
-                                                onCategoryClick(category.id)
+                                                onCategoryClick(category.id.toString())
                                             }
                                         )
                                     }

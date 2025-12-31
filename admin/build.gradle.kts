@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,6 +22,24 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Cloudinary credentials from local.properties
+        val localPropertiesFile = rootProject.file("local.properties")
+        val localProperties = Properties()
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        
+        val cloudinaryCloudName = localProperties.getProperty("CLOUDINARY_CLOUD_NAME", "")
+        val cloudinaryUploadPreset = localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", "")
+        
+        println("=== Cloudinary Config ===")
+        println("CloudName: $cloudinaryCloudName")
+        println("UploadPreset: $cloudinaryUploadPreset")
+        println("========================")
+        
+        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"$cloudinaryCloudName\"")
+        buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"$cloudinaryUploadPreset\"")
     }
 
     buildTypes {
@@ -40,6 +60,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -56,6 +77,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation("androidx.compose.runtime:runtime-livedata:1.7.6")
     
     // Navigation
     implementation(libs.androidx.navigation.compose)
@@ -67,13 +89,6 @@ dependencies {
 
     // Coil
     implementation(libs.coil.compose)
-
-    // Retrofit
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp.logging)
-
-
 
     // Realm
     implementation(libs.realm.base)
