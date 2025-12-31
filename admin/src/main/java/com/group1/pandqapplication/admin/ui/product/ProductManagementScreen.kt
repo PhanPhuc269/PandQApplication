@@ -45,6 +45,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDto
 import com.group1.pandqapplication.shared.ui.theme.BranchTextMainLight
 import com.group1.pandqapplication.shared.ui.theme.BranchTextSubLight
@@ -56,12 +62,25 @@ import com.group1.pandqapplication.shared.ui.theme.ProductStatusRed
 
 @Composable
 fun ProductManagementScreen(
+    viewModel: AdminProductViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
     onAddProductClick: () -> Unit = {},
-    onProductClick: (String) -> Unit = {},
-    viewModel: AdminProductViewModel = hiltViewModel()
+    onProductClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Consumed operation state logic remains below...
+    
+    // Consume operation state (e.g. after delete)
+    LaunchedEffect(uiState.operationSuccess) {
+        if (uiState.operationSuccess) {
+            viewModel.clearOperationState()
+        }
+    }
+    
+    // Delete Confirmation State
+    var productToDelete by remember { mutableStateOf<ProductDto?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val backgroundColor = com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundLight
     val textMain = BranchTextMainLight
@@ -137,8 +156,8 @@ fun ProductManagementScreen(
                     )
                 }
                 TextField(
-                    value = "",
-                    onValueChange = {},
+                    value = uiState.searchQuery,
+                    onValueChange = { viewModel.onSearchQueryChanged(it) },
                     placeholder = { Text("Tìm theo tên sản phẩm hoặc SKU", color = textSub) },
                     modifier = Modifier.weight(1f),
                     colors = TextFieldDefaults.colors(
@@ -160,38 +179,97 @@ fun ProductManagementScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item { FilterChip(text = "Tất cả", isSelected = true) }
-                item { FilterChip(text = "Còn hàng", isSelected = false) }
-                item { FilterChip(text = "Sắp hết", isSelected = false) }
-                item { FilterChip(text = "Hết hàng", isSelected = false) }
+                item { FilterChip(text = "Tất cả", isSelected = uiState.filterStatus == "ALL") { viewModel.onFilterStatusChanged("ALL") } }
+                item { FilterChip(text = "Còn hàng", isSelected = uiState.filterStatus == "IN_STOCK") { viewModel.onFilterStatusChanged("IN_STOCK") } }
+                item { FilterChip(text = "Sắp hết", isSelected = uiState.filterStatus == "LOW_STOCK") { viewModel.onFilterStatusChanged("LOW_STOCK") } }
+                item { FilterChip(text = "Hết hàng", isSelected = uiState.filterStatus == "OUT_OF_STOCK") { viewModel.onFilterStatusChanged("OUT_OF_STOCK") } }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Product List
-            if (uiState.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = ProductPrimary)
-                }
-            } else if (uiState.error != null) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = uiState.error ?: "Error", color = Color.Red)
-                }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(uiState.products) { product ->
-                        ProductItem(
-                            product = product,
-                            backgroundColor = surfaceColor,
-                            textMain = textMain,
-                            textSub = textSub,
-                            onClick = { onProductClick(product.id) }
+            // Product List Content
+            Box(modifier = Modifier.weight(1f)) {
+                if (uiState.filteredProducts.isEmpty() && !uiState.isLoading) {
+                    // Empty State
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Filled.Info,
+                            contentDescription = "Empty",
+                            tint = Color.Gray,
+                            modifier = Modifier.size(64.dp)
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Chưa có sản phẩm nào", color = Color.Gray, fontSize = 16.sp)
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(uiState.filteredProducts) { product ->
+                            ProductItem(
+                                product = product,
+                                backgroundColor = surfaceColor,
+                                textMain = textMain,
+                                textSub = textSub,
+                                onClick = { onProductClick(product.id) },
+                                onDeleteClick = { 
+                                    productToDelete = product
+                                    showDeleteDialog = true
+                                }
+                            )
+                        }
+                    }
+                }
+                
+                // Overlay Loader (Non-blocking or at least keeping list visible)
+                if (uiState.isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.White.copy(alpha = 0.3f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = ProductPrimary)
+                    }
+                }
+                
+                // Error Message
+                if (uiState.error != null) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = uiState.error ?: "Error", color = Color.Red)
                     }
                 }
             }
+        }
+        
+        // Delete Confirmation Dialog
+        if (showDeleteDialog && productToDelete != null) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Xác nhận xóa") },
+                text = { Text("Bạn có chắc chắn muốn xóa sản phẩm \"${productToDelete?.name}\" không?") },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(
+                        onClick = {
+                            productToDelete?.let { viewModel.deleteProduct(it.id) }
+                            showDeleteDialog = false
+                            productToDelete = null
+                        }
+                    ) {
+                        Text("Xóa", color = Color.Red)
+                    }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Hủy")
+                    }
+                }
+            )
         }
     }
 }
@@ -199,7 +277,8 @@ fun ProductManagementScreen(
 @Composable
 fun FilterChip(
     text: String,
-    isSelected: Boolean
+    isSelected: Boolean,
+    onClick: () -> Unit
 ) {
     val backgroundColor = if (isSelected) ProductPrimary else ProductChipUnselectedLight
     val textColor = if (isSelected) Color.White else Color(0xFF1F2937)
@@ -209,7 +288,7 @@ fun FilterChip(
             .height(32.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(backgroundColor)
-            .clickable { }
+            .clickable { onClick() }
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -228,7 +307,8 @@ fun ProductItem(
     backgroundColor: Color,
     textMain: Color,
     textSub: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     val statusColor = when(product.status) {
         "IN_STOCK" -> ProductStatusGreen
@@ -287,6 +367,14 @@ fun ProductItem(
                     modifier = Modifier
                         .size(12.dp)
                         .background(statusColor, CircleShape)
+                )
+            }
+            // Delete Icon
+            IconButton(onClick = onDeleteClick) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Filled.Delete,
+                    contentDescription = "Delete",
+                    tint = Color.Red.copy(alpha = 0.7f)
                 )
             }
             Icon(

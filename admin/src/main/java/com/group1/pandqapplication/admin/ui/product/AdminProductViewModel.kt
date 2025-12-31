@@ -20,11 +20,14 @@ import javax.inject.Inject
 data class AdminProductUiState(
     val isLoading: Boolean = false,
     val products: List<ProductDto> = emptyList(),
+    val filteredProducts: List<ProductDto> = emptyList(), // Store filtered list separately
     val categories: List<CategoryDto> = emptyList(),
     val currentProduct: ProductDetailDto? = null,
     val error: String? = null,
     val operationSuccess: Boolean = false,
-    val operationError: String? = null
+    val operationError: String? = null,
+    val searchQuery: String = "",
+    val filterStatus: String = "ALL" // ALL, IN_STOCK, LOW_STOCK, OUT_OF_STOCK
 )
 
 
@@ -41,6 +44,36 @@ class AdminProductViewModel @Inject constructor(
         loadCategories()
     }
 
+    private fun updateFilteredList() {
+        val currentList = _uiState.value.products
+        val query = _uiState.value.searchQuery.trim().lowercase()
+        val status = _uiState.value.filterStatus
+
+        val filtered = currentList.filter { product ->
+            val matchesSearch = product.name.lowercase().contains(query) // Simple name search
+            val matchesStatus = when (status) {
+                "ALL" -> true
+                "IN_STOCK" -> product.status == "IN_STOCK" || product.status == "ACTIVE" // Handle backend statuses
+                "LOW_STOCK" -> product.status == "LOW_STOCK"
+                "OUT_OF_STOCK" -> product.status == "OUT_OF_STOCK" || product.status == "INACTIVE"
+                else -> true
+            }
+            matchesSearch && matchesStatus
+        }
+
+        _uiState.value = _uiState.value.copy(filteredProducts = filtered)
+    }
+    
+    fun onSearchQueryChanged(query: String) {
+        _uiState.value = _uiState.value.copy(searchQuery = query)
+        updateFilteredList()
+    }
+    
+    fun onFilterStatusChanged(status: String) {
+        _uiState.value = _uiState.value.copy(filterStatus = status)
+        updateFilteredList()
+    }
+
 
     fun loadProducts() {
         viewModelScope.launch {
@@ -51,6 +84,7 @@ class AdminProductViewModel @Inject constructor(
                         isLoading = false,
                         products = products
                     )
+                    updateFilteredList() // Update filtered list after loading
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
@@ -173,11 +207,14 @@ class AdminProductViewModel @Inject constructor(
             
             repository.deleteProduct(id)
                 .onSuccess {
+                    // Update list locally for instant feedback
+                    val updatedList = _uiState.value.products.filter { it.id != id }
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        operationSuccess = true
+                        operationSuccess = true,
+                        products = updatedList
                     )
-                    loadProducts()
+                    updateFilteredList() // Re-apply filters
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
@@ -202,6 +239,25 @@ class AdminProductViewModel @Inject constructor(
         }
     }
 
+
+    fun uploadImage(file: java.io.File, onResult: (String?) -> Unit) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            // Use CloudinaryHelper directly
+            com.group1.pandqapplication.admin.util.CloudinaryHelper.uploadImage(file)
+                .onSuccess { url ->
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    onResult(url)
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        operationError = error.message ?: "Failed to upload image"
+                    )
+                    onResult(null)
+                }
+        }
+    }
 
     fun clearOperationState() {
         _uiState.value = _uiState.value.copy(

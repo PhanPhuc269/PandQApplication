@@ -28,15 +28,44 @@ fun getImageFileFromUri(context: Context, uri: Uri?): File? {
     if (uri == null) return null
     
     return try {
-        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
-        val file = File(context.cacheDir, "image_${System.currentTimeMillis()}.jpg")
-        inputStream.use { input ->
-            file.outputStream().use { output ->
-                input.copyTo(output)
-            }
+        val contentResolver = context.contentResolver
+        val inputStream = contentResolver.openInputStream(uri) ?: return null
+        
+        // Decode bitmap
+        val originalBitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+        inputStream.close()
+        
+        if (originalBitmap == null) return null
+        
+        // Resize if too big (max dimension 1024px)
+        val maxDimension = 1024
+        val ratio = Math.min(
+            maxDimension.toDouble() / originalBitmap.width,
+            maxDimension.toDouble() / originalBitmap.height
+        )
+        
+        val finalBitmap = if (ratio < 1.0) {
+            val width = (originalBitmap.width * ratio).toInt()
+            val height = (originalBitmap.height * ratio).toInt()
+            android.graphics.Bitmap.createScaledBitmap(originalBitmap, width, height, true)
+        } else {
+            originalBitmap
         }
+
+        val file = File(context.cacheDir, "image_compressed_${System.currentTimeMillis()}.jpg")
+        file.outputStream().use { output ->
+            finalBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, output)
+        }
+        
+        // Recycle bitmaps to free memory
+        if (finalBitmap !== originalBitmap) {
+            originalBitmap.recycle()
+        }
+        finalBitmap.recycle()
+        
         file
     } catch (e: Exception) {
+        e.printStackTrace()
         null
     }
 }

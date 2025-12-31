@@ -31,6 +31,8 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.navigation
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.group1.pandqapplication.admin.ui.analysis.SalesAnalysisScreen
 import com.group1.pandqapplication.admin.ui.components.AdminDrawerContent
 import com.group1.pandqapplication.admin.ui.navigation.AdminScreen
@@ -113,7 +115,7 @@ class AdminActivity : ComponentActivity() {
                                 onNavigateToProfile = {
                                     navController.navigate(AdminScreen.Profile.route)
                                 },
-                                onNavigateToInventory = { navController.navigate(AdminScreen.Inventory.route) },
+                                onNavigateToInventory = { navController.navigate("product_graph") },
                                 onNavigateToCategory = { navController.navigate(AdminScreen.CategoryManagement.route) },
                                 onNavigateToBranch = { navController.navigate(AdminScreen.BranchManagement.route) },
                                 onNavigateToSupplier = { navController.navigate(AdminScreen.SupplierManagement.route) },
@@ -160,25 +162,45 @@ class AdminActivity : ComponentActivity() {
                         composable(AdminScreen.BranchManagement.route) {
                             BranchManagementScreen(onBackClick = { navController.popBackStack() })
                         }
-                        composable(AdminScreen.Inventory.route) {
-                            ProductManagementScreen(
-                                onBackClick = { navController.popBackStack() },
-                                onAddProductClick = { navController.navigate("add_product") },
-                                onProductClick = { productId ->
-                                    navController.navigate("add_product?productId=$productId")
+
+                        // Product Management Graph (Shared ViewModel Scope)
+                        navigation(
+                            startDestination = AdminScreen.Inventory.route,
+                            route = "product_graph"
+                        ) {
+                            composable(AdminScreen.Inventory.route) { backStackEntry ->
+                                val parentEntry = remember(backStackEntry) {
+                                    navController.getBackStackEntry("product_graph")
                                 }
-                            )
-                        }
-                        composable(
-                            route = AdminScreen.AddProduct.route,
-                            arguments = listOf(navArgument("productId") { nullable = true; type = NavType.StringType })
-                        ) { backStackEntry ->
-                            val productId = backStackEntry.arguments?.getString("productId")
-                            AddProductScreen(
-                                productId = productId,
-                                onBackClick = { navController.popBackStack() },
-                                onCancelClick = { navController.popBackStack() }
-                            )
+                                val viewModel: com.group1.pandqapplication.admin.ui.product.AdminProductViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+                                
+                                ProductManagementScreen(
+                                    viewModel = viewModel,
+                                    onBackClick = { navController.popBackStack() },
+                                    onAddProductClick = { navController.navigate("add_product") },
+                                    onProductClick = { productId ->
+                                        navController.navigate("add_product?productId=$productId")
+                                    }
+                                )
+                            }
+                            
+                            composable(
+                                route = AdminScreen.AddProduct.route,
+                                arguments = listOf(navArgument("productId") { nullable = true; type = NavType.StringType })
+                            ) { backStackEntry ->
+                                val parentEntry = remember(backStackEntry) {
+                                    navController.getBackStackEntry("product_graph")
+                                }
+                                val viewModel: com.group1.pandqapplication.admin.ui.product.AdminProductViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+
+                                val productId = backStackEntry.arguments?.getString("productId")
+                                AddProductScreen(
+                                    productId = productId,
+                                    viewModel = viewModel,
+                                    onBackClick = { navController.popBackStack() },
+                                    onCancelClick = { navController.popBackStack() }
+                                )
+                            }
                         }
 
                         composable(AdminScreen.Profile.route) {

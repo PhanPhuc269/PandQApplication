@@ -30,6 +30,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
 
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -101,8 +102,19 @@ fun AddProductScreen(
     val sheetState = rememberModalBottomSheetState()
     
     
-    // Determine mode
+    // Specifications State
+    var specifications by remember { mutableStateOf(listOf<ProductSpecificationDto>()) }
+    
+    // Images State
+    var images by remember { mutableStateOf(listOf<String>()) }
 
+    var showSpecDialog by remember { mutableStateOf(false) }
+    var newSpecKey by remember { mutableStateOf("") }
+    var newSpecValue by remember { mutableStateOf("") }
+    var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
+
+    
+    // Determine mode
     val isEditMode = productId != null
 
     // Load product if edit mode
@@ -118,17 +130,20 @@ fun AddProductScreen(
             name = product.name
             description = product.description ?: ""
             price = product.price.toString()
-            // costPrice is not in ProductDetailDto? Check backend. ProductDetailDto usually has it.
-            // If missing in DTO, we skip.
-            // costPrice = product.costPrice?.toString() ?: "" 
             // costPrice = product.costPrice?.toString() ?: "" 
             categoryId = product.categoryId ?: ""
+            if (images.isEmpty()) {
+                images = product.images?.map { it.imageUrl } ?: emptyList()
+            }
+            if (specifications.isEmpty()) {
+                specifications = product.specifications ?: emptyList()
+            }
         }
     }
     
     // Update selected category name when categoryId or categories list changes
     LaunchedEffect(categoryId, uiState.categories) {
-        val cat = uiState.categories.find { it.id == categoryId }
+        val cat = uiState.categories.find { it.id.toString() == categoryId }
         selectedCategoryName = cat?.name ?: "Chưa chọn (ID: ${categoryId.take(4)}...)"
     }
 
@@ -147,6 +162,22 @@ fun AddProductScreen(
         if (uiState.operationError != null) {
             Toast.makeText(context, uiState.operationError, Toast.LENGTH_SHORT).show()
             viewModel.clearOperationState()
+        }
+    }
+    
+    // Image Picker Launcher
+    val imagePickerLauncher = com.group1.pandqapplication.admin.ui.category.rememberImagePickerLauncher { uri ->
+        if (uri != null) {
+            val file = com.group1.pandqapplication.admin.ui.category.getImageFileFromUri(context, uri)
+            if (file != null) {
+                viewModel.uploadImage(file) { url ->
+                    if (url != null) {
+                        val newUrl: String = url
+                        images = images + newUrl
+                        Toast.makeText(context, "Đã tải ảnh lên", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
     }
 
@@ -195,52 +226,84 @@ fun AddProductScreen(
                      .background(surfaceColor.copy(alpha = 0.8f))
                      .padding(16.dp)
              ) {
-                  Button(
-                      onClick = {
-                          val priceVal = price.toDoubleOrNull() ?: 0.0
-                          val costVal = costPrice.toDoubleOrNull()
-                          
-                          if (isEditMode && productId != null) {
-                              viewModel.updateProduct(
-                                  id = productId,
-                                  categoryId = categoryId,
-                                  name = name,
-                                  description = description,
-                                  price = priceVal,
-                                  costPrice = costVal,
-                                  thumbnailUrl = "https://via.placeholder.com/150", // Mock
-                                  status = "IN_STOCK", // Mock
-                                  images = emptyList(), // Mock
-                                  specifications = emptyList() // Mock
-                              )
+                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                     if (isEditMode) {
+                         Button(
+                             onClick = {
+                                 showDeleteConfirmationDialog = true
+                             },
+                             modifier = Modifier.fillMaxWidth().height(48.dp),
+                             shape = RoundedCornerShape(8.dp),
+                             colors = ButtonDefaults.buttonColors(
+                                 containerColor = Color.Transparent,
+                                 contentColor = Color.Red
+                             ),
+                             border = androidx.compose.foundation.BorderStroke(1.dp, Color.Red)
+                         ) {
+                             Text("Xóa sản phẩm", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                         }
+                     }
+
+                      Button(
+                          onClick = {
+                              val priceVal = price.toDoubleOrNull() ?: 0.0
+                              val costVal = costPrice.toDoubleOrNull()
+                              
+                              if (name.isBlank()) {
+                                  Toast.makeText(context, "Vui lòng nhập tên sản phẩm", Toast.LENGTH_SHORT).show()
+                                  return@Button
+                              }
+                              if (categoryId.isBlank()) {
+                                  Toast.makeText(context, "Vui lòng chọn danh mục", Toast.LENGTH_SHORT).show()
+                                  return@Button
+                              }
+                              if (priceVal <= 0) {
+                                  Toast.makeText(context, "Giá bán phải lớn hơn 0", Toast.LENGTH_SHORT).show()
+                                  return@Button
+                              }
+
+                              if (isEditMode && productId != null) {
+                                  viewModel.updateProduct(
+                                      id = productId,
+                                      categoryId = categoryId,
+                                      name = name,
+                                      description = description,
+                                      price = priceVal,
+                                      costPrice = costVal,
+                                      thumbnailUrl = images.firstOrNull() ?: "https://via.placeholder.com/150",
+                                      status = "ACTIVE", 
+                                      images = images,
+                                      specifications = specifications
+                                  )
+                              } else {
+                                  viewModel.createProduct(
+                                      categoryId = categoryId,
+                                      name = name,
+                                      description = description,
+                                      price = priceVal,
+                                      costPrice = costVal,
+                                      thumbnailUrl = images.firstOrNull() ?: "https://via.placeholder.com/150", 
+                                      status = "ACTIVE", 
+                                      images = images,
+                                      specifications = specifications
+                                  )
+                              }
+                          },
+                          modifier = Modifier.fillMaxWidth().height(48.dp),
+                          shape = RoundedCornerShape(8.dp),
+                          colors = ButtonDefaults.buttonColors(
+                              containerColor = AddProductPrimary,
+                              disabledContainerColor = AddProductPrimary.copy(alpha = 0.5f)
+                          ),
+                          enabled = !uiState.isLoading
+                      ) {
+                          if (uiState.isLoading) {
+                              CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                           } else {
-                              viewModel.createProduct(
-                                  categoryId = categoryId,
-                                  name = name,
-                                  description = description,
-                                  price = priceVal,
-                                  costPrice = costVal,
-                                  thumbnailUrl = "https://via.placeholder.com/150", // Mock
-                                  status = "IN_STOCK", // Mock
-                                  images = emptyList(), // Mock
-                                  specifications = emptyList() // Mock
-                              )
+                              Text(if (isEditMode) "Lưu thay đổi" else "Lưu sản phẩm", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                           }
-                      },
-                      modifier = Modifier.fillMaxWidth().height(48.dp),
-                      shape = RoundedCornerShape(8.dp),
-                      colors = ButtonDefaults.buttonColors(
-                          containerColor = AddProductPrimary,
-                          disabledContainerColor = AddProductPrimary.copy(alpha = 0.5f)
-                      ),
-                      enabled = !uiState.isLoading
-                  ) {
-                      if (uiState.isLoading) {
-                          CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                      } else {
-                          Text(if (isEditMode) "Lưu thay đổi" else "Lưu sản phẩm", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                       }
-                  }
+                 }
              }
         }
     ) { paddingValues ->
@@ -337,7 +400,7 @@ fun AddProductScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
-                                            categoryId = category.id
+                                            categoryId = category.id.toString()
                                             showCategorySheet = false
                                         }
                                         .padding(vertical = 12.dp),
@@ -345,7 +408,7 @@ fun AddProductScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(category.name, fontSize = 16.sp, color = textPrimary)
-                                    if (category.id == categoryId) {
+                                    if (category.id.toString() == categoryId) {
                                         Icon(Icons.Default.Widgets, contentDescription = "Selected", tint = AddProductPrimary)
                                     }
                                 }
@@ -379,7 +442,9 @@ fun AddProductScreen(
                                     .clip(RoundedCornerShape(8.dp))
                                     .border(1.dp, AddProductPrimary.copy(alpha=0.5f), RoundedCornerShape(8.dp)) // Dashed border simulated or just solid alpha
                                     .background(inputBgColor)
-                                    .clickable {},
+                                    .clickable {
+                                        imagePickerLauncher.launch("image/*")
+                                    },
                                 contentAlignment = Alignment.Center
                              ) {
                                  Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -387,13 +452,21 @@ fun AddProductScreen(
                                      Text("Thêm ảnh", fontSize = 12.sp, color = AddProductPrimary, fontWeight = FontWeight.Medium)
                                  }
                              }
-                            // Existing Images
-                             Box(modifier = Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(8.dp)).background(Color.Gray)) {
-                                  AsyncImage(model = "https://lh3.googleusercontent.com/aida-public/AB6AXuAMmUmyt0QrLiQq6UX_1MyoKlLGMWNI8ZVXZwjtkz8LazlpWIKYx_oDmjzRD_j7YmsMmr7r5OuoFEpxgW9oxZgjafuOmbFDkXsFzIiC4iwDqlpeblBL9JAY5gl5WJSAUY2oTPqWbnS4fUF_3f43lUr6V_-SrhAoL16EV9p49QGTbf9n3nhEXyDP_x2-_iLoHzd7y6xnK16C1ZUhj2-sr3G3-r0ldkk2Xif-iX8CaHt59jzQmzquIHUeJUbOY-GBrKBD5j8RqIn8MGE", contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                            
+                             // Dynamic Images List (Display last 2 or scrollable)
+                             // For simplicity showing up to 2 previews
+                             images.takeLast(2).forEach { imageUrl ->
+                                 Box(modifier = Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(8.dp)).background(Color.Gray)) {
+                                      AsyncImage(model = imageUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                                 }
                              }
-                             Box(modifier = Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(8.dp)).background(Color.Gray)) {
-                                  AsyncImage(model = "https://lh3.googleusercontent.com/aida-public/AB6AXuAwFPVTdi3QP2hJ7WA_PAHNeNkzREnaQSVJJ6LjfryVIKKUWeB1C9g6qFbhWUPARag7chrHaSj_roKD8QqhrswVD3dyhI2nTdj7aFt_iG63FARo2RdPcVrrLNsMplUr_nfNl75Ex6lUKT8hhxQg_ZKcGtQPsY8_-OAdQuBssITPeAgekblgoh9hdlH92By7-c6wAG2w0MXP1aCNMh0bNt5HETVY6K5mSS3YcTh_p5rStLtfIe_dGytOOg2-DOXKexuyfNEdg5KU0_0", contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                             // Fill remaining space if less than 2 images
+                             repeat(2 - images.takeLast(2).size) {
+                                 Spacer(modifier = Modifier.weight(1f))
                              }
+                        }
+                        if (images.size > 2) {
+                            Text("+ ${images.size - 2} ảnh khác", fontSize = 12.sp, color = textSecondary, modifier = Modifier.padding(top = 4.dp))
                         }
                     }
                     
@@ -478,7 +551,13 @@ fun AddProductScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                      Text("Thông số kỹ thuật", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-                     Text("Thêm", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = AddProductPrimary)
+                     Text(
+                        "Thêm", 
+                        fontSize = 16.sp, 
+                        fontWeight = FontWeight.Medium, 
+                        color = AddProductPrimary,
+                        modifier = Modifier.clickable { showSpecDialog = true }
+                    )
                 }
                 Column(
                     modifier = Modifier
@@ -488,14 +567,80 @@ fun AddProductScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    SpecRow("CPU", "Intel Core i9", textPrimary, inputBgColor, textSecondary)
-                    SpecRow("RAM", "16GB DDR5", textPrimary, inputBgColor, textSecondary)
+                    if (specifications.isEmpty()) {
+                        Text("Chưa có thông số kỹ thuật", color = textSecondary, fontSize = 14.sp)
+                    } else {
+                        specifications.forEach { spec ->
+                            SpecRow(
+                                attr = spec.specKey, 
+                                value = spec.specValue, 
+                                textColor = textPrimary, 
+                                bgColor = inputBgColor, 
+                                iconColor = textSecondary,
+                                onDelete = { specifications = specifications - spec }
+                            )
+                        }
+                    }
                 }
             }
             
             Spacer(modifier = Modifier.height(48.dp))
         }
     }
+    
+    if (showSpecDialog) {
+        AlertDialog(
+            onDismissRequest = { showSpecDialog = false },
+            title = { Text("Thêm thông số kỹ thuật") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextField(value = newSpecKey, onValueChange = { newSpecKey = it }, placeholder = { Text("Tên thông số (VD: RAM)") })
+                    TextField(value = newSpecValue, onValueChange = { newSpecValue = it }, placeholder = { Text("Giá trị (VD: 8GB)") })
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (newSpecKey.isNotBlank() && newSpecValue.isNotBlank()) {
+                        specifications = specifications + ProductSpecificationDto(newSpecKey, newSpecValue)
+                        newSpecKey = ""
+                        newSpecValue = ""
+                        showSpecDialog = false
+                    }
+                }) {
+                    Text("Thêm")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showSpecDialog = false }) {
+                    Text("Hủy")
+                }
+            }
+        )
+    }
+
+    if (showDeleteConfirmationDialog && productId != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmationDialog = false },
+            title = { Text("Xác nhận xóa") },
+            text = { Text("Bạn có chắc chắn muốn xóa sản phẩm này không?") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                     onClick = {
+                         viewModel.deleteProduct(productId)
+                         showDeleteConfirmationDialog = false
+                     }
+                ) {
+                    Text("Xóa", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showDeleteConfirmationDialog = false }) {
+                    Text("Hủy")
+                }
+            }
+        )
+    }
+
 }
 
 @Composable
@@ -549,7 +694,8 @@ fun SpecRow(
     value: String,
     textColor: Color,
     bgColor: Color,
-    iconColor: Color
+    iconColor: Color,
+    onDelete: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -578,7 +724,12 @@ fun SpecRow(
         ) {
             Text(value, color = textColor, fontSize = 16.sp)
         }
-        Icon(Icons.Default.Delete, null, tint = iconColor)
+        Icon(
+            Icons.Default.Delete, 
+            null, 
+            tint = iconColor,
+            modifier = Modifier.clickable { onDelete() }
+        )
     }
 }
 
