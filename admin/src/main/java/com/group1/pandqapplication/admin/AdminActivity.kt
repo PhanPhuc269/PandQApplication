@@ -41,6 +41,10 @@ import com.group1.pandqapplication.admin.ui.role.RoleManagementScreen
 import com.group1.pandqapplication.admin.ui.branch.BranchManagementScreen
 import com.group1.pandqapplication.admin.ui.inventory.InventoryScreen
 import com.group1.pandqapplication.admin.ui.product.AddProductScreen
+import com.group1.pandqapplication.admin.ui.product.ProductManagementScreen
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
+
 import com.group1.pandqapplication.admin.ui.orders.AdminOrderDetailsScreen
 import com.group1.pandqapplication.admin.ui.promotions.CreatePromotionScreen
 import com.group1.pandqapplication.admin.ui.profile.AdminProfileScreen
@@ -102,8 +106,10 @@ class AdminActivity : ComponentActivity() {
                                     navController.navigate(AdminScreen.Promotions.route)
                                 },
                                 onNavigateToAddProduct = {
-                                    navController.navigate(AdminScreen.AddProduct.route)
+                                    navController.navigate("add_product")
                                 },
+
+
                                 onNavigateToProfile = {
                                     navController.navigate(AdminScreen.Profile.route)
                                 },
@@ -155,17 +161,26 @@ class AdminActivity : ComponentActivity() {
                             BranchManagementScreen(onBackClick = { navController.popBackStack() })
                         }
                         composable(AdminScreen.Inventory.route) {
-                            InventoryScreen(
+                            ProductManagementScreen(
                                 onBackClick = { navController.popBackStack() },
-                                onNavigateToAddProduct = { navController.navigate(AdminScreen.AddProduct.route) }
+                                onAddProductClick = { navController.navigate("add_product") },
+                                onProductClick = { productId ->
+                                    navController.navigate("add_product?productId=$productId")
+                                }
                             )
                         }
-                        composable(AdminScreen.AddProduct.route) {
+                        composable(
+                            route = AdminScreen.AddProduct.route,
+                            arguments = listOf(navArgument("productId") { nullable = true; type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val productId = backStackEntry.arguments?.getString("productId")
                             AddProductScreen(
+                                productId = productId,
                                 onBackClick = { navController.popBackStack() },
                                 onCancelClick = { navController.popBackStack() }
                             )
                         }
+
                         composable(AdminScreen.Profile.route) {
                             AdminProfileScreen(
                                 onBackClick = { navController.popBackStack() },
@@ -201,6 +216,7 @@ class AdminActivity : ComponentActivity() {
                 }
             }
         }
-    }
+        }
 }
+
 }

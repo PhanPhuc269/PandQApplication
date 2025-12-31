@@ -9,5 +9,6 @@ data class ProductDto(
     val price: Double,
     val thumbnailUrl: String?,
     val averageRating: Double?,
-    val reviewCount: Int?
+    val reviewCount: Int?,
+    val status: String?
 )

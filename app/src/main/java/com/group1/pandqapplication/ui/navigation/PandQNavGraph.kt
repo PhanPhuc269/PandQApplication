@@ -16,6 +16,10 @@ import com.group1.pandqapplication.ui.login.LoginScreen
 import com.group1.pandqapplication.ui.checkout.CheckoutScreen
 import com.group1.pandqapplication.ui.ordertracking.OrderTrackingScreen
 import com.group1.pandqapplication.ui.shipping.ShippingAddressScreen
+import com.group1.pandqapplication.ui.product.ProductManagementScreen
+import com.group1.pandqapplication.ui.admin.AddProductScreen
+
+
 
 @Composable
 fun PandQNavGraph(
@@ -379,5 +383,40 @@ fun PandQNavGraph(
                 }
             )
         }
+        composable(Screen.ProductManagement.route) {
+            ProductManagementScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onAddProductClick = {
+                    navController.navigate(Screen.AddProduct.createRoute())
+                },
+                onProductClick = { productId ->
+                    navController.navigate(Screen.AddProduct.createRoute(productId))
+                }
+            )
+        }
+        composable(
+            route = Screen.AddProduct.route,
+            arguments = listOf(
+                navArgument("productId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId")
+            AddProductScreen(
+                productId = productId,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onCancelClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
     }
 }
+

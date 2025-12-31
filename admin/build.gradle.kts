@@ -68,6 +68,13 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging)
+
+
+
     // Realm
     implementation(libs.realm.base)
 

@@ -25,9 +25,12 @@ import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.VideoCall
 import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -56,13 +59,97 @@ import com.group1.pandqapplication.shared.ui.theme.AddProductTextPrimaryDark
 import com.group1.pandqapplication.shared.ui.theme.AddProductTextPrimaryLight
 import com.group1.pandqapplication.shared.ui.theme.AddProductTextSecondaryDark
 import com.group1.pandqapplication.shared.ui.theme.AddProductTextSecondaryLight
-import androidx.compose.foundation.Canvas
+import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.group1.pandqapplication.admin.ui.product.AdminProductViewModel
+import com.group1.pandqapplication.shared.data.remote.dto.ProductSpecificationDto
+import androidx.compose.material3.CircularProgressIndicator
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductScreen(
+
+    productId: String? = null,
     onBackClick: () -> Unit = {},
-    onCancelClick: () -> Unit = {}
+    onCancelClick: () -> Unit = {},
+    viewModel: AdminProductViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    
+    // Form State
+    var name by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var price by remember { mutableStateOf("") }
+    var costPrice by remember { mutableStateOf("") }
+    var stock by remember { mutableStateOf("") } // Not used in API yet but UI has it
+
+    var categoryId by remember { mutableStateOf("") }
+    var selectedCategoryName by remember { mutableStateOf("Chưa chọn") }
+    
+    // Bottom Sheet State
+    var showCategorySheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+    
+    
+    // Determine mode
+
+    val isEditMode = productId != null
+
+    // Load product if edit mode
+    LaunchedEffect(productId) {
+        if (productId != null) {
+            viewModel.getProduct(productId)
+        }
+    }
+
+    // Bind data when product loads
+    LaunchedEffect(uiState.currentProduct) {
+        uiState.currentProduct?.let { product ->
+            name = product.name
+            description = product.description ?: ""
+            price = product.price.toString()
+            // costPrice is not in ProductDetailDto? Check backend. ProductDetailDto usually has it.
+            // If missing in DTO, we skip.
+            // costPrice = product.costPrice?.toString() ?: "" 
+            // costPrice = product.costPrice?.toString() ?: "" 
+            categoryId = product.categoryId ?: ""
+        }
+    }
+    
+    // Update selected category name when categoryId or categories list changes
+    LaunchedEffect(categoryId, uiState.categories) {
+        val cat = uiState.categories.find { it.id == categoryId }
+        selectedCategoryName = cat?.name ?: "Chưa chọn (ID: ${categoryId.take(4)}...)"
+    }
+
+    
+    // Handle Success
+    LaunchedEffect(uiState.operationSuccess) {
+        if (uiState.operationSuccess) {
+            Toast.makeText(context, if (isEditMode) "Cập nhật thành công" else "Thêm thành công", Toast.LENGTH_SHORT).show()
+            viewModel.clearOperationState()
+            onBackClick() // Go back to list
+        }
+    }
+
+    // Handle Error
+    LaunchedEffect(uiState.operationError) {
+        if (uiState.operationError != null) {
+            Toast.makeText(context, uiState.operationError, Toast.LENGTH_SHORT).show()
+            viewModel.clearOperationState()
+        }
+    }
+
     val isDarkTheme = false
     
     val backgroundColor = if (isDarkTheme) AddProductBackgroundDark else AddProductBackgroundLight
@@ -85,7 +172,7 @@ fun AddProductScreen(
                     Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back", tint = textPrimary)
                 }
                 Text(
-                    "Thêm sản phẩm mới",
+                    if (isEditMode) "Cập nhật sản phẩm" else "Thêm sản phẩm mới",
                     color = textPrimary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
@@ -108,18 +195,52 @@ fun AddProductScreen(
                      .background(surfaceColor.copy(alpha = 0.8f))
                      .padding(16.dp)
              ) {
-                 Button(
-                     onClick = {},
-                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                     shape = RoundedCornerShape(8.dp),
-                     colors = ButtonDefaults.buttonColors(
-                         containerColor = AddProductPrimary,
-                         disabledContainerColor = AddProductPrimary.copy(alpha = 0.5f)
-                     ),
-                     enabled = false // Disabled as per design for now
-                 ) {
-                     Text("Lưu sản phẩm", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                 }
+                  Button(
+                      onClick = {
+                          val priceVal = price.toDoubleOrNull() ?: 0.0
+                          val costVal = costPrice.toDoubleOrNull()
+                          
+                          if (isEditMode && productId != null) {
+                              viewModel.updateProduct(
+                                  id = productId,
+                                  categoryId = categoryId,
+                                  name = name,
+                                  description = description,
+                                  price = priceVal,
+                                  costPrice = costVal,
+                                  thumbnailUrl = "https://via.placeholder.com/150", // Mock
+                                  status = "IN_STOCK", // Mock
+                                  images = emptyList(), // Mock
+                                  specifications = emptyList() // Mock
+                              )
+                          } else {
+                              viewModel.createProduct(
+                                  categoryId = categoryId,
+                                  name = name,
+                                  description = description,
+                                  price = priceVal,
+                                  costPrice = costVal,
+                                  thumbnailUrl = "https://via.placeholder.com/150", // Mock
+                                  status = "IN_STOCK", // Mock
+                                  images = emptyList(), // Mock
+                                  specifications = emptyList() // Mock
+                              )
+                          }
+                      },
+                      modifier = Modifier.fillMaxWidth().height(48.dp),
+                      shape = RoundedCornerShape(8.dp),
+                      colors = ButtonDefaults.buttonColors(
+                          containerColor = AddProductPrimary,
+                          disabledContainerColor = AddProductPrimary.copy(alpha = 0.5f)
+                      ),
+                      enabled = !uiState.isLoading
+                  ) {
+                      if (uiState.isLoading) {
+                          CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                      } else {
+                          Text(if (isEditMode) "Lưu thay đổi" else "Lưu sản phẩm", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                      }
+                  }
              }
         }
     ) { paddingValues ->
@@ -141,8 +262,25 @@ fun AddProductScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    LabelInput("Tên sản phẩm", "Nhập tên sản phẩm", textSecondary, textPrimary, inputBgColor)
-                    LabelInput("Mô tả chi tiết", "Nhập mô tả chi tiết về sản phẩm", textSecondary, textPrimary, inputBgColor, isMultiLine = true)
+                    LabelInput(
+                        label = "Tên sản phẩm", 
+                        placeholder = "Nhập tên sản phẩm", 
+                        text = name,
+                        onValueChange = { name = it },
+                        labelColor = textSecondary, 
+                        textColor = textPrimary, 
+                        bgColor = inputBgColor
+                    )
+                    LabelInput(
+                        label = "Mô tả chi tiết", 
+                        placeholder = "Nhập mô tả chi tiết về sản phẩm", 
+                        text = description,
+                        onValueChange = { description = it },
+                        labelColor = textSecondary, 
+                        textColor = textPrimary, 
+                        bgColor = inputBgColor, 
+                        isMultiLine = true
+                    )
                     
                     // Category Selector
                     Row(
@@ -151,18 +289,74 @@ fun AddProductScreen(
                             .height(48.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(inputBgColor)
+                            .clickable { showCategorySheet = true }
                             .padding(horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(Icons.Default.Widgets, null, tint = textSecondary)
                         Spacer(modifier = Modifier.width(12.dp))
                         Text("Danh mục", color = textPrimary, fontSize = 16.sp, modifier = Modifier.weight(1f))
-                        Text("Chưa chọn", color = textSecondary, fontSize = 14.sp)
+                        Text(selectedCategoryName, color = if(categoryId.isNotEmpty()) textPrimary else textSecondary, fontSize = 14.sp)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Icon(Icons.Default.ArrowForwardIos, null, tint = textSecondary, modifier = Modifier.size(16.dp))
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null, 
+                            tint = textSecondary, 
+                            modifier = Modifier.size(16.dp)
+                        )
+
                     }
                 }
             }
+            
+            // ... (Rest of content)
+
+            if (showCategorySheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showCategorySheet = false },
+                    sheetState = sheetState,
+                    containerColor = surfaceColor
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            "Chọn danh mục",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textPrimary,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(uiState.categories) { category ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            categoryId = category.id
+                                            showCategorySheet = false
+                                        }
+                                        .padding(vertical = 12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(category.name, fontSize = 16.sp, color = textPrimary)
+                                    if (category.id == categoryId) {
+                                        Icon(Icons.Default.Widgets, contentDescription = "Selected", tint = AddProductPrimary)
+                                    }
+                                }
+                                HorizontalDivider(color = textSecondary.copy(alpha = 0.1f))
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(32.dp))
+                    }
+                }
+            }
+
             
             // Images & Video
             Section("Hình ảnh & Video", textPrimary) {
@@ -235,12 +429,43 @@ fun AddProductScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Column {
-                        LabelInput("Giá bán", "VD: 19.990.000", textSecondary, textPrimary, inputBgColor, hasError = true)
-                        Text("Vui lòng nhập giá bán", fontSize = 12.sp, color = AddProductError, modifier = Modifier.padding(top = 4.dp))
+                        LabelInput(
+                            label = "Giá bán", 
+                            placeholder = "VD: 19990000", 
+                            text = price,
+                            onValueChange = { price = it },
+                            labelColor = textSecondary, 
+                            textColor = textPrimary, 
+                            bgColor = inputBgColor, 
+                            hasError = price.isNotEmpty() && price.toDoubleOrNull() == null
+                        )
+                        if (price.isEmpty()) {
+                            Text("Vui lòng nhập giá bán", fontSize = 12.sp, color = AddProductError, modifier = Modifier.padding(top = 4.dp))
+                        }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Box(modifier = Modifier.weight(1f)) { LabelInput("Giá vốn", "Không bắt buộc", textSecondary, textPrimary, inputBgColor) }
-                        Box(modifier = Modifier.weight(1f)) { LabelInput("Tồn kho", "VD: 100", textSecondary, textPrimary, inputBgColor) }
+                        Box(modifier = Modifier.weight(1f)) { 
+                            LabelInput(
+                                label = "Giá vốn", 
+                                placeholder = "Không bắt buộc", 
+                                text = costPrice,
+                                onValueChange = { costPrice = it },
+                                labelColor = textSecondary, 
+                                textColor = textPrimary, 
+                                bgColor = inputBgColor
+                            ) 
+                        }
+                        Box(modifier = Modifier.weight(1f)) { 
+                            LabelInput(
+                                label = "Tồn kho", 
+                                placeholder = "VD: 100", 
+                                text = stock,
+                                onValueChange = { stock = it },
+                                labelColor = textSecondary, 
+                                textColor = textPrimary, 
+                                bgColor = inputBgColor
+                            ) 
+                        }
                     }
                 }
             }
@@ -285,6 +510,8 @@ fun Section(title: String, textColor: Color, content: @Composable () -> Unit) {
 fun LabelInput(
     label: String,
     placeholder: String,
+    text: String,
+    onValueChange: (String) -> Unit,
     labelColor: Color,
     textColor: Color,
     bgColor: Color,
@@ -293,22 +520,26 @@ fun LabelInput(
 ) {
     Column {
         Text(label, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = labelColor, modifier = Modifier.padding(bottom = 8.dp))
-        Box(
+        TextField(
+            value = text,
+            onValueChange = onValueChange,
+            placeholder = { Text(placeholder, color = labelColor.copy(alpha = 0.5f), fontSize = 16.sp) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(if (isMultiLine) 120.dp else 48.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(bgColor)
-                .then(if (hasError) Modifier.border(1.dp, AddProductError, RoundedCornerShape(8.dp)) else Modifier)
-                .padding(horizontal = 12.dp, vertical = 12.dp)
-        ) {
-            if (!isMultiLine) {
-                // Simplified text input display
-                Text(placeholder, color = labelColor.copy(alpha = 0.5f), fontSize = 16.sp)
-            } else {
-                 Text(placeholder, color = labelColor.copy(alpha = 0.5f), fontSize = 16.sp)
-            }
-        }
+                .border(if (hasError) 1.dp else 0.dp, if (hasError) AddProductError else Color.Transparent, RoundedCornerShape(8.dp)),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = bgColor,
+                unfocusedContainerColor = bgColor,
+                focusedTextColor = textColor,
+                unfocusedTextColor = textColor,
+                focusedIndicatorColor = Color.Transparent, /* Hide underline */
+                unfocusedIndicatorColor = Color.Transparent
+            ),
+
+            singleLine = !isMultiLine
+        )
     }
 }
 

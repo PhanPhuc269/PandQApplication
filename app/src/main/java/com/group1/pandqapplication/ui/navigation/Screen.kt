@@ -51,5 +51,17 @@ sealed class Screen(val route: String) {
         fun createRoute(productId: String) = "write_review/$productId"
     }
     data object UserGuide : Screen("user_guide")
+
     data object Policy : Screen("policy")
+    data object ProductManagement : Screen("product_management")
+    data object AddProduct : Screen("add_product?productId={productId}") {
+        fun createRoute(productId: String? = null): String {
+            return if (productId != null) {
+                "add_product?productId=$productId"
+            } else {
+                "add_product"
+            }
+        }
+    }
+
 }

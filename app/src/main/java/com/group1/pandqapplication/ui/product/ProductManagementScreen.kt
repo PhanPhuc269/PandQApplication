@@ -22,7 +22,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.group1.pandqapplication.ui.admin.AdminProductViewModel
+import com.group1.pandqapplication.shared.data.remote.dto.ProductDto
+
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -56,8 +63,13 @@ import com.group1.pandqapplication.shared.ui.theme.ProductStatusRed
 
 @Composable
 fun ProductManagementScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onAddProductClick: () -> Unit = {},
+    onProductClick: (String) -> Unit = {},
+    viewModel: AdminProductViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     val isDarkTheme = false
     
     // Reuse Branch background colors as they are also "f8f6f6" and "221310" (close enough or same)
@@ -101,7 +113,7 @@ fun ProductManagementScreen(
                     )
                     
                     IconButton(
-                        onClick = { /* Add Product */ },
+                        onClick = onAddProductClick,
                         modifier = Modifier
                             .size(40.dp)
                     ) {
@@ -185,26 +197,33 @@ fun ProductManagementScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Product List
-            val products = listOf(
-                Product("Pro Display XDR", "Giá: 4,999.00 USD - SKU: AP-XDR-01", "https://lh3.googleusercontent.com/aida-public/AB6AXuDMxaGRB3158tPKOh5WBS7vSVxeOuQwOQGuu04--ofhrmqWYPl9EIaJ8OP-WT_PNXrqZvF8BisfOki_Avf5Ao-VGD_YJsS0Fp2A2Rm1xkZ4lAg16BuVpCSLZIUuEXImzsf8LvoAksTuuO5zXMk4lMCPhjQc_9lxZkgo3dKTFyKtnDMEeUjN2EBcqlkL0TK7yNphScqPCvNKx_MjBNPXvi1I60GcUuQyWVD9sWJcah2EvHQ5LqyBt4p-5un_Za2IcYcI2wUd4ypOWD0", ProductStatus.IN_STOCK),
-                Product("MacBook Pro 16-inch", "Giá: 2,399.00 USD - SKU: MBP-16-01", "https://lh3.googleusercontent.com/aida-public/AB6AXuAJJm4vXz6nAI4J2IN5rLtGRJEHx54Q7GwRUxqUDO3wvfzo6x8vtuxGwpw3yQoM13ZHzmwBMAQ6lq5BZ3unqchesn9aL7l2zrYexpgaWBO33peX9irPi-MB8nA3peUO90cQ8OkGGWeIdtmxPNytGdwihvRU2eXNg6E1rW2S4m2B10lmvY3TLt0Ur6sKHq1lMo2Sr3xW7B6MBc85lpSsdue0NOYx7q71eQZB8u0udgxTz5lZnG_hOPPgDxAWuWKot32UZkUVMOtDVJQ", ProductStatus.IN_STOCK),
-                Product("AirPods Max", "Giá: 549.00 USD - SKU: AP-MAX-01", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrO_aKFDXKUyYoirb2_9HRq5F46nMi8cfLK7J20mRxVPyjVn1hqtvXu5S_K3lm3eBQUBaY6n3nJpHkcDaZbWmvnE0e6bC8npHon5nNG95WHg3W3g6LET2liBmIP2nDexyqmGguraYY4wlbdXt7fVD18uQ48hKLZtiYAuW-_jKV3WjV5BG8_oqkMKXe3H1zBU7Pq7h8beux04Gx6kmQidfSgNFy-LyVRLVQwa3S7edVqSpW_RIocpXfsgXtRwUFDsYu595aLr3xNL0", ProductStatus.LOW_STOCK),
-                Product("iPhone 15 Pro", "Giá: 999.00 USD - SKU: IP-15P-01", "https://lh3.googleusercontent.com/aida-public/AB6AXuDz5zCJ9qzxPsUsFiBmmuH8GActCw-DLRKZOi_-4BP_KE0IpokGB3ITSsRbVthARzUo0tg-iYnh8Bic2ARbSqh1nT_1cmevuOcrPFmgNJcJZk1tFp4zmk8eAd0mSHsEVvPX8NZgc4pMeCDkIFvm3KP1XA1YvNUqSJgHpzSfNG4FwgwBtVkGQ6V5HVrV8j5qu-FJuPISz1R0IicsWxO3zNcGJ9zpeZCvxSuoriqHZcgX0aRFnEDFl0FUuvSjzmwEKuHBGZKmgpoJ1b0", ProductStatus.OUT_OF_STOCK),
-                Product("Apple Watch Ultra 2", "Giá: 799.00 USD - SKU: AW-UL2-01", "https://lh3.googleusercontent.com/aida-public/AB6AXuAQSDBNTdcTD_YQBTSEzTcS9Abc6c9qao9DE_b7FqSk-vl16RkBrevSGNkVcJGfTTQwOGBcOxB4BuK3BeIQk7iNuYdDsfs4JbY9ssUhnDWu4oF34rTuP7Yx5uFcrcSAL0HLL2Pe5XcIjoyebxMHyb-Cgqpw4Q-uiFARQKHVcAACAGLhgyScJAUPkjpg0YeP5Q3VR5qDgnJLaCHJOXtZDhLJPeNhauiE7Gl-FidFDxKkgevPa4eAAEC6G3pk2C8Cg2jgpLCKQ5LSP0Y", ProductStatus.IN_STOCK)
-            )
-
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(products) { product ->
-                    ProductItem(
-                        product = product,
-                        backgroundColor = surfaceColor,
-                        textMain = textMain,
-                        textSub = textSub
-                    )
+            // Product List
+            if (uiState.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = ProductPrimary)
+                }
+            } else if (uiState.error != null) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = uiState.error ?: "Error", color = Color.Red)
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(uiState.products) { product ->
+                        ProductItem(
+                            product = product,
+                            backgroundColor = surfaceColor,
+                            textMain = textMain,
+                            textSub = textSub,
+                            onClick = { onProductClick(product.id) }
+                        )
+                    }
                 }
             }
+
+
+
         }
     }
 }
@@ -242,15 +261,17 @@ fun FilterChip(
 
 @Composable
 fun ProductItem(
-    product: Product,
+    product: ProductDto,
     backgroundColor: Color,
     textMain: Color,
-    textSub: Color
+    textSub: Color,
+    onClick: () -> Unit
 ) {
     val statusColor = when(product.status) {
-        ProductStatus.IN_STOCK -> ProductStatusGreen
-        ProductStatus.LOW_STOCK -> ProductStatusOrange
-        ProductStatus.OUT_OF_STOCK -> ProductStatusRed
+        "IN_STOCK" -> ProductStatusGreen
+        "LOW_STOCK" -> ProductStatusOrange
+        "OUT_OF_STOCK" -> ProductStatusRed
+        else -> ProductStatusGreen // Default
     }
 
     Row(
@@ -258,12 +279,12 @@ fun ProductItem(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(backgroundColor)
-            .clickable { }
+            .clickable { onClick() }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            model = product.imageUrl,
+            model = product.thumbnailUrl,
             contentDescription = null,
             modifier = Modifier
                 .size(56.dp)
@@ -284,13 +305,14 @@ fun ProductItem(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = product.priceSku,
+                text = "Giá: ${product.price} USD",
                 fontSize = 14.sp,
                 color = textSub,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
+
 
         Spacer(modifier = Modifier.width(8.dp))
 
@@ -315,16 +337,7 @@ fun ProductItem(
     }
 }
 
-data class Product(
-    val name: String,
-    val priceSku: String,
-    val imageUrl: String,
-    val status: ProductStatus
-)
 
-enum class ProductStatus {
-    IN_STOCK, LOW_STOCK, OUT_OF_STOCK
-}
 
 @Preview
 @Composable

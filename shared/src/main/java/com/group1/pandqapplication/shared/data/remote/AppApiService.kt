@@ -19,6 +19,9 @@ import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayCreateOrderResp
 import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayStatusResponse
 import com.group1.pandqapplication.shared.data.remote.dto.ReviewDto
 import com.group1.pandqapplication.shared.data.remote.dto.OrderDto
+import com.group1.pandqapplication.shared.data.remote.dto.CreateProductRequest
+import com.group1.pandqapplication.shared.data.remote.dto.UpdateProductRequest
+
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -45,6 +48,16 @@ interface AppApiService {
 
     @GET("api/v1/products/{id}")
     suspend fun getProductById(@Path("id") productId: String): ProductDetailDto
+
+    @POST("api/v1/products")
+    suspend fun createProduct(@Body request: CreateProductRequest): ProductDetailDto
+
+    @PUT("api/v1/products/{id}")
+    suspend fun updateProduct(@Path("id") id: String, @Body request: UpdateProductRequest): ProductDetailDto
+
+    @DELETE("api/v1/products/{id}")
+    suspend fun deleteProduct(@Path("id") id: String)
+
 
     @GET("api/v1/reviews/product/{productId}")
     suspend fun getReviewsByProductId(
