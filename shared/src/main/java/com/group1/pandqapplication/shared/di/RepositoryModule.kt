@@ -8,6 +8,8 @@ import com.group1.pandqapplication.shared.data.repository.AppRepository
 import com.group1.pandqapplication.shared.data.repository.AppRepositoryImpl
 import com.group1.pandqapplication.shared.data.repository.OrderRepository
 import com.group1.pandqapplication.shared.data.repository.OrderRepositoryImpl
+import com.group1.pandqapplication.shared.data.repository.CategoryRepository
+import com.group1.pandqapplication.shared.data.repository.CategoryRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,4 +43,10 @@ abstract class RepositoryModule {
     abstract fun bindOrderRepository(
         orderRepositoryImpl: OrderRepositoryImpl
     ): OrderRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCategoryRepository(
+        categoryRepositoryImpl: CategoryRepositoryImpl
+    ): CategoryRepository
 }

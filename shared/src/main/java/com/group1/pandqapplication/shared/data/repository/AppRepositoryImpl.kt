@@ -68,7 +68,7 @@ class AppRepositoryImpl @Inject constructor(
                 realm.write {
                      categories.forEach { dto ->
                         copyToRealm(CategoryEntity().apply {
-                            id = dto.id
+                            id = dto.id.toString()
                             name = dto.name
                             iconUrl = dto.imageUrl // Use imageUrl from CategoryDto
                         }, updatePolicy = UpdatePolicy.ALL)

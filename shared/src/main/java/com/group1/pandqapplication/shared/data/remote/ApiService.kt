@@ -1,6 +1,9 @@
 package com.group1.pandqapplication.shared.data.remote
 
 import com.group1.pandqapplication.shared.data.remote.dto.AddToCartRequest
+import com.group1.pandqapplication.shared.data.remote.dto.CategoryCreateRequest
+import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
+import com.group1.pandqapplication.shared.data.remote.dto.CategoryUpdateRequest
 import com.group1.pandqapplication.shared.data.remote.dto.FcmTokenByEmailRequest
 import com.group1.pandqapplication.shared.data.remote.dto.FcmTokenRequest
 import com.group1.pandqapplication.shared.data.remote.dto.NotificationDto
@@ -15,10 +18,30 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.DELETE
 import retrofit2.http.Query
+import java.util.UUID
 
 interface ApiService {
     @GET("endpoint")
     suspend fun getMessage(): String
+
+    // Category endpoints
+    @GET("api/v1/categories")
+    suspend fun getAllCategories(): Response<List<CategoryDto>>
+
+    @GET("api/v1/categories/{id}")
+    suspend fun getCategoryById(@Path("id") id: UUID): Response<CategoryDto>
+
+    @POST("api/v1/categories")
+    suspend fun createCategory(@Body request: CategoryCreateRequest): Response<CategoryDto>
+
+    @PUT("api/v1/categories/{id}")
+    suspend fun updateCategory(
+        @Path("id") id: UUID,
+        @Body request: CategoryUpdateRequest
+    ): Response<CategoryDto>
+
+    @DELETE("api/v1/categories/{id}")
+    suspend fun deleteCategory(@Path("id") id: UUID): Response<Unit>
 
     // Notification endpoints
     @GET("api/v1/notifications/user/{userId}")
