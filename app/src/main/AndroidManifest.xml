@@ -42,20 +42,12 @@
                 <data android:scheme="pandqapp" android:host="products" />
             </intent-filter>
 
-            <!-- Deep link: https://pandq.com -->
-            <intent-filter>
+            <!-- Deep link: https://pandq.phanphuc.id.vn (Public URL) -->
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="pandq.com" />
-            </intent-filter>
-            
-            <!-- Deep link: https://www.pandq.com -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="www.pandq.com" />
+                <data android:scheme="https" android:host="pandq.phanphuc.id.vn" />
             </intent-filter>
 
         </activity>

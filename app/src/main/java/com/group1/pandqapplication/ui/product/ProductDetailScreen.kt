@@ -355,9 +355,9 @@ fun ProductImageHeader(
 }
 
 private fun shareProduct(context: android.content.Context, productId: String, productName: String) {
-    // Use https scheme so links are recognized as clickable in Messenger/Zalo
-    val deepLink = "https://pandq.com/products/$productId"
-    val shareText = "Xem sản phẩm $productName tại TechShop: $deepLink"
+    // Use centralized config for deep link domain (from local.properties)
+    val deepLink = com.group1.pandqapplication.util.AppConfig.getProductDeepLink(productId)
+    val shareText = "Xem sản phẩm $productName tại ${com.group1.pandqapplication.util.AppConfig.APP_NAME}: $deepLink"
     
     val sendIntent = android.content.Intent().apply {
         action = android.content.Intent.ACTION_SEND

@@ -33,6 +33,10 @@ android {
         // Cloudinary config from local.properties
         buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${localProperties.getProperty("CLOUDINARY_CLOUD_NAME", "")}\"")
         buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"${localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", "")}\"")
+        
+        // Deep link config from local.properties
+        buildConfigField("String", "DEEP_LINK_DOMAIN", "\"${localProperties.getProperty("DEEP_LINK_DOMAIN", "pandq.com")}\"")
+        buildConfigField("String", "APP_NAME", "\"${localProperties.getProperty("APP_NAME", "TechShop")}\"")
     }
 
     buildTypes {
