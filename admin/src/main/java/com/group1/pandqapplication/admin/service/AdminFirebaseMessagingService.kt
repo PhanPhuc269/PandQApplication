@@ -1,4 +1,4 @@
-package com.group1.pandqapplication.service
+package com.group1.pandqapplication.admin.service
 
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -8,59 +8,48 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.group1.pandqapplication.MainActivity
-import com.group1.pandqapplication.PandQApplication
-import com.group1.pandqapplication.R
+import com.group1.pandqapplication.admin.AdminActivity
+import com.group1.pandqapplication.admin.AdminApplication
+import com.group1.pandqapplication.admin.R
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class PandQFirebaseMessagingService : FirebaseMessagingService() {
+class AdminFirebaseMessagingService : FirebaseMessagingService() {
 
     companion object {
-        private const val TAG = "FCM"
+        private const val TAG = "AdminFCM"
     }
-
-    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d(TAG, "FCM Token: $token")
-        
-        // Send token to backend
-        sendTokenToServer(token)
+        Log.d(TAG, "=== ADMIN APP NEW FCM TOKEN ===")
+        Log.d(TAG, "Token: $token")
+        Log.d(TAG, "================================")
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
-        Log.d(TAG, "Message received from: ${remoteMessage.from}")
+        Log.d(TAG, "=== ADMIN APP RECEIVED FCM MESSAGE ===")
+        Log.d(TAG, "From: ${remoteMessage.from}")
+        Log.d(TAG, "Message ID: ${remoteMessage.messageId}")
 
         // Handle notification payload (when app is in foreground)
         remoteMessage.notification?.let { notification ->
-            Log.d(TAG, "Notification Title: ${notification.title}")
-            Log.d(TAG, "Notification Body: ${notification.body}")
-            showNotification(notification.title ?: "", notification.body ?: "")
+            Log.d(TAG, "Notification payload - Title: ${notification.title}")
+            Log.d(TAG, "Notification payload - Body: ${notification.body}")
+            showNotification(
+                title = "[Admin] ${notification.title ?: "Thông báo"}",
+                body = notification.body ?: ""
+            )
         }
 
-        // Handle data payload
+        // Handle data payload (works in foreground and background)
         if (remoteMessage.data.isNotEmpty()) {
             Log.d(TAG, "Data payload: ${remoteMessage.data}")
             handleDataPayload(remoteMessage.data)
         }
-    }
-
-    private fun sendTokenToServer(token: String) {
-        serviceScope.launch {
-            try {
-                // TODO: Send token to backend using repository
-                Log.d(TAG, "Token should be sent to server: $token")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to send token to server", e)
-            }
-        }
+        
+        Log.d(TAG, "======================================")
     }
 
     private fun handleDataPayload(data: Map<String, String>) {
@@ -69,7 +58,8 @@ class PandQFirebaseMessagingService : FirebaseMessagingService() {
         val type = data["type"]
         val targetUrl = data["targetUrl"]
 
-        showNotification(title, body, type, targetUrl)
+        // Always prefix with [Admin] to distinguish from customer app
+        showNotification("[Admin] $title", body, type, targetUrl)
     }
 
     private fun showNotification(
@@ -78,10 +68,12 @@ class PandQFirebaseMessagingService : FirebaseMessagingService() {
         type: String? = null,
         targetUrl: String? = null
     ) {
+        Log.d(TAG, "Showing ADMIN notification: $title")
+        
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Create intent to open app when notification is tapped
-        val intent = Intent(this, MainActivity::class.java).apply {
+        // Create intent to open admin app when notification is tapped
+        val intent = Intent(this, AdminActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             type?.let { putExtra("notification_type", it) }
             targetUrl?.let { putExtra("target_url", it) }
@@ -94,11 +86,12 @@ class PandQFirebaseMessagingService : FirebaseMessagingService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        // Build notification using the channel created in PandQApplication
-        val notification = NotificationCompat.Builder(this, PandQApplication.NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher) // App launcher icon
+        // Build notification with clear ADMIN branding
+        val notification = NotificationCompat.Builder(this, AdminApplication.NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(title)
             .setContentText(body)
+            .setSubText("PandQ Admin") // Shows app name in notification
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
@@ -107,6 +100,7 @@ class PandQFirebaseMessagingService : FirebaseMessagingService() {
 
         // Show notification with unique ID
         notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        Log.d(TAG, "ADMIN notification displayed successfully")
     }
 }
 
