@@ -28,7 +28,8 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object RoleManagement : AdminScreen("role_management", "Roles", Icons.Default.ManageAccounts)
     object BranchManagement : AdminScreen("branch_management", "Branches", Icons.Default.Storefront)
     object Inventory : AdminScreen("inventory", "Inventory", Icons.Default.Inventory)
-    object AddProduct : AdminScreen("add_product", "Add Product", Icons.Default.AddBox)
+    object AddProduct : AdminScreen("add_product?productId={productId}", "Add Product", Icons.Default.AddBox)
+
     object OrderDetails : AdminScreen("order_details", "Order Details", Icons.Default.Receipt)
     object CreatePromotion : AdminScreen("create_promotion", "Create Promotion", Icons.Default.Add)
     object Profile : AdminScreen("profile", "Profile", Icons.Default.ManageAccounts)

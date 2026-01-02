@@ -40,6 +40,7 @@ fun AccountScreen(
     onNavigateToPersonalInfo: () -> Unit = {},
     onNavigateToAddressList: () -> Unit = {},
     onNavigateToSupport: () -> Unit = {},
+    onNavigateToUserGuide: () -> Unit = {},
     onNavigateToPolicy: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -232,6 +233,13 @@ fun AccountScreen(
                     label = "Hỗ trợ", 
                     primaryColor = primaryColor,
                     onClick = onNavigateToSupport
+                )
+                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                SectionItem(
+                    icon = Icons.Outlined.Info, 
+                    label = "Hướng dẫn sử dụng", 
+                    primaryColor = primaryColor,
+                    onClick = onNavigateToUserGuide
                 )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 SectionItem(

@@ -3,6 +3,10 @@ package com.group1.pandqapplication.data.repository
 import com.group1.pandqapplication.shared.data.remote.AppApiService
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDetailDto
 import com.group1.pandqapplication.shared.data.remote.dto.ReviewDto
+import com.group1.pandqapplication.shared.data.remote.dto.ProductDto
+import com.group1.pandqapplication.shared.data.remote.dto.CreateProductRequest
+import com.group1.pandqapplication.shared.data.remote.dto.UpdateProductRequest
+
 import javax.inject.Inject
 import javax.inject.Singleton
 import java.io.File
@@ -26,6 +30,43 @@ class ProductRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun getAllProducts(): Result<List<ProductDto>> {
+        return try {
+            val products = apiService.getProducts()
+            Result.success(products)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun createProduct(request: CreateProductRequest): Result<ProductDetailDto> {
+        return try {
+            val product = apiService.createProduct(request)
+            Result.success(product)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateProduct(id: String, request: UpdateProductRequest): Result<ProductDetailDto> {
+        return try {
+            val product = apiService.updateProduct(id, request)
+            Result.success(product)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteProduct(id: String): Result<Unit> {
+        return try {
+            apiService.deleteProduct(id)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 
     suspend fun getReviewsByProductId(
         productId: String,

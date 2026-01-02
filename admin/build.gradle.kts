@@ -78,6 +78,14 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation("androidx.compose.runtime:runtime-livedata:1.7.6")
+
+    // Network
+    implementation(libs.retrofit)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.storage)
+    implementation(libs.kotlinx.coroutines.play.services)
     
     // Navigation
     implementation(libs.androidx.navigation.compose)
@@ -89,14 +97,6 @@ dependencies {
 
     // Coil
     implementation(libs.coil.compose)
-
-    // Firebase
-    implementation(platform(libs.firebase.bom))
-    implementation("com.google.firebase:firebase-storage-ktx")
-
-    // Image Picker
-    implementation("androidx.activity:activity-compose:1.9.3")
-    implementation("androidx.compose.foundation:foundation:1.7.6")
 
     // Realm
     implementation(libs.realm.base)

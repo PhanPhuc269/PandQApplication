@@ -26,14 +26,14 @@ import com.group1.pandqapplication.ui.navigation.Screen
 @Composable
 fun SplashScreen(
     navController: NavController,
-    onInitializationComplete: () -> Unit,
+    onInitializationComplete: (Boolean) -> Unit,
     viewModel: SplashViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState) {
         if (uiState is SplashState.Success) {
-            onInitializationComplete()
+            onInitializationComplete((uiState as SplashState.Success).isFirstLaunch)
         }
     }
 
