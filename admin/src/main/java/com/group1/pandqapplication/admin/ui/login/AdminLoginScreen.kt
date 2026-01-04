@@ -254,11 +254,15 @@ fun AdminLoginScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE2E8F0))
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = textColor)
+                if (!hasExistingSession) {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE2E8F0))
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = textColor)
+                    }
+                } else {
+                    Spacer(modifier = Modifier.size(40.dp))
                 }
 
                 Surface(
