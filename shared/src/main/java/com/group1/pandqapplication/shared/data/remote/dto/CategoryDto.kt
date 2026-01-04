@@ -1,7 +1,41 @@
 package com.group1.pandqapplication.shared.data.remote.dto
 
+import com.google.gson.annotations.SerializedName
+import java.util.UUID
+
 data class CategoryDto(
-    val id: String,
+    @SerializedName("id")
+    val id: UUID,
+    @SerializedName("name")
     val name: String,
-    val iconUrl: String?  // Nullable to handle null from API
+    @SerializedName("description")
+    val description: String? = null,
+    @SerializedName("imageUrl")
+    val imageUrl: String? = null,
+    @SerializedName("parentId")
+    val parentId: UUID? = null,
+    @SerializedName("subCategories")
+    val subCategories: List<CategoryDto>? = null
+)
+
+data class CategoryCreateRequest(
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("description")
+    val description: String? = null,
+    @SerializedName("imageUrl")
+    val imageUrl: String? = null,
+    @SerializedName("parentId")
+    val parentId: UUID? = null
+)
+
+data class CategoryUpdateRequest(
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("description")
+    val description: String? = null,
+    @SerializedName("imageUrl")
+    val imageUrl: String? = null,
+    @SerializedName("parentId")
+    val parentId: UUID? = null
 )

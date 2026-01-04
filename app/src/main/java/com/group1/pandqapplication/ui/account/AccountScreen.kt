@@ -1,5 +1,6 @@
 package com.group1.pandqapplication.ui.account
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,9 +12,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,13 +29,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    viewModel: AccountViewModel = hiltViewModel(),
+    onNavigateToPersonalInfo: () -> Unit = {},
+    onNavigateToAddressList: () -> Unit = {},
+    onNavigateToSupport: () -> Unit = {},
+    onNavigateToUserGuide: () -> Unit = {},
+    onNavigateToPolicy: () -> Unit = {}
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val backgroundColor = Color(0xFFF8F6F6)
     val primaryColor = Color(0xFFec3713)
 
@@ -48,7 +61,7 @@ fun AccountScreen(
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = {}) {
+                     IconButton(onClick = {}) {
                          Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = Color(0xFF1F2937))
                     }
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -59,7 +72,7 @@ fun AccountScreen(
                              color = Color(0xFF111827)
                          ) 
                     }
-                    Spacer(modifier = Modifier.size(48.dp)) // Balance the Back button size
+                    Spacer(modifier = Modifier.size(48.dp)) // Balance right side
                 }
             }
         }
@@ -77,49 +90,131 @@ fun AccountScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                 AsyncImage(
-                    model = "https://lh3.googleusercontent.com/aida-public/AB6AXuCwILGFmyQOJSWfUNVKWm8accZ99ZMUMajjM5_16dG6r-LbAS5VUTS-SjVchAwiv6T8CUIJPoO9_QIWhQbbjUv2YwJGkrHinCulA75-HDAzfS3IBlDyl5IWJfgMBTJLdOWCV4MuPguh-U1AvZ6LUb_qHUUy_V6357n6jLUAKXeojajAMcxJvqXZmY2bAsliPryIr-4ny0TgV6__D9tF8IEvF4sKVH2DSX1u2kUrTQSdURvOV2aJn__I-w84iZWceHB4qacbhicBJQg",
-                    contentDescription = "Avatar",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(128.dp)
-                        .clip(CircleShape)
-                )
+                // Avatar - show user photo or default icon
+                if (uiState.photoUrl != null) {
+                    AsyncImage(
+                        model = uiState.photoUrl,
+                        contentDescription = "Avatar",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(128.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    // Default avatar with icon
+                    Box(
+                        modifier = Modifier
+                            .size(128.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE5E7EB)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = "Default Avatar",
+                            modifier = Modifier.size(64.dp),
+                            tint = Color(0xFF9CA3AF)
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    "Lê Minh Anh", 
+                    uiState.displayName, 
                     fontSize = 22.sp, 
                     fontWeight = FontWeight.Bold, 
                     color = Color(0xFF111827)
                 )
                 Text(
-                    "leminhanh@example.com", 
+                    uiState.email, 
                     fontSize = 16.sp, 
                     color = Color(0xFF6B7280)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {},
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
-                    shape = RoundedCornerShape(8.dp),
+            }
+            
+            // Email Verification Banner
+            if (uiState.isLoggedIn && !uiState.isEmailVerified) {
+                Surface(
                     modifier = Modifier
-                        .height(40.dp)
-                        .widthIn(min = 200.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    color = Color(0xFFFEF3C7), // amber-100
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Edit Profile", fontWeight = FontWeight.Bold)
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = null,
+                                tint = Color(0xFFD97706), // amber-600
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                "Email chưa được xác thực",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF92400E) // amber-800
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Vui lòng xác thực email để sử dụng đầy đủ tính năng.",
+                            fontSize = 14.sp,
+                            color = Color(0xFFB45309) // amber-700
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { viewModel.sendVerificationEmail() },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, Color(0xFFD97706))
+                            ) {
+                                if (uiState.isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        color = Color(0xFFD97706),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Text("Gửi lại email", color = Color(0xFFD97706), fontSize = 13.sp)
+                                }
+                            }
+                            OutlinedButton(
+                                onClick = { viewModel.refreshEmailVerificationStatus() },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, Color(0xFFD97706))
+                            ) {
+                                Text("Đã xác thực", color = Color(0xFFD97706), fontSize = 13.sp)
+                            }
+                        }
+                    }
                 }
             }
             
             Spacer(modifier = Modifier.height(20.dp))
-            
-            // Account Section
             SectionHeader(title = "Tài khoản")
             SectionContainer {
-                SectionItem(icon = Icons.Outlined.Person, label = "Thông tin cá nhân", primaryColor = primaryColor)
+                SectionItem(
+                    icon = Icons.Outlined.Person, 
+                    label = "Thông tin cá nhân", 
+                    primaryColor = primaryColor,
+                    onClick = onNavigateToPersonalInfo
+                )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
-                SectionItem(icon = Icons.Outlined.Home, label = "Sổ địa chỉ", primaryColor = primaryColor)
-                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
-                SectionItem(icon = Icons.Outlined.ReceiptLong, label = "Lịch sử đơn hàng", primaryColor = primaryColor)
+                SectionItem(
+                    icon = Icons.Outlined.Home, 
+                    label = "Sổ địa chỉ", 
+                    primaryColor = primaryColor,
+                    onClick = onNavigateToAddressList
+                )
             }
             
             // Settings Section
@@ -133,7 +228,26 @@ fun AccountScreen(
             // Support Section
             Spacer(modifier = Modifier.height(20.dp))
             SectionContainer {
-                SectionItem(icon = Icons.Outlined.HelpOutline, label = "Hỗ trợ", primaryColor = primaryColor)
+                SectionItem(
+                    icon = Icons.Outlined.HelpOutline, 
+                    label = "Hỗ trợ", 
+                    primaryColor = primaryColor,
+                    onClick = onNavigateToSupport
+                )
+                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                SectionItem(
+                    icon = Icons.Outlined.Info, 
+                    label = "Hướng dẫn sử dụng", 
+                    primaryColor = primaryColor,
+                    onClick = onNavigateToUserGuide
+                )
+                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                SectionItem(
+                    icon = Icons.Outlined.Description, 
+                    label = "Chính sách & Điều khoản", 
+                    primaryColor = primaryColor,
+                    onClick = onNavigateToPolicy
+                )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 SectionItem(
                     icon = Icons.Filled.Logout, 

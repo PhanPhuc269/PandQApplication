@@ -1,22 +1,64 @@
 package com.group1.pandqapplication.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.group1.pandqapplication.MainViewModel
 import com.group1.pandqapplication.ui.home.HomeScreen
 import com.group1.pandqapplication.ui.login.LoginScreen
 import com.group1.pandqapplication.ui.checkout.CheckoutScreen
 import com.group1.pandqapplication.ui.ordertracking.OrderTrackingScreen
 import com.group1.pandqapplication.ui.shipping.ShippingAddressScreen
+import com.group1.pandqapplication.ui.shipping.ShippingAddressScreen
+
+
 
 @Composable
 fun PandQNavGraph(
     navController: NavHostController = rememberNavController(),
     startDestination: String = Screen.Onboarding.route,
-    destinationAfterSplash: String = Screen.Onboarding.route
+    destinationAfterSplash: String = Screen.Onboarding.route,
+    mainViewModel: MainViewModel = hiltViewModel(),
+    pendingDeepLink: String? = null,
+    onDeepLinkHandled: () -> Unit = {}
 ) {
+    // Handle deep link from push notification
+    androidx.compose.runtime.LaunchedEffect(pendingDeepLink) {
+        pendingDeepLink?.let { deepLink ->
+            android.util.Log.d("DeepLink", "Processing deep link: $deepLink")
+            // Parse deep link format: pandq://orders/{orderId}
+            when {
+                deepLink.contains("orders/") -> {
+                    val orderId = deepLink.substringAfterLast("orders/")
+                    if (orderId.isNotEmpty()) {
+                        android.util.Log.d("DeepLink", "Navigating to order: $orderId")
+                        navController.navigate(Screen.OrderTracking.createRoute(orderId))
+                    }
+                }
+                deepLink.contains("products/") -> {
+                    val productId = deepLink.substringAfterLast("products/")
+                    if (productId.isNotEmpty()) {
+                        navController.navigate(Screen.ProductDetail.createRoute(productId))
+                    }
+                }
+                deepLink.contains("home") -> {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(navController.graph.startDestinationId)
+                        launchSingleTop = true
+                    }
+                }
+            }
+            onDeepLinkHandled()
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -24,8 +66,9 @@ fun PandQNavGraph(
         composable(Screen.Splash.route) {
             com.group1.pandqapplication.ui.splash.SplashScreen(
                 navController = navController,
-                onInitializationComplete = {
-                    navController.navigate(destinationAfterSplash) {
+                onInitializationComplete = { isFirstLaunch ->
+                    val targetDestination = if (isFirstLaunch) Screen.Onboarding.route else Screen.Login.route
+                    navController.navigate(targetDestination) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
                 }
@@ -52,39 +95,88 @@ fun PandQNavGraph(
         composable(Screen.Home.route) {
             com.group1.pandqapplication.ui.main.MainScreen(
                 onLogout = {
-                     navController.navigate(Screen.Login.route) {
+                    mainViewModel.logout()
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 },
                 onCartClick = {
                     navController.navigate(Screen.Cart.route)
                 },
-                onProductClick = {
-                    navController.navigate(Screen.ProductDetail.route)
+                onProductClick = { productId ->
+                    navController.navigate(Screen.ProductDetail.createRoute(productId))
                 },
                 onSearchClick = {
-                    navController.navigate(Screen.Search.route)
+                    navController.navigate(Screen.Search.createRoute())
                 },
-                onOrderClick = {
-                    navController.navigate(Screen.OrderTracking.route)
+                onCategoryClick = { categoryId ->
+                    navController.navigate(Screen.Search.createRoute(categoryId))
+                },
+                onOrderClick = { orderId ->
+                    navController.navigate(Screen.OrderTracking.createRoute(orderId))
+                },
+                onPersonalInfoClick = {
+                    navController.navigate(Screen.PersonalInfo.route)
+                },
+                onAddressListClick = {
+                    navController.navigate(Screen.AddressList.route)
+                },                    
+                onNavigateToOrder = { orderId ->
+                    navController.navigate(Screen.OrderTracking.createRoute(orderId))
+                },
+                onNavigateToProduct = { productId ->
+                    // TODO: Pass productId to ProductDetail screen when it supports dynamic product
+                    navController.navigate(Screen.ProductDetail.route)
+                },
+                onNavigateToPromotion = { promoId ->
+                    // TODO: Navigate to promotion screen when available
+                    // For now, stay on current screen
+                },
+                onSupportClick = {
+                    navController.navigate(Screen.Support.route)
+                },
+                onPolicyClick = {
+                    navController.navigate(Screen.Policy.route)
+                },
+                onUserGuideClick = {
+                    navController.navigate(Screen.UserGuide.route)
                 }
             )
         }
-        composable(Screen.Search.route) {
+        composable(
+            route = Screen.Search.route,
+            arguments = listOf(
+                navArgument("categoryId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
             com.group1.pandqapplication.ui.search.SearchScreen(
                 onBackClick = {
                     navController.popBackStack()
+                },
+                onProductClick = { productId ->
+                    navController.navigate(Screen.ProductDetail.createRoute(productId))
                 }
             )
         }
-        composable(Screen.ProductDetail.route) {
+        composable(
+            route = Screen.ProductDetail.route,
+            arguments = listOf(navArgument("productId") { type = NavType.StringType })
+        ) {
             com.group1.pandqapplication.ui.product.ProductDetailScreen(
                 onBackClick = {
                     navController.popBackStack()
                 },
                 onCartClick = {
                     navController.navigate(Screen.Cart.route)
-                }
+                },
+                onProductClick = { productId ->
+                    navController.navigate(Screen.ProductDetail.createRoute(productId))
+                },
+                userId = mainViewModel.getCurrentUserId()
             )
         }
         composable(Screen.Cart.route) {
@@ -92,23 +184,70 @@ fun PandQNavGraph(
                 onBackClick = {
                     navController.popBackStack()
                 },
-                onCheckoutClick = {
-                    navController.navigate(Screen.Checkout.route)
+                onCheckoutClick = { orderId ->
+                    navController.navigate(Screen.Checkout.createRoute(orderId))
+                },
+                userId = mainViewModel.getCurrentUserId(),
+                onLoginRequired = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Cart.route) { saveState = true }
+                        launchSingleTop = true
+                    }
                 }
             )
         }
-        composable(Screen.Checkout.route) {
+        composable(
+            route = Screen.Checkout.route,
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
             CheckoutScreen(
                 onBackClick = {
                     navController.popBackStack()
                 },
                 onEditAddressClick = {
-                    navController.navigate(Screen.ShippingAddress.route)
+                    navController.navigate(Screen.AddressList.route)
+                },
+                onPaymentSuccess = { paidOrderId ->
+                    // Navigate to success screen and clear back stack to checkout
+                    navController.navigate(Screen.OrderSuccess.createRoute(paidOrderId)) {
+                        popUpTo(Screen.Checkout.route) { inclusive = true }
+                    }
+                },
+                onLoginRequired = {
+                    // Navigate to login when guest tries to checkout
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Checkout.route) { inclusive = true }
+                    }
+                },
+                orderId = orderId,
+                userId = mainViewModel.getCurrentUserId()
+            )
+        }
+        composable(
+            route = Screen.OrderTracking.route,
+            arguments = listOf(navArgument("orderId") { 
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId")
+            OrderTrackingScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onSupportClick = {
+                    navController.navigate(Screen.Support.route)
+                },
+                orderId = orderId,
+                onReviewClick = { productId, _ ->
+                    navController.navigate(Screen.WriteReview.createRoute(productId))
                 }
             )
         }
-        composable(Screen.OrderTracking.route) {
-            OrderTrackingScreen(
+        composable(Screen.Support.route) {
+            com.group1.pandqapplication.ui.support.SupportScreen(
                 onBackClick = {
                     navController.popBackStack()
                 }
@@ -121,5 +260,129 @@ fun PandQNavGraph(
                 }
             )
         }
+        composable(Screen.PersonalInfo.route) {
+            com.group1.pandqapplication.ui.personalinfo.PersonalInfoScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(Screen.AddressList.route) {
+            com.group1.pandqapplication.ui.address.AddressListScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onAddAddress = {
+                    navController.navigate(Screen.AddEditAddress.createRoute())
+                },
+                onEditAddress = { addressId ->
+                    navController.navigate(Screen.AddEditAddress.createRoute(addressId))
+                },
+                onSelectAddress = { _ ->
+                    // After selecting address (and setting as default), pop back to checkout
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(
+            route = Screen.AddEditAddress.route,
+            arguments = listOf(
+                navArgument("addressId") {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) {
+            com.group1.pandqapplication.ui.address.AddEditAddressScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToMap = {
+                    navController.navigate(Screen.MapPicker.route)
+                }
+            )
+        }
+        composable(Screen.MapPicker.route) {
+            com.group1.pandqapplication.ui.address.MapPickerScreen(
+                onLocationSelected = { lat, lon, address ->
+                    // Save to singleton
+                    com.group1.pandqapplication.ui.address.MapSelectionHolder.setAddress(address)
+                    navController.popBackStack()
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+        )
+        }
+        composable(
+            route = Screen.OrderSuccess.route,
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val successOrderId = backStackEntry.arguments?.getString("orderId") ?: ""
+            com.group1.pandqapplication.ui.order.OrderSuccessScreen(
+                orderId = successOrderId,
+                onCloseClick = {
+                    // Go back to home, clearing the payment flow from back stack
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onTrackOrderClick = { orderId ->
+                    navController.navigate(Screen.OrderTracking.createRoute(orderId))
+                },
+                onContinueShoppingClick = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(
+            route = Screen.WriteReview.route,
+            arguments = listOf(navArgument("productId") { type = NavType.StringType })
+        ) {
+            // Use ProductDetailViewModel for review submission
+            // ViewModel will auto-load product from SavedStateHandle "productId"
+            val viewModel: com.group1.pandqapplication.ui.product.ProductDetailViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsState()
+            
+            // Handle success - navigate back to Home (which has Orders tab)
+            androidx.compose.runtime.LaunchedEffect(uiState.reviewSubmitSuccess) {
+                if (uiState.reviewSubmitSuccess) {
+                    // Navigate back to Home and clear the back stack
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
+            }
+            
+            com.group1.pandqapplication.ui.product.WriteReviewScreen(
+                product = uiState.product,
+                onBackClick = { navController.popBackStack() },
+                onSubmitClick = { rating, comment, imageUrls ->
+                    viewModel.submitReview(rating, comment, imageUrls)
+                },
+                primaryColor = com.group1.pandqapplication.shared.ui.theme.Primary,
+                isSubmitting = uiState.isSubmittingReview,
+                errorMessage = uiState.reviewSubmitError,
+                onDismissError = { viewModel.clearReviewSubmitState() }
+            )                
+        }                
+        composable(Screen.Policy.route) {
+            com.group1.pandqapplication.ui.policy.PolicyScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(Screen.UserGuide.route) {
+            com.group1.pandqapplication.ui.guide.UserGuideScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
     }
 }
+

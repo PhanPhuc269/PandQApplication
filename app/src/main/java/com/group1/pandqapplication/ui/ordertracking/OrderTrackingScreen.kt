@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -32,13 +32,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,13 +55,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.group1.pandqapplication.shared.data.remote.dto.OrderDto
 import com.group1.pandqapplication.shared.ui.theme.BackgroundDark
 import com.group1.pandqapplication.shared.ui.theme.BackgroundLight
 import com.group1.pandqapplication.shared.ui.theme.CardDark
@@ -72,9 +75,24 @@ import com.group1.pandqapplication.shared.ui.theme.TextLightSecondary
 
 @Composable
 fun OrderTrackingScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onSupportClick: () -> Unit = {},
+    orderId: String? = null,
+    order: OrderDto? = null, // Can pass order directly from navigation
+    viewModel: OrderTrackingViewModel = hiltViewModel(),
+    onReviewClick: (String, String) -> Unit = { _, _ -> } // productId, productName
 ) {
-    val isDarkTheme = false // You can hook this up to system theme
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Load order from API or set from param
+    LaunchedEffect(orderId, order) {
+        when {
+            order != null -> viewModel.setOrder(order)
+            orderId != null -> viewModel.loadOrder(orderId)
+        }
+    }
+    
+    val isDarkTheme = false
     
     val backgroundColor = if (isDarkTheme) BackgroundDark else BackgroundLight
     val cardColor = if (isDarkTheme) CardDark else CardLight
@@ -88,7 +106,8 @@ fun OrderTrackingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(cardColor.copy(alpha = 0.8f))
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 IconButton(
                     onClick = onBackClick,
@@ -110,264 +129,455 @@ fun OrderTrackingScreen(
             }
         },
         bottomBar = {
+            val currentOrder = uiState.order
+            // Only COMPLETED orders can be reviewed
+            val canReview = currentOrder != null && 
+                currentOrder.status.uppercase() == "COMPLETED"
+            
             Box(
                 modifier = Modifier
                     .background(cardColor.copy(alpha = 0.8f))
                     .padding(16.dp)
             ) {
-                Button(
-                    onClick = { /* Contact Support */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = "Liên hệ hỗ trợ",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                if (canReview && currentOrder != null) {
+                    // Show single review button for the order (reviews first product)
+                    val firstItem = currentOrder.items.firstOrNull()
+                    if (firstItem != null) {
+                        Button(
+                            onClick = { 
+                                onReviewClick(firstItem.productId, firstItem.productName)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "Đánh giá đơn hàng",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = onSupportClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "Liên hệ hỗ trợ",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            // Order Summary Card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = cardColor),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Primary)
+                }
+            }
+            uiState.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Đơn hàng #123456",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = textPrimary
+                            text = uiState.error ?: "Đã xảy ra lỗi",
+                            color = Color.Gray,
+                            fontSize = 14.sp
                         )
-                        Text(
-                            text = "24/08/2024",
-                            fontSize = 14.sp,
-                            color = textSecondary
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row {
-                        Text(
-                            text = "Dự kiến giao hàng: ",
-                            fontSize = 14.sp,
-                            color = textSecondary
-                        )
-                        Text(
-                            text = "28/08/2024",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = textPrimary
-                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { orderId?.let { viewModel.loadOrder(it) } },
+                            colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                        ) {
+                            Text("Thử lại")
+                        }
                     }
                 }
             }
-
-            // Visual Progress Tracker
-            Card(
-                colors = CardDefaults.cardColors(containerColor = cardColor),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            uiState.order != null -> {
+                val currentOrder = uiState.order!!
+                
                 Column(
                     modifier = Modifier
-                        .padding(20.dp)
-                        .padding(start = 0.dp) // Adjust for custom drawing
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    TrackingStep(
-                        icon = Icons.Default.ReceiptLong,
-                        title = "Đã đặt hàng",
-                        subtitle = "Đơn hàng của bạn đã được tiếp nhận",
-                        isActive = true,
-                        isLast = false,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary
-                    )
-                    TrackingStep(
-                        icon = Icons.Default.Verified,
-                        title = "Đã xác nhận",
-                        subtitle = "Chúng tôi đang chuẩn bị đơn hàng",
-                        isActive = true,
-                        isLast = false,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary
-                    )
-                    TrackingStep(
-                        icon = Icons.Default.LocalShipping,
-                        title = "Đang vận chuyển",
-                        subtitle = "Đã giao cho đơn vị vận chuyển",
-                        isActive = true,
-                        isLast = false,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary
-                    )
-                    TrackingStep(
-                        icon = Icons.Default.Inventory2,
-                        title = "Đã giao hàng",
-                        subtitle = "Dự kiến giao trong hôm nay",
-                        isActive = false,
-                        isLast = true,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary
-                    )
-                }
-            }
-
-            // Status Updates Section
-            Card(
-                colors = CardDefaults.cardColors(containerColor = cardColor),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = "Cập nhật trạng thái",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    
-                    StatusUpdateItem(
-                        time = "10:30 AM",
-                        title = "Tài xế đang giao hàng",
-                        subtitle = "Đơn hàng của bạn sẽ sớm được giao",
-                        isActive = true,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        cardColor = cardColor
-                    )
-                    StatusUpdateItem(
-                        time = "08:15 AM",
-                        title = "Đơn hàng đã đến kho",
-                        subtitle = "Kho phân loại tại TP. Hồ Chí Minh",
-                        isActive = false,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        cardColor = cardColor
-                    )
-                    StatusUpdateItem(
-                        time = "02:00 AM",
-                        title = "Đơn hàng rời kho",
-                        subtitle = "Kho tổng tại Hà Nội",
-                        isActive = false,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        cardColor = cardColor
-                    )
-                }
-            }
-
-            // Order Details Section
-            var isExpanded by remember { mutableStateOf(false) }
-            val rotationState by animateFloatAsState(targetValue = if (isExpanded) 180f else 0f,
-                label = "rotation"
-            )
-
-            Card(
-                colors = CardDefaults.cardColors(containerColor = cardColor),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { isExpanded = !isExpanded }
-                            .padding(20.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Order Summary Card
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = cardColor),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = "Xem chi tiết đơn hàng",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = textPrimary
-                        )
-                        Icon(
-                            imageVector = Icons.Default.ExpandMore,
-                            contentDescription = "Expand",
-                            tint = textSecondary,
-                            modifier = Modifier.rotate(rotationState)
-                        )
-                    }
-                    
-                    AnimatedVisibility(visible = isExpanded) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(width = 1.dp, color = Color.Gray.copy(alpha = 0.1f))
-                                .padding(horizontal = 20.dp, vertical = 16.dp)
-                        ) {
-                            HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
-                            
-                            ProductItem(
-                                imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuD2QLgAw-PbKaZBCry2SmZ-6Al3osT32sT83U8trPV2KBau97NH24hvyGHemPk4kCyBmTkS0bGQiW-i3oOZais9LHXsjg3f52HQ23ZuKYNOb2y4rJh8fxy3Aw4KHhC9lZNAWkg-nUHYhMdNQZaozH3hk5fdA4oWeQAuIIouc4KQrF1udwchHowVXsESI6jo67RJk1tmsqRlsmjHS331wcEFMZlq9eYzoIL_g9o5zB6aVgEhqnYOhhM1M-vXJclaPY1PG-RzNIw9kNg",
-                                name = "Smartphone Model X",
-                                quantity = 1,
-                                price = "15.000.000₫",
-                                textPrimary = textPrimary,
-                                textSecondary = textSecondary
-                            )
-                            
-                            ProductItem(
-                                imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDKLRtOQfHBkwMEYYlUfBvnQ_6DhpscO4aDKVefohRTPsLi2ZSHFnzBO2LdYylYEvoso-AtcdKFZbEvdLQd7ywfDosD-nWrZwpWNMM1inUfltWXg0ljMpKCmSA4hTFSpu5rioV3LqNEHp164ViuRJNWEavn4FUcihLUARWEkxuhaVh6ye3gD-isjmMOMw_EpOGV92dp96CheJZV2ywUeXD9GqzMRHtKg86sGRHRDKocokd3BuglNFB6quX95webZBaIvA2ZePadjCQ",
-                                name = "Tai nghe Pro",
-                                quantity = 1,
-                                price = "5.000.000₫",
-                                textPrimary = textPrimary,
-                                textSecondary = textSecondary
-                            )
-
-                            HorizontalDivider(
-                                modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
-                                color = Color.Gray.copy(alpha = 0.2f)
-                            )
-                            
+                        Column(modifier = Modifier.padding(20.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Tổng cộng",
+                                    text = "Đơn hàng #${currentOrder.id.take(8)}",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = textPrimary
                                 )
                                 Text(
-                                    text = "20.000.000₫",
+                                    text = OrderTrackingViewModel.formatDate(currentOrder.createdAt),
+                                    fontSize = 14.sp,
+                                    color = textSecondary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row {
+                                Text(
+                                    text = "Dự kiến giao hàng: ",
+                                    fontSize = 14.sp,
+                                    color = textSecondary
+                                )
+                                Text(
+                                    text = OrderTrackingViewModel.calculateEstimatedDelivery(currentOrder.createdAt),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = textPrimary
+                                )
+                            }
+                            
+                            // Status Badge for cancelled/failed orders
+                            if (currentOrder.status.uppercase() in listOf("CANCELLED", "FAILED", "RETURNED")) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            color = Color(0xFFFFEBEE),
+                                            shape = RoundedCornerShape(4.dp)
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = when (currentOrder.status.uppercase()) {
+                                            "CANCELLED" -> "Đã hủy"
+                                            "FAILED" -> "Thất bại"
+                                            "RETURNED" -> "Đã trả hàng"
+                                            else -> currentOrder.status
+                                        },
+                                        color = Color(0xFFD32F2F),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Visual Progress Tracker
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = cardColor),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(20.dp)
+                                .padding(start = 0.dp)
+                        ) {
+                            uiState.trackingSteps.forEachIndexed { index, step ->
+                                TrackingStep(
+                                    icon = when (step.iconType) {
+                                        TrackingIconType.ORDER_PLACED -> Icons.Default.ReceiptLong
+                                        TrackingIconType.CONFIRMED -> Icons.Default.Verified
+                                        TrackingIconType.SHIPPING -> Icons.Default.LocalShipping
+                                        TrackingIconType.DELIVERED -> Icons.Default.Inventory2
+                                    },
+                                    title = step.title,
+                                    subtitle = step.subtitle,
+                                    isActive = step.isActive,
+                                    isLast = index == uiState.trackingSteps.lastIndex,
+                                    textPrimary = textPrimary,
+                                    textSecondary = textSecondary
+                                )
+                            }
+                        }
+                    }
+
+                    // Status Updates Section
+                    if (uiState.statusUpdates.isNotEmpty()) {
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = cardColor),
+                            shape = RoundedCornerShape(12.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(20.dp)) {
+                                Text(
+                                    text = "Cập nhật trạng thái",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = textPrimary,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                
+                                uiState.statusUpdates.forEach { update ->
+                                    StatusUpdateItem(
+                                        time = update.time,
+                                        title = update.title,
+                                        subtitle = update.subtitle,
+                                        isActive = update.isActive,
+                                        textPrimary = textPrimary,
+                                        textSecondary = textSecondary,
+                                        cardColor = cardColor
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Order Details Section
+                    var isExpanded by remember { mutableStateOf(false) }
+                    val rotationState by animateFloatAsState(
+                        targetValue = if (isExpanded) 180f else 0f,
+                        label = "rotation"
+                    )
+
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = cardColor),
+                        shape = RoundedCornerShape(12.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { isExpanded = !isExpanded }
+                                    .padding(20.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Xem chi tiết đơn hàng",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = textPrimary
                                 )
+                                Icon(
+                                    imageVector = Icons.Default.ExpandMore,
+                                    contentDescription = "Expand",
+                                    tint = textSecondary,
+                                    modifier = Modifier.rotate(rotationState)
+                                )
+                            }
+                            
+                            AnimatedVisibility(visible = isExpanded) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .border(width = 1.dp, color = Color.Gray.copy(alpha = 0.1f))
+                                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                                ) {
+                                    HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
+                                    
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    
+                                    // Order ID
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "Mã đơn hàng",
+                                            fontSize = 14.sp,
+                                            color = textSecondary
+                                        )
+                                        Text(
+                                            text = "#${currentOrder.id.take(8).uppercase()}",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = textPrimary
+                                        )
+                                    }
+                                    
+                                    // Order Date
+                                    if (!currentOrder.createdAt.isNullOrBlank()) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "Ngày đặt hàng",
+                                                fontSize = 14.sp,
+                                                color = textSecondary
+                                            )
+                                            Text(
+                                                text = OrderTrackingViewModel.formatDate(currentOrder.createdAt),
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = textPrimary
+                                            )
+                                        }
+                                    }
+                                    
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = 12.dp),
+                                        color = Color.Gray.copy(alpha = 0.2f)
+                                    )
+                                    
+                                    // Section title: Products
+                                    Text(
+                                        text = "Sản phẩm",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = textPrimary,
+                                        modifier = Modifier.padding(bottom = 12.dp)
+                                    )
+                                    
+                                    // Display actual order items
+                                    if (currentOrder.items.isEmpty()) {
+                                        Text(
+                                            text = "Không có thông tin sản phẩm",
+                                            fontSize = 14.sp,
+                                            color = textSecondary,
+                                            modifier = Modifier.padding(vertical = 8.dp)
+                                        )
+                                    } else {
+                                        currentOrder.items.forEach { item ->
+                                            ProductItem(
+                                                imageUrl = item.imageUrl ?: "",
+                                                name = item.productName,
+                                                quantity = item.quantity,
+                                                price = OrderTrackingViewModel.formatPrice(item.totalPrice),
+                                                textPrimary = textPrimary,
+                                                textSecondary = textSecondary
+                                            )
+                                        }
+                                    }
+
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(top = 16.dp, bottom = 16.dp),
+                                        color = Color.Gray.copy(alpha = 0.2f)
+                                    )
+                                    
+                                    // Shipping Address
+                                    if (!currentOrder.shippingAddress.isNullOrBlank()) {
+                                        Text(
+                                            text = "Địa chỉ giao hàng",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = textPrimary
+                                        )
+                                        Text(
+                                            text = currentOrder.shippingAddress ?: "",
+                                            fontSize = 13.sp,
+                                            color = textSecondary,
+                                            modifier = Modifier.padding(bottom = 12.dp)
+                                        )
+                                    }
+                                    
+                                    // Payment Method
+                                    if (!currentOrder.paymentMethod.isNullOrBlank()) {
+                                        Row(
+                                            modifier = Modifier.padding(bottom = 12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Thanh toán: ",
+                                                fontSize = 14.sp,
+                                                color = textSecondary
+                                            )
+                                            Text(
+                                                text = when (currentOrder.paymentMethod?.uppercase()) {
+                                                    "COD" -> "Thanh toán khi nhận hàng"
+                                                    "ZALOPAY" -> "ZaloPay"
+                                                    "SEPAY" -> "SePay"
+                                                    "MOMO" -> "MoMo"
+                                                    else -> currentOrder.paymentMethod ?: ""
+                                                },
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                color = textPrimary
+                                            )
+                                        }
+                                    }
+                                    
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        color = Color.Gray.copy(alpha = 0.2f)
+                                    )
+                                    
+                                    // Summary
+                                    SummaryRow("Tạm tính", OrderTrackingViewModel.formatPrice(currentOrder.totalAmount), textSecondary, textPrimary)
+                                    SummaryRow("Phí vận chuyển", OrderTrackingViewModel.formatPrice(currentOrder.shippingFee), textSecondary, textPrimary)
+                                    if (currentOrder.discountAmount > 0) {
+                                        SummaryRow("Giảm giá", "-${OrderTrackingViewModel.formatPrice(currentOrder.discountAmount)}", textSecondary, Primary)
+                                    }
+                                    
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "Tổng cộng",
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = textPrimary
+                                        )
+                                        Text(
+                                            text = OrderTrackingViewModel.formatPrice(currentOrder.finalAmount),
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = textPrimary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SummaryRow(
+    label: String,
+    value: String,
+    labelColor: Color,
+    valueColor: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, fontSize = 14.sp, color = labelColor)
+        Text(text = value, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = valueColor)
     }
 }
 
@@ -387,7 +597,7 @@ fun TrackingStep(
             .drawBehind {
                 if (!isLast) {
                     drawLine(
-                        color = if (isActive) Color.LightGray else Color.LightGray, // Ideally use theme color
+                        color = if (isActive) Color.LightGray else Color.LightGray,
                         start = Offset(18.dp.toPx(), 40.dp.toPx()),
                         end = Offset(18.dp.toPx(), size.height),
                         strokeWidth = 2.dp.toPx(),
@@ -396,10 +606,9 @@ fun TrackingStep(
                 }
             }
     ) {
-        // Icon
         Box(
             modifier = Modifier
-                .padding(start = 2.dp) // Fine tune alignment
+                .padding(start = 2.dp)
                 .size(36.dp)
                 .background(
                     color = if (isActive) Primary else Color.Transparent,
@@ -467,7 +676,6 @@ fun StatusUpdateItem(
         
         Column {
             Row(verticalAlignment = Alignment.Top) {
-                // Dot
                 Box(
                     modifier = Modifier
                         .padding(top = 6.dp)
@@ -476,7 +684,7 @@ fun StatusUpdateItem(
                             color = if (isActive) Primary else Color.LightGray,
                             shape = CircleShape
                         )
-                        .border(4.dp, cardColor, CircleShape) // Ring effect
+                        .border(4.dp, cardColor, CircleShape)
                 )
                 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -514,15 +722,29 @@ fun ProductItem(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = name,
+        Box(
             modifier = Modifier
                 .size(64.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color.Gray.copy(alpha = 0.1f)),
-            contentScale = ContentScale.Crop
-        )
+            contentAlignment = Alignment.Center
+        ) {
+            if (imageUrl.isNotBlank()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = name,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = "📦",
+                    fontSize = 24.sp
+                )
+            }
+        }
         
         Spacer(modifier = Modifier.width(16.dp))
         

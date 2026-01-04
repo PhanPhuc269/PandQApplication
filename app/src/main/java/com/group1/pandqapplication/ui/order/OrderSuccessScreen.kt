@@ -21,11 +21,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundDark
 import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundLight
@@ -45,19 +49,27 @@ import com.group1.pandqapplication.shared.ui.theme.SuccessTextPrimaryDark
 import com.group1.pandqapplication.shared.ui.theme.SuccessTextPrimaryLight
 import com.group1.pandqapplication.shared.ui.theme.SuccessTextSecondaryDark
 import com.group1.pandqapplication.shared.ui.theme.SuccessTextSecondaryLight
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun OrderSuccessScreen(
+    orderId: String,
     onCloseClick: () -> Unit = {},
-    onTrackOrderClick: () -> Unit = {},
-    onContinueShoppingClick: () -> Unit = {}
+    onTrackOrderClick: (String) -> Unit = {},
+    onContinueShoppingClick: () -> Unit = {},
+    viewModel: OrderSuccessViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val isDarkTheme = false
     
     val backgroundColor = if (isDarkTheme) CheckoutBackgroundDark else CheckoutBackgroundLight
     val textPrimary = if (isDarkTheme) SuccessTextPrimaryDark else SuccessTextPrimaryLight
     val textSecondary = if (isDarkTheme) SuccessTextSecondaryDark else SuccessTextSecondaryLight
-    val surfaceColor = if (isDarkTheme) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.05f) // approximated for detail box
+    val surfaceColor = if (isDarkTheme) Color.White.copy(alpha = 0.05f) else Color.Black.copy(alpha = 0.05f)
+
+    // Format currency
+    val currencyFormat = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
 
     Scaffold(
         containerColor = backgroundColor,
@@ -69,7 +81,7 @@ fun OrderSuccessScreen(
                 horizontalArrangement = Arrangement.End
             ) {
                 Text(
-                    text = "Close",
+                    text = "Đóng",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = textSecondary,
@@ -120,7 +132,7 @@ fun OrderSuccessScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "Cảm ơn bạn đã mua sắm tại ElectroStore.",
+                    text = "Cảm ơn bạn đã mua sắm tại PandQ.",
                     fontSize = 16.sp,
                     color = textSecondary,
                     textAlign = TextAlign.Center
@@ -150,29 +162,45 @@ fun OrderSuccessScreen(
                         .background(surfaceColor)
                         .padding(16.dp)
                 ) {
-                   Row(
-                       modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                       horizontalArrangement = Arrangement.SpaceBetween
-                   ) {
-                       Text("Mã đơn hàng", fontSize = 14.sp, color = textSecondary)
-                       Text("#ABC12345XYZ", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
-                   }
-                   HorizontalDivider(color = Color.White.copy(alpha = 0.1f)) // Using white alpha as per dark mode HTML hint, serves both reasonably
-                   Row(
-                       modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                       horizontalArrangement = Arrangement.SpaceBetween
-                   ) {
-                       Text("Giao hàng dự kiến", fontSize = 14.sp, color = textSecondary)
-                       Text("Thứ Ba, 28/11/2023", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
-                   }
-                   HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
-                   Row(
-                       modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                       horizontalArrangement = Arrangement.SpaceBetween
-                   ) {
-                       Text("Tổng cộng", fontSize = 14.sp, color = textSecondary)
-                       Text("15.990.000₫", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = ProductPrimary)
-                   }
+                    if (uiState.isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 20.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = ProductPrimary,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Mã đơn hàng", fontSize = 14.sp, color = textSecondary)
+                            Text(
+                                "#${uiState.orderId.takeLast(8).uppercase()}", 
+                                fontSize = 14.sp, 
+                                fontWeight = FontWeight.Medium, 
+                                color = textPrimary
+                            )
+                        }
+                        HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Tổng cộng", fontSize = 14.sp, color = textSecondary)
+                            Text(
+                                currencyFormat.format(uiState.totalAmount), 
+                                fontSize = 14.sp, 
+                                fontWeight = FontWeight.Bold, 
+                                color = ProductPrimary
+                            )
+                        }
+                    }
                 }
             }
             
@@ -184,7 +212,7 @@ fun OrderSuccessScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = onTrackOrderClick,
+                    onClick = { onTrackOrderClick(orderId) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
@@ -218,5 +246,6 @@ fun OrderSuccessScreen(
 @Preview
 @Composable
 fun PreviewOrderSuccessScreen() {
-    OrderSuccessScreen()
+    OrderSuccessScreen(orderId = "preview-order-id")
 }
+

@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,21 +26,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.group1.pandqapplication.shared.data.remote.dto.AddressDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShippingAddressScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    userId: String = "",  // Should be passed from previous screen or retrieved from SharedPreferences
+    viewModel: ShippingAddressViewModel = hiltViewModel()
 ) {
     val primaryColor = Color(0xFFec3713)
     val backgroundColor = Color(0xFFF8F6F6)
     val surfaceColor = Color.White
+    
+    val uiState by viewModel.uiState.collectAsState()
     
     // State for form
     var fullName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var addressDetail by remember { mutableStateOf("") }
     var isDefault by remember { mutableStateOf(false) }
+
+    // Load addresses when screen appears
+    LaunchedEffect(userId) {
+        if (userId.isNotEmpty()) {
+            viewModel.loadUserAddresses(userId)
+        }
+    }
 
     Scaffold(
         containerColor = backgroundColor,
@@ -108,28 +122,33 @@ fun ShippingAddressScreen(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    // Address 1 (Default)
-                    SavedAddressCard(
-                        name = "Nguyễn Văn A",
-                        phone = "(+84) 901 234 567",
-                        address = "123 Đường Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
-                        isDefault = true,
-                        isSelected = true,
-                        primaryColor = primaryColor,
-                        surfaceColor = surfaceColor
+                if (uiState.isLoading) {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = primaryColor)
+                    }
+                } else if (uiState.addresses.isEmpty()) {
+                    Text(
+                        text = "Chưa có địa chỉ lưu nào. Vui lòng thêm địa chỉ mới.",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(16.dp)
                     )
-                    
-                    // Address 2
-                    SavedAddressCard(
-                        name = "Trần Thị B",
-                        phone = "(+84) 912 345 678",
-                        address = "456 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
-                        isDefault = false,
-                        isSelected = false,
-                        primaryColor = primaryColor,
-                        surfaceColor = surfaceColor
-                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        uiState.addresses.forEach { address ->
+                            SavedAddressCard(
+                                name = address.receiverName,
+                                phone = address.phone,
+                                address = "${address.detailAddress}, ${address.ward}, ${address.district}, ${address.city}",
+                                isDefault = address.isDefault,
+                                isSelected = uiState.selectedAddressId == address.id,
+                                primaryColor = primaryColor,
+                                surfaceColor = surfaceColor,
+                                onSelect = { viewModel.selectAddress(address.id) },
+                                onSetDefault = { viewModel.setDefaultAddress(address.id) }
+                            )
+                        }
+                    }
                 }
             }
             
@@ -242,7 +261,9 @@ fun SavedAddressCard(
     isDefault: Boolean,
     isSelected: Boolean,
     primaryColor: Color,
-    surfaceColor: Color
+    surfaceColor: Color,
+    onSelect: () -> Unit = {},
+    onSetDefault: () -> Unit = {}
 ) {
     val borderColor = if (isSelected) primaryColor else Color(0xFFE5E7EB)
     
@@ -256,7 +277,7 @@ fun SavedAddressCard(
                 color = borderColor,
                 shape = RoundedCornerShape(12.dp)
             )
-            .clickable { }
+            .clickable { onSelect() }
             .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.Top) {
@@ -264,7 +285,7 @@ fun SavedAddressCard(
                 imageVector = if (isSelected) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked,
                 contentDescription = null,
                 tint = if (isSelected) primaryColor else Color.LightGray,
-                modifier = Modifier.padding(top = 2.dp)
+                modifier = Modifier.padding(top = 2.dp).clickable { onSelect() }
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -289,6 +310,21 @@ fun SavedAddressCard(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                        )
+                    }
+                } else if (isSelected) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = { onSetDefault() },
+                        modifier = Modifier.height(28.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor.copy(alpha = 0.1f))
+                    ) {
+                        Text(
+                            text = "Đặt mặc định",
+                            color = primaryColor,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }

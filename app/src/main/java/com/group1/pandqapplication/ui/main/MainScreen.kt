@@ -22,9 +22,18 @@ import com.group1.pandqapplication.ui.product.ProductDetailScreen
 fun MainScreen(
     onLogout: () -> Unit,
     onCartClick: () -> Unit,
-    onProductClick: () -> Unit,
+    onProductClick: (String) -> Unit,
     onSearchClick: () -> Unit,
-    onOrderClick: () -> Unit
+    onCategoryClick: (String) -> Unit = {},
+    onOrderClick: (String) -> Unit, // orderId parameter
+    onPersonalInfoClick: () -> Unit = {},
+    onAddressListClick: () -> Unit = {},
+    onSupportClick: () -> Unit = {},
+    onPolicyClick: () -> Unit = {},
+    onUserGuideClick: () -> Unit = {}, // Added param
+    onNavigateToOrder: (String?) -> Unit = { orderId -> orderId?.let { onOrderClick(it) } }, // Navigate to order with orderId
+    onNavigateToProduct: (String?) -> Unit = { id -> id?.let { onProductClick(it) } }, // Navigate to product with optional productId
+    onNavigateToPromotion: (String?) -> Unit = { _ -> } // Navigate to promotion
 ) {
     val navController = rememberNavController()
 
@@ -42,21 +51,58 @@ fun MainScreen(
                     HomeScreen(
                         onLogout = onLogout,
                         onProductClick = onProductClick,
-                        onSearchClick = onSearchClick
+                        onSearchClick = onSearchClick,
+                        onCategoryClick = onCategoryClick,
+                        onCartClick = onCartClick
                     )
                 }
                 composable(BottomNavItem.Orders.route) { 
                     OrdersScreen(
-                        onOrderClick = onOrderClick
+                        onOrderClick = { orderId -> onNavigateToOrder(orderId) }
                     ) 
                 }
-                composable(BottomNavItem.Notifications.route) { NotificationsScreen() }
+                composable(BottomNavItem.Notifications.route) { 
+                    NotificationsScreen(
+                        onNotificationClick = { targetUrl ->
+                            // Parse targetUrl and navigate to appropriate screen
+                            when {
+                                targetUrl == null -> { /* No navigation */ }
+                                targetUrl.contains("home") -> {
+                                    // Navigate to home tab
+                                    navController.navigate(BottomNavItem.Home.route) {
+                                        popUpTo(navController.graph.startDestinationId)
+                                        launchSingleTop = true
+                                    }
+                                }
+                                targetUrl.contains("orders") -> {
+                                    // Extract orderId from URL like "pandq://orders/29381"
+                                    val orderId = targetUrl.substringAfterLast("/")
+                                    onNavigateToOrder(orderId)
+                                }
+                                targetUrl.contains("products") -> {
+                                    val productId = targetUrl.substringAfterLast("/")
+                                    onNavigateToProduct(productId)
+                                }
+                                targetUrl.contains("promotions") || targetUrl.contains("coupons") || targetUrl.contains("flash-sale") -> {
+                                    val promoId = targetUrl.substringAfterLast("/")
+                                    onNavigateToPromotion(promoId)
+                                }
+                            }
+                        }
+                    )
+                }
                 composable(BottomNavItem.Account.route) { 
                     com.group1.pandqapplication.ui.account.AccountScreen(
-                        onLogout = onLogout
+                        onLogout = onLogout,
+                        onNavigateToPersonalInfo = onPersonalInfoClick,
+                        onNavigateToAddressList = onAddressListClick,
+                        onNavigateToSupport = onSupportClick,
+                        onNavigateToUserGuide = onUserGuideClick,
+                        onNavigateToPolicy = onPolicyClick
                     )
                 }
             }
         }
     }
 }
+

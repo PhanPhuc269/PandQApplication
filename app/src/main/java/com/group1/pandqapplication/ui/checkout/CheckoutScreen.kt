@@ -23,29 +23,34 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundDark
 import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundLight
 import com.group1.pandqapplication.shared.ui.theme.CheckoutBorderDark
@@ -58,11 +63,40 @@ import com.group1.pandqapplication.shared.ui.theme.CheckoutTextLight
 import com.group1.pandqapplication.shared.ui.theme.CheckoutTextSecondaryDark
 import com.group1.pandqapplication.shared.ui.theme.CheckoutTextSecondaryLight
 
+enum class PaymentMethod {
+    ZALOPAY,
+    SEPAY
+}
+
 @Composable
 fun CheckoutScreen(
     onBackClick: () -> Unit = {},
-    onEditAddressClick: () -> Unit = {}
+    onEditAddressClick: () -> Unit = {},
+    onPaymentSuccess: (String) -> Unit = {},
+    onLoginRequired: () -> Unit = {},
+    orderId: String,  // Required: Order ID from cart
+    userId: String = "", // Current user ID (empty if guest)
+    viewModel: CheckoutViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Check if user is guest - redirect to login
+    LaunchedEffect(userId) {
+        if (userId.isEmpty()) {
+            // User is guest, must login to checkout
+            snackbarHostState.showSnackbar("Vui lòng đăng nhập để thanh toán")
+            onLoginRequired()
+            return@LaunchedEffect
+        }
+    }
+    
+    // Load payment details when screen appears
+    LaunchedEffect(orderId) {
+        viewModel.loadPaymentDetails(orderId)
+    }
+    
     val isDarkTheme = false // Toggle for testing
     
     val backgroundColor = if (isDarkTheme) CheckoutBackgroundDark else CheckoutBackgroundLight
@@ -71,9 +105,78 @@ fun CheckoutScreen(
     val textSecondary = if (isDarkTheme) CheckoutTextSecondaryDark else CheckoutTextSecondaryLight
     val borderColor = if (isDarkTheme) CheckoutBorderDark else CheckoutBorderLight
     val dotsInactive = if (isDarkTheme) Color(0xFF673B32) else Color(0xFFD6D3D1)
+    
+    // Show SePay QR Dialog when QR URL is available
+    if (uiState.sepayQrUrl != null) {
+        SepayQRDialog(
+            qrUrl = uiState.sepayQrUrl!!,
+            amount = uiState.paymentDetails?.finalAmount ?: 0L,
+            bankAccount = uiState.sepayBankAccount,
+            accountName = uiState.sepayAccountName,
+            content = uiState.sepayContent,
+            transactionId = uiState.sepayTransactionId,
+            onDismiss = { viewModel.resetPaymentState() },
+            onCheckStatus = { 
+                uiState.sepayTransactionId?.let { viewModel.checkSepayStatus(it) }
+            }
+        )
+    }
+    
+    // Show error in snackbar
+    LaunchedEffect(uiState.paymentError) {
+        uiState.paymentError?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearPaymentError()
+        }
+    }
+    
+    // Handle payment success
+    LaunchedEffect(uiState.paymentSuccess) {
+        if (uiState.paymentSuccess) {
+            onPaymentSuccess(orderId)
+            viewModel.resetPaymentState()
+        }
+    }
+    
+    // Handle ZaloPay transaction token - call ZaloPay SDK to open sandbox app
+    LaunchedEffect(uiState.zpTransToken) {
+        uiState.zpTransToken?.let { token ->
+            // Get Activity from context
+            val activity = context as? android.app.Activity
+            if (activity != null) {
+                // Call ZaloPay SDK to pay order - opens ZaloPay Sandbox app
+                vn.zalopay.sdk.ZaloPaySDK.getInstance().payOrder(
+                    activity,
+                    token,
+                    "pandqapp://payment/callback",
+                    object : vn.zalopay.sdk.listeners.PayOrderListener {
+                        override fun onPaymentSucceeded(transactionId: String, transToken: String, appTransId: String) {
+                            viewModel.handlePaymentResult(PaymentResult.Success)
+                        }
+
+                        override fun onPaymentCanceled(zpTransToken: String, appTransId: String) {
+                            viewModel.handlePaymentResult(PaymentResult.Cancelled)
+                        }
+
+                        override fun onPaymentError(zaloPayError: vn.zalopay.sdk.ZaloPayError, zpTransToken: String, appTransId: String) {
+                            if (zaloPayError == vn.zalopay.sdk.ZaloPayError.PAYMENT_APP_NOT_FOUND) {
+                                viewModel.handlePaymentResult(PaymentResult.ZaloPayNotInstalled)
+                            } else {
+                                viewModel.handlePaymentResult(PaymentResult.Error("Lỗi thanh toán: ${zaloPayError.name}"))
+                            }
+                        }
+                    }
+                )
+                // Clear only zpTransToken to prevent this LaunchedEffect from re-triggering
+                // Keep appTransId for payment status checking
+                viewModel.clearZpTransToken()
+            }
+        }
+    }
 
     Scaffold(
         containerColor = backgroundColor,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Box(
                 modifier = Modifier
@@ -101,25 +204,51 @@ fun CheckoutScreen(
             }
         },
         bottomBar = {
+            // Check if address is available
+            val hasAddress = uiState.paymentDetails?.shippingAddress?.isNotBlank() == true
+            
             Box(
                 modifier = Modifier
                     .background(surfaceColor.copy(alpha = 0.8f))
                     .padding(16.dp)
             ) {
                 Button(
-                    onClick = { /* Confirm Order */ },
+                    onClick = { 
+                        if (!hasAddress) {
+                            // Show error if no address
+                            viewModel.setPaymentError("Vui lòng thêm địa chỉ giao hàng trước khi thanh toán")
+                        } else {
+                            viewModel.initiatePayment(orderId)
+                        }
+                    },
+                    enabled = !uiState.isProcessingPayment && uiState.paymentDetails != null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = CheckoutPrimary),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (hasAddress) CheckoutPrimary else CheckoutPrimary.copy(alpha = 0.5f)
+                    ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "Xác nhận - 2.480.000₫",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    if (uiState.isProcessingPayment) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        val amount = if (uiState.paymentDetails != null) {
+                            formatPrice(uiState.paymentDetails!!.finalAmount)
+                        } else {
+                            "..."
+                        }
+                        Text(
+                            text = "Xác nhận - $amount",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
@@ -189,7 +318,7 @@ fun CheckoutScreen(
                         
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "John Doe",
+                                text = uiState.paymentDetails?.userName ?: "Đang tải...",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = textPrimary,
@@ -197,7 +326,7 @@ fun CheckoutScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = "(+84) 987 654 321, 123 Đường ABC, Phường X, Quận Y, TP. Z",
+                                text = "${uiState.paymentDetails?.userPhone?.let { "(+84) $it, " } ?: ""} ${uiState.paymentDetails?.shippingAddress ?: ""}, ${uiState.paymentDetails?.shippingDistrict ?: ""}, ${uiState.paymentDetails?.shippingCity ?: ""}",
                                 fontSize = 14.sp,
                                 color = textSecondary,
                                 maxLines = 2,
@@ -230,17 +359,19 @@ fun CheckoutScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         PaymentOption(
                             text = "Thanh toán bằng ZaloPay",
-                            isSelected = true,
+                            isSelected = uiState.selectedPaymentMethod == PaymentMethod.ZALOPAY,
                             surfaceColor = surfaceColor,
-                            borderColor = CheckoutPrimary, // Active border
-                            textPrimary = textPrimary
+                            borderColor = if (uiState.selectedPaymentMethod == PaymentMethod.ZALOPAY) CheckoutPrimary else borderColor,
+                            textPrimary = textPrimary,
+                            onClick = { viewModel.selectPaymentMethod(PaymentMethod.ZALOPAY) }
                         )
                         PaymentOption(
-                            text = "Thanh toán bằng SoPay",
-                            isSelected = false,
+                            text = "Thanh toán bằng SePay",
+                            isSelected = uiState.selectedPaymentMethod == PaymentMethod.SEPAY,
                             surfaceColor = surfaceColor,
-                            borderColor = borderColor,
-                            textPrimary = textPrimary
+                            borderColor = if (uiState.selectedPaymentMethod == PaymentMethod.SEPAY) CheckoutPrimary else borderColor,
+                            textPrimary = textPrimary,
+                            onClick = { viewModel.selectPaymentMethod(PaymentMethod.SEPAY) }
                         )
                     }
                 }
@@ -309,9 +440,11 @@ fun CheckoutScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        SummaryRow("Tạm tính", "2.500.000₫", textSecondary, textPrimary)
-                        SummaryRow("Phí vận chuyển", "30.000₫", textSecondary, textPrimary)
-                        SummaryRow("Giảm giá", "-50.000₫", textSecondary, CheckoutPrimary)
+                        SummaryRow("Tạm tính", formatPrice(uiState.paymentDetails?.subtotal ?: 0), textSecondary, textPrimary)
+                        SummaryRow("Phí vận chuyển", formatPrice(uiState.paymentDetails?.shippingFee ?: 0), textSecondary, textPrimary)
+                        if ((uiState.paymentDetails?.discountAmount ?: 0) > 0) {
+                            SummaryRow("Giảm giá", "-${formatPrice(uiState.paymentDetails?.discountAmount ?: 0)}", textSecondary, CheckoutPrimary)
+                        }
                         
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 0.dp),
@@ -330,7 +463,7 @@ fun CheckoutScreen(
                                 color = textPrimary
                             )
                             Text(
-                                text = "2.480.000₫",
+                                text = formatPrice(uiState.paymentDetails?.finalAmount ?: 0),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = textPrimary
@@ -349,13 +482,15 @@ fun PaymentOption(
     isSelected: Boolean,
     surfaceColor: Color,
     borderColor: Color,
-    textPrimary: Color
+    textPrimary: Color,
+    onClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .border(
-                width = if (isSelected) 1.dp else 1.dp,
+                width = if (isSelected) 2.dp else 1.dp,
                 color = borderColor,
                 shape = RoundedCornerShape(12.dp)
             )
@@ -363,11 +498,9 @@ fun PaymentOption(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Compose RadioButton doesn't support easy custom "dot" drawing identical to HTML without custom Canvas, 
-        // but default RadioButton is close enough.
         RadioButton(
             selected = isSelected,
-            onClick = { },
+            onClick = onClick,
             colors = RadioButtonDefaults.colors(
                 selectedColor = CheckoutPrimary,
                 unselectedColor = Color.Gray
@@ -406,8 +539,17 @@ fun SummaryRow(label: String, value: String, labelColor: Color, valueColor: Colo
     }
 }
 
+fun formatPrice(amount: Long): String {
+    return String.format("%,d₫", amount).replace(',', '.')
+}
+
+fun formatCurrency(amount: Double): String {
+    val longAmount = amount.toLong()
+    return String.format("%,d", longAmount).replace(',', '.')
+}
+
 @Preview
 @Composable
 fun PreviewCheckoutScreen() {
-    CheckoutScreen()
+    CheckoutScreen(orderId = "preview-order-id")
 }
