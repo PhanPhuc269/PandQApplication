@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,11 +43,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.group1.pandqapplication.admin.data.remote.dto.DashboardSummaryResponse
 import com.group1.pandqapplication.shared.ui.theme.PandQApplicationTheme
+import java.math.BigDecimal
 
 @Composable
 fun AdminDashboardScreen(
+    viewModel: AdminDashboardViewModel = hiltViewModel(),
     onNavigateToOrders: () -> Unit = {},
     onNavigateToPromotions: () -> Unit = {},
     onNavigateToAddProduct: () -> Unit = {},
@@ -64,8 +69,52 @@ fun AdminDashboardScreen(
     userName: String = "Admin",
     avatarUrl: String? = null
 ) {
-    val overviewData = remember { dummyOverview }
-    val recentActivities = remember { dummyActivities }
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Convert API data to UI model or use dummy if loading/error
+    val overviewData = remember(uiState.summary) {
+        uiState.summary?.let { summary ->
+            listOf(
+                OverviewData(
+                    title = "Total Revenue",
+                    value = formatCurrency(summary.totalRevenue ?: BigDecimal.ZERO),
+                    subtitle = summary.revenueSubtitle ?: "vs last month",
+                    icon = Icons.Default.TrendingUp,
+                    type = OverviewType.REVENUE,
+                    trend = summary.revenueTrend
+                ),
+                OverviewData(
+                    title = "Total Orders",
+                    value = (summary.totalOrders ?: 0).toString(),
+                    subtitle = "${summary.pendingOrders ?: 0} pending",
+                    icon = Icons.Default.LocalShipping,
+                    type = OverviewType.ORDERS
+                ),
+                OverviewData(
+                    title = "Low Stock Alerts",
+                    value = (summary.lowStockAlerts ?: 0).toString(),
+                    subtitle = "Needs attention",
+                    icon = Icons.Default.Warning,
+                    type = OverviewType.ALERTS
+                )
+            )
+        } ?: dummyOverview
+    }
+    
+    val recentActivities = remember(uiState.summary) {
+        uiState.summary?.recentActivities?.map { activity ->
+            RecentActivity(
+                id = activity.id ?: "",
+                title = activity.title ?: "",
+                subtitle = activity.subtitle ?: "",
+                status = activity.status ?: "",
+                statusColor = parseStatusColor(activity.statusColor),
+                time = activity.time ?: "",
+                imageUrl = activity.imageUrl,
+                isAlert = activity.isAlert ?: false
+            )
+        } ?: dummyActivities
+    }
     
     val quickActions = listOf(
         QuickAction("Add Product", Icons.Default.AddBox, Color(0xFFA855F7)), // Purple
@@ -615,6 +664,22 @@ fun RecentActivityItem(activity: RecentActivity) {
                 )
             }
         }
+    }
+}
+
+// Helper functions
+private fun formatCurrency(amount: BigDecimal): String {
+    return String.format("%,.0f VND", amount)
+}
+
+private fun parseStatusColor(colorString: String?): Color {
+    return when (colorString?.lowercase()) {
+        "green" -> Color(0xFF10B981)
+        "orange" -> Color(0xFFF97316)
+        "red" -> Color(0xFFEF4444)
+        "blue" -> Color(0xFF3B82F6)
+        "purple" -> Color(0xFFA855F7)
+        else -> Color.Gray
     }
 }
 

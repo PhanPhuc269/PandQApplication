@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -177,6 +178,14 @@ fun AdminDrawerContent(
                 primaryColor = primaryColor
             )
 
+            DrawerItem(
+                label = "Inbox",
+                icon = Icons.Default.Notifications,
+                isSelected = currentRoute == AdminScreen.NotificationList.route,
+                onClick = { onNavigate(AdminScreen.NotificationList.route) },
+                primaryColor = primaryColor
+            )
+
             // Marketing
             Spacer(modifier = Modifier.height(16.dp))
             DrawerSectionHeader("Marketing")
@@ -188,8 +197,8 @@ fun AdminDrawerContent(
                 primaryColor = primaryColor
             )
             DrawerItem(
-                label = "Notifications",
-                icon = Icons.Default.Notifications,
+                label = "Push Campaigns",
+                icon = Icons.Default.Email,
                 isSelected = currentRoute == AdminScreen.NotificationTemplates.route,
                 onClick = { onNavigate(AdminScreen.NotificationTemplates.route) },
                 primaryColor = primaryColor

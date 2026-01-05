@@ -38,7 +38,7 @@ class AdminFirebaseMessagingService : FirebaseMessagingService() {
             Log.d(TAG, "Notification payload - Title: ${notification.title}")
             Log.d(TAG, "Notification payload - Body: ${notification.body}")
             showNotification(
-                title = "[Admin] ${notification.title ?: "Thông báo"}",
+                title = "${notification.title ?: "Thông báo"}",
                 body = notification.body ?: ""
             )
         }
@@ -59,7 +59,7 @@ class AdminFirebaseMessagingService : FirebaseMessagingService() {
         val targetUrl = data["targetUrl"]
 
         // Always prefix with [Admin] to distinguish from customer app
-        showNotification("[Admin] $title", body, type, targetUrl)
+        showNotification("$title", body, type, targetUrl)
     }
 
     private fun showNotification(

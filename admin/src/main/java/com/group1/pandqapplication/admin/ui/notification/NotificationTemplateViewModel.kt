@@ -90,14 +90,15 @@ class NotificationTemplateViewModel @Inject constructor(
         }
     }
 
-    fun createTemplate(title: String, body: String, type: String = "SYSTEM") {
+    fun createTemplate(title: String, body: String, scheduledAt: String? = null, type: String = "SYSTEM") {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
                 val request = CreateNotificationTemplateRequest(
                     title = title,
                     body = body,
-                    type = type
+                    type = type,
+                    scheduledAt = scheduledAt
                 )
                 adminApiService.createNotificationTemplate(request)
                 loadTemplates()
@@ -107,6 +108,28 @@ class NotificationTemplateViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = "Lỗi tạo: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun updateTemplate(id: String, title: String, body: String, scheduledAt: String?) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val request = com.group1.pandqapplication.admin.data.remote.dto.UpdateNotificationTemplateRequest(
+                    title = title,
+                    body = body,
+                    scheduledAt = scheduledAt
+                )
+                adminApiService.updateNotificationTemplate(id, request)
+                loadTemplates()
+                _uiState.value = _uiState.value.copy(successMessage = "Đã cập nhật!")
+            } catch (e: Exception) {
+                Log.e("NotificationTemplateVM", "Failed to update", e)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Lỗi cập nhật: ${e.message}"
                 )
             }
         }

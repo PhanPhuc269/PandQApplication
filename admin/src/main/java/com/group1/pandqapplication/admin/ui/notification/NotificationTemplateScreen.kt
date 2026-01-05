@@ -34,6 +34,9 @@ fun NotificationTemplateScreen(
     var showCreateDialog by remember { mutableStateOf(false) }
     var newTitle by remember { mutableStateOf("") }
     var newBody by remember { mutableStateOf("") }
+    var editingTemplateId by remember { mutableStateOf<String?>(null) }
+    var selectedDate by remember { mutableStateOf<String?>(null) }
+    var selectedTime by remember { mutableStateOf<String?>(null) }
 
     // Show snackbar messages
     LaunchedEffect(uiState.successMessage, uiState.error) {
@@ -107,6 +110,25 @@ fun NotificationTemplateScreen(
                             template = template,
                             onToggle = { viewModel.toggleActive(template.id) },
                             onSend = { viewModel.sendNotification(template.id) },
+                            onEdit = {
+                                editingTemplateId = template.id
+                                newTitle = template.title
+                                newBody = template.body
+                                // Parse scheduledAt to fill date/time if needed
+                                if (template.scheduledAt != null) {
+                                     try {
+                                         // Expecting format "yyyy-MM-ddTHH:mm:ss"
+                                         val parts = template.scheduledAt.split("T")
+                                         if (parts.size >= 2) {
+                                            selectedDate = parts[0]
+                                            selectedTime = parts[1]
+                                         }
+                                     } catch (e: Exception) {
+                                         // Ignore parse error
+                                     }
+                                }
+                                showCreateDialog = true
+                            },
                             onDelete = { viewModel.deleteTemplate(template.id) }
                         )
                     }
@@ -129,8 +151,15 @@ fun NotificationTemplateScreen(
     // Create Dialog
     if (showCreateDialog) {
         AlertDialog(
-            onDismissRequest = { showCreateDialog = false },
-            title = { Text("Tạo mẫu thông báo") },
+            onDismissRequest = { 
+                showCreateDialog = false
+                editingTemplateId = null
+                newTitle = ""
+                newBody = ""
+                selectedDate = null
+                selectedTime = null
+            },
+            title = { Text(if (editingTemplateId == null) "Tạo mẫu thông báo" else "Cập nhật mẫu thông báo") },
             text = {
                 Column {
                     OutlinedTextField(
@@ -149,25 +178,102 @@ fun NotificationTemplateScreen(
                         minLines = 3,
                         maxLines = 5
                     )
+                
+                    // Scheduler UI
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    val calendar = java.util.Calendar.getInstance()
+
+                    // Date DatePickerDialog
+                    val datePickerDialog = android.app.DatePickerDialog(
+                        context,
+                        { _, year, month, dayOfMonth ->
+                            selectedDate = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                        },
+                        calendar.get(java.util.Calendar.YEAR),
+                        calendar.get(java.util.Calendar.MONTH),
+                        calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                    )
+
+                    // Time TimePickerDialog
+                    val timePickerDialog = android.app.TimePickerDialog(
+                        context,
+                        { _, hourOfDay, minute ->
+                            selectedTime = String.format("%02d:%02d:00", hourOfDay, minute)
+                        },
+                        calendar.get(java.util.Calendar.HOUR_OF_DAY),
+                        calendar.get(java.util.Calendar.MINUTE),
+                        true
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Lên lịch gửi (Không bắt buộc)", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { datePickerDialog.show() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(text = selectedDate ?: "Chọn ngày")
+                        }
+                        
+                        OutlinedButton(
+                            onClick = { timePickerDialog.show() },
+                            modifier = Modifier.weight(1f),
+                            enabled = selectedDate != null
+                        ) {
+                            Text(text = selectedTime ?: "Chọn giờ")
+                        }
+                    }
+
+                    if (selectedDate != null && selectedTime != null) {
+                        Text(
+                            text = "Dự kiến gửi: $selectedDate $selectedTime",
+                            fontSize = 12.sp,
+                            color = Color(0xFF059669),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
                         if (newTitle.isNotBlank() && newBody.isNotBlank()) {
-                            viewModel.createTemplate(newTitle, newBody)
+                            var scheduledAt: String? = null
+                            if (selectedDate != null && selectedTime != null) {
+                                scheduledAt = "${selectedDate}T${selectedTime}"
+                            }
+                            
+                            if (editingTemplateId == null) {
+                                viewModel.createTemplate(newTitle, newBody, scheduledAt)
+                            } else {
+                                viewModel.updateTemplate(editingTemplateId!!, newTitle, newBody, scheduledAt)
+                            }
                             showCreateDialog = false
                             newTitle = ""
                             newBody = ""
+                            selectedDate = null
+                            selectedTime = null
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF137fec))
                 ) {
-                    Text("Tạo")
+                    Text(if (editingTemplateId == null) "Tạo" else "Cập nhật")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showCreateDialog = false }) {
+                TextButton(onClick = { 
+                    showCreateDialog = false 
+                    editingTemplateId = null
+                    newTitle = ""
+                    newBody = ""
+                    selectedDate = null
+                    selectedTime = null
+                }) {
                     Text("Hủy")
                 }
             }
@@ -180,6 +286,7 @@ fun NotificationTemplateItem(
     template: NotificationTemplateDto,
     onToggle: () -> Unit,
     onSend: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -293,6 +400,15 @@ fun NotificationTemplateItem(
                             Icons.Default.Send,
                             contentDescription = "Send",
                             tint = if (template.isActive) Color(0xFF137fec) else Color.Gray
+                        )
+                    }
+
+                    // Edit button
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            tint = Color(0xFF137fec)
                         )
                     }
 

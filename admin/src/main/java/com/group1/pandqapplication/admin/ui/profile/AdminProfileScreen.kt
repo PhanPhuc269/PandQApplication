@@ -160,12 +160,6 @@ private fun ProfileContent(
             onLastNameChange = onLastNameChange
         )
 
-
-
-        SecuritySection(onChangePassword = onChangePassword)
-
-        Divider(modifier = Modifier.padding(16.dp), color = Color.LightGray.copy(alpha = 0.3f))
-
         Spacer(modifier = Modifier.height(24.dp))
 
         // Save Changes Button

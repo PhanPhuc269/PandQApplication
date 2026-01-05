@@ -303,6 +303,9 @@ class AdminActivity : FragmentActivity() {
                                 onBackClick = { navController.popBackStack() }
                             )
                         }
+                        composable(AdminScreen.NotificationList.route) {
+                            com.group1.pandqapplication.admin.ui.notifications.AdminNotificationScreen()
+                        }
 
                     }
                 }

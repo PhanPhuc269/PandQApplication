@@ -6,6 +6,7 @@ import com.group1.pandqapplication.admin.data.remote.dto.UpdateNotificationTempl
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Query
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -38,4 +39,14 @@ interface AdminApiService {
 
     @DELETE("api/v1/admin/notification-templates/{id}")
     suspend fun deleteNotificationTemplate(@Path("id") id: String)
+
+    // Dashboard
+    @GET("api/v1/admin/dashboard/summary")
+    suspend fun getDashboardSummary(): com.group1.pandqapplication.admin.data.remote.dto.DashboardSummaryResponse
+
+    @GET("api/v1/admin/notifications")
+    suspend fun getAdminNotifications(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20
+    ): com.group1.pandqapplication.admin.data.remote.dto.AdminNotificationResponse
 }
