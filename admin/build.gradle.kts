@@ -97,15 +97,20 @@ dependencies {
     // Biometric
     implementation(libs.androidx.biometric)
 
-    // Firebase (needed for AdminAuth)
+    // Firebase (needed for AdminAuth and FCM)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.messaging)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     
     // OkHttp for Cloudinary upload
     implementation(libs.okhttp)
+    
+    // Retrofit & Gson for AdminApiService
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

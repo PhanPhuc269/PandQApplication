@@ -144,6 +144,11 @@ class LoginViewModel @Inject constructor(
                 
                 if (result.isSuccess) {
                     Log.d("FCM", "FCM token registered successfully")
+                    
+                    // Subscribe to customer notification topics
+                    FcmHelper.subscribeToTopic("promotions")
+                    FcmHelper.subscribeToTopic("order_updates")
+                    Log.d("FCM", "Subscribed to customer topics: promotions, order_updates")
                 } else {
                     Log.e("FCM", "Failed to register FCM token: ${result.exceptionOrNull()?.message}")
                 }

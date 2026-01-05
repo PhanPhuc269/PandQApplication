@@ -1,11 +1,17 @@
 package com.group1.pandqapplication.admin.ui.login
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.group1.pandqapplication.admin.data.repository.AdminAuthRepository
 import com.group1.pandqapplication.admin.data.repository.AdminAuthResult
+import com.group1.pandqapplication.admin.util.AdminFcmHelper
+import com.group1.pandqapplication.shared.data.repository.NotificationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AdminAuthViewModel @Inject constructor(
     private val authRepository: AdminAuthRepository,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val notificationRepository: NotificationRepository
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AdminAuthState>(AdminAuthState.Idle)
@@ -64,13 +71,46 @@ class AdminAuthViewModel @Inject constructor(
             authRepository.loginAndVerifyAdmin(email, password).collect { result ->
                 _authState.value = when (result) {
                     is AdminAuthResult.Loading -> AdminAuthState.Loading
-                    is AdminAuthResult.Success -> AdminAuthState.Success(
-                        email = result.response.user?.email ?: "",
-                        displayName = result.response.user?.fullName,
-                        role = result.response.user?.role ?: "ADMIN"
-                    )
+                    is AdminAuthResult.Success -> {
+                        // Register FCM token after successful login
+                        registerFcmToken(result.response.user?.email ?: email)
+                        AdminAuthState.Success(
+                            email = result.response.user?.email ?: "",
+                            displayName = result.response.user?.fullName,
+                            role = result.response.user?.role ?: "ADMIN"
+                        )
+                    }
                     is AdminAuthResult.Error -> AdminAuthState.Error(result.message)
                 }
+            }
+        }
+    }
+
+    /**
+     * Register FCM token with backend after successful login.
+     * Uses GlobalScope to ensure completion even if ViewModel is destroyed.
+     */
+    private fun registerFcmToken(email: String) {
+        GlobalScope.launch(Dispatchers.IO + NonCancellable) {
+            try {
+                val firebaseUid = firebaseAuth.currentUser?.uid
+                val fcmToken = AdminFcmHelper.getToken()
+                
+                Log.d("AdminFCM", "Registering FCM token for admin: ${email}")
+                Log.d("AdminFCM", "FCM Token: ${fcmToken.take(20)}...")
+                Log.d("AdminFCM", "Firebase UID: $firebaseUid")
+
+                val result = notificationRepository.updateFcmTokenByEmail(email, fcmToken, firebaseUid)
+                
+                if (result.isSuccess) {
+                    Log.d("AdminFCM", "Admin FCM token registered successfully!")
+                    // Also subscribe to admin topic for broadcast notifications
+                    AdminFcmHelper.subscribeToAdminTopic()
+                } else {
+                    Log.e("AdminFCM", "Failed to register admin FCM token: ${result.exceptionOrNull()?.message}")
+                }
+            } catch (e: Exception) {
+                Log.e("AdminFCM", "Error registering admin FCM token", e)
             }
         }
     }
