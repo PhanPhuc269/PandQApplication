@@ -1,14 +1,19 @@
 package com.group1.pandqapplication.ui.splash
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,9 +23,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.group1.pandqapplication.R
 import com.group1.pandqapplication.ui.navigation.Screen
 
 @Composable
@@ -46,16 +53,19 @@ fun SplashScreen(
         when (val state = uiState) {
             is SplashState.Loading -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Replace with your Logo if available
-                    Text(
-                        text = "PandQ",
-                        style = MaterialTheme.typography.displayMedium,
-                        color = MaterialTheme.colorScheme.primary
+                    // App logo
+                    Image(
+                        painter = painterResource(id = R.mipmap.ic_launcher),
+                        contentDescription = "PandQ Logo",
+                        modifier = Modifier.size(120.dp)
                     )
-                    Spacer(modifier = Modifier.height(32.dp))
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Đang tải dữ liệu...", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(25.dp))
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth(0.2f)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                    )
                 }
             }
             is SplashState.Error -> {

@@ -69,7 +69,7 @@
         <!-- FCM Default Notification Icon -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@drawable/ic_launcher_foreground" />
+            android:resource="@mipmap/ic_launcher" />
 
         <!-- FCM Default Notification Color -->
         <meta-data

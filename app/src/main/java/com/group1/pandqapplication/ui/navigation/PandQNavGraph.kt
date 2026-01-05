@@ -67,7 +67,14 @@ fun PandQNavGraph(
             com.group1.pandqapplication.ui.splash.SplashScreen(
                 navController = navController,
                 onInitializationComplete = { isFirstLaunch ->
-                    val targetDestination = if (isFirstLaunch) Screen.Onboarding.route else Screen.Login.route
+                    // If first launch -> Onboarding
+                    // If already logged in -> Home (from destinationAfterSplash)
+                    // Otherwise -> Login
+                    val targetDestination = when {
+                        isFirstLaunch -> Screen.Onboarding.route
+                        destinationAfterSplash == Screen.Home.route -> Screen.Home.route
+                        else -> Screen.Login.route
+                    }
                     navController.navigate(targetDestination) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }

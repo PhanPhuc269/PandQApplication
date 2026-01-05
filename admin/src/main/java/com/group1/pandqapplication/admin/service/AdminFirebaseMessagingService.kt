@@ -88,7 +88,7 @@ class AdminFirebaseMessagingService : FirebaseMessagingService() {
 
         // Build notification with clear ADMIN branding
         val notification = NotificationCompat.Builder(this, AdminApplication.NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(body)
             .setSubText("PandQ Admin") // Shows app name in notification
