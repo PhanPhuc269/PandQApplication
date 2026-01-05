@@ -41,26 +41,36 @@ fun AdminNotificationScreen(
             .fillMaxSize()
             .background(Color(0xFFF9FAFB))
     ) {
-        // Header
+        // Header with edge-to-edge support
         Surface(
             color = Color.White,
             shadowElevation = 2.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Inbox",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = Color.Black
-                )
-                IconButton(onClick = { viewModel.loadNotifications() }) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Color.Gray)
+            Column {
+                // Status bar spacer for edge-to-edge
+                Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+                
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Empty spacer for centering
+                    Box(modifier = Modifier.size(48.dp))
+                    
+                    Text(
+                        text = "Hộp thư",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = Color.Black,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    
+                    IconButton(onClick = { viewModel.loadNotifications() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Làm mới", tint = Color.Gray)
+                    }
                 }
             }
         }

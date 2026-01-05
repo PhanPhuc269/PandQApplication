@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -37,6 +38,19 @@ fun NotificationTemplateScreen(
     var editingTemplateId by remember { mutableStateOf<String?>(null) }
     var selectedDate by remember { mutableStateOf<String?>(null) }
     var selectedTime by remember { mutableStateOf<String?>(null) }
+    var selectedTargetUrl by remember { mutableStateOf<String?>(null) }
+    var showTargetUrlDropdown by remember { mutableStateOf(false) }
+    
+    // Predefined target destinations
+    val targetOptions = listOf(
+        "" to "Không chọn (Mặc định)",
+        "pandq://home" to "Trang chủ",
+        "pandq://promotions" to "Khuyến mãi",
+        "pandq://orders" to "Đơn hàng",
+        "pandq://cart" to "Giỏ hàng",
+        "pandq://profile" to "Hồ sơ",
+        "pandq://products" to "Sản phẩm"
+    )
 
     // Show snackbar messages
     LaunchedEffect(uiState.successMessage, uiState.error) {
@@ -54,7 +68,7 @@ fun NotificationTemplateScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Quản lý thông báo", fontWeight = FontWeight.Bold) },
+                title = { Text("Quản lý thông báo", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -114,6 +128,7 @@ fun NotificationTemplateScreen(
                                 editingTemplateId = template.id
                                 newTitle = template.title
                                 newBody = template.body
+                                selectedTargetUrl = template.targetUrl
                                 // Parse scheduledAt to fill date/time if needed
                                 if (template.scheduledAt != null) {
                                      try {
@@ -158,6 +173,7 @@ fun NotificationTemplateScreen(
                 newBody = ""
                 selectedDate = null
                 selectedTime = null
+                selectedTargetUrl = null
             },
             title = { Text(if (editingTemplateId == null) "Tạo mẫu thông báo" else "Cập nhật mẫu thông báo") },
             text = {
@@ -237,6 +253,41 @@ fun NotificationTemplateScreen(
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
+                    
+                    // Target URL Dropdown
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Điểm đến khi nhấn thông báo", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    ExposedDropdownMenuBox(
+                        expanded = showTargetUrlDropdown,
+                        onExpandedChange = { showTargetUrlDropdown = it }
+                    ) {
+                        OutlinedTextField(
+                            value = targetOptions.find { it.first == (selectedTargetUrl ?: "") }?.second ?: "Không chọn",
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showTargetUrlDropdown) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            singleLine = true
+                        )
+                        ExposedDropdownMenu(
+                            expanded = showTargetUrlDropdown,
+                            onDismissRequest = { showTargetUrlDropdown = false }
+                        ) {
+                            targetOptions.forEach { (url, label) ->
+                                DropdownMenuItem(
+                                    text = { Text(label) },
+                                    onClick = {
+                                        selectedTargetUrl = url.ifEmpty { null }
+                                        showTargetUrlDropdown = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -249,15 +300,16 @@ fun NotificationTemplateScreen(
                             }
                             
                             if (editingTemplateId == null) {
-                                viewModel.createTemplate(newTitle, newBody, scheduledAt)
+                                viewModel.createTemplate(newTitle, newBody, scheduledAt, selectedTargetUrl)
                             } else {
-                                viewModel.updateTemplate(editingTemplateId!!, newTitle, newBody, scheduledAt)
+                                viewModel.updateTemplate(editingTemplateId!!, newTitle, newBody, scheduledAt, selectedTargetUrl)
                             }
                             showCreateDialog = false
                             newTitle = ""
                             newBody = ""
                             selectedDate = null
                             selectedTime = null
+                            selectedTargetUrl = null
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF137fec))
@@ -273,6 +325,7 @@ fun NotificationTemplateScreen(
                     newBody = ""
                     selectedDate = null
                     selectedTime = null
+                    selectedTargetUrl = null
                 }) {
                     Text("Hủy")
                 }

@@ -56,6 +56,7 @@ import com.group1.pandqapplication.admin.ui.profile.AdminProfileScreen
 import com.group1.pandqapplication.admin.ui.setting.AdminSettingsScreen
 import com.group1.pandqapplication.admin.ui.customer.CustomerListScreen
 import com.group1.pandqapplication.admin.ui.shipping.ShippingManagementScreen
+import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -65,8 +66,14 @@ class AdminActivity : FragmentActivity() {
     @Inject
     lateinit var adminUserManager: AdminUserManager
     
+    @Inject
+    lateinit var adminSettingsManager: com.group1.pandqapplication.admin.data.AdminSettingsManager
+    
+    private var isAppInBackground = false
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
             MaterialTheme {
                 val navController = rememberNavController()
@@ -87,6 +94,57 @@ class AdminActivity : FragmentActivity() {
                 LaunchedEffect(isLoggedIn) {
                     if (isLoggedIn && currentUser == null) {
                         adminUserManager.loadCurrentUser()
+                    }
+                }
+                
+                // Collect settings
+                val isReturnScreenEnabled by adminSettingsManager.isReturnScreenEnabled.collectAsState()
+                
+                // Track if we need to show return screen after resume
+                var shouldShowReturnScreen by remember { mutableStateOf(false) }
+                
+                // Use rememberUpdatedState to avoid stale closures in the lifecycle callback
+                val currentIsLoggedIn by androidx.compose.runtime.rememberUpdatedState(isLoggedIn)
+                val currentIsReturnScreenEnabled by androidx.compose.runtime.rememberUpdatedState(isReturnScreenEnabled)
+                
+                // Lifecycle observer to detect app going to background and resuming
+                // Use ProcessLifecycleOwner to detect app-level lifecycle, not just composable lifecycle
+                androidx.compose.runtime.DisposableEffect(Unit) {
+                    val processLifecycleOwner = androidx.lifecycle.ProcessLifecycleOwner.get()
+                    val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+                        android.util.Log.d("ReturnScreen", "Lifecycle event: $event, isLoggedIn=$currentIsLoggedIn, isReturnScreenEnabled=$currentIsReturnScreenEnabled")
+                        when (event) {
+                            androidx.lifecycle.Lifecycle.Event.ON_STOP -> {
+                                // Only track if logged in and return screen enabled
+                                if (currentIsLoggedIn && currentIsReturnScreenEnabled) {
+                                    isAppInBackground = true
+                                    android.util.Log.d("ReturnScreen", "App went to background, isAppInBackground=true")
+                                }
+                            }
+                            androidx.lifecycle.Lifecycle.Event.ON_START -> {
+                                android.util.Log.d("ReturnScreen", "ON_START: isAppInBackground=$isAppInBackground")
+                                if (isAppInBackground && currentIsLoggedIn && currentIsReturnScreenEnabled) {
+                                    shouldShowReturnScreen = true
+                                    isAppInBackground = false
+                                    android.util.Log.d("ReturnScreen", "Set shouldShowReturnScreen=true")
+                                }
+                            }
+                            else -> {}
+                        }
+                    }
+                    processLifecycleOwner.lifecycle.addObserver(observer)
+                    onDispose {
+                        processLifecycleOwner.lifecycle.removeObserver(observer)
+                    }
+                }
+                
+                // Navigate to Login Screen when app resumes from background (shows "Chào mừng trở lại" if session exists)
+                LaunchedEffect(shouldShowReturnScreen) {
+                    if (shouldShowReturnScreen && currentRoute != AdminScreen.Login.route) {
+                        android.util.Log.d("ReturnScreen", "Navigating to Login screen for return flow")
+                        currentRoute = AdminScreen.Login.route
+                        navController.navigate(AdminScreen.Login.route)
+                        shouldShowReturnScreen = false
                     }
                 }
 
@@ -130,8 +188,7 @@ class AdminActivity : FragmentActivity() {
                     ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = AdminScreen.Login.route,
-                        modifier = Modifier.padding(innerPadding)
+                        startDestination = AdminScreen.Login.route
                     ) {
                         composable(AdminScreen.Dashboard.route) {
                             AdminDashboardScreen(
@@ -161,6 +218,7 @@ class AdminActivity : FragmentActivity() {
                                 onNavigateToSettings = { navController.navigate(AdminScreen.Settings.route) },
                                 onNavigateToCustomer = { navController.navigate(AdminScreen.CustomerList.route) },
                                 onNavigateToShipping = { navController.navigate(AdminScreen.ShippingManagement.route) },
+                                onNavigateToNotifications = { navController.navigate(AdminScreen.NotificationList.route) },
                                 userName = userName,
                                 avatarUrl = avatarUrl
                             )
@@ -263,7 +321,14 @@ class AdminActivity : FragmentActivity() {
                                 onChangePassword = { navController.navigate(AdminScreen.ChangePassword.route) },
                                 userName = userName,
                                 userRole = userRole,
-                                avatarUrl = avatarUrl
+                                avatarUrl = avatarUrl,
+                                onLogout = {
+                                    adminUserManager.clearUser()
+                                    currentRoute = AdminScreen.Login.route
+                                    navController.navigate(AdminScreen.Login.route) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
                             )
                         }
                         composable(AdminScreen.CustomerList.route) {

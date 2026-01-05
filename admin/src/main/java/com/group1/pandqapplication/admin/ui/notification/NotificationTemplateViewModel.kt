@@ -90,7 +90,7 @@ class NotificationTemplateViewModel @Inject constructor(
         }
     }
 
-    fun createTemplate(title: String, body: String, scheduledAt: String? = null, type: String = "SYSTEM") {
+    fun createTemplate(title: String, body: String, scheduledAt: String? = null, targetUrl: String? = null, type: String = "SYSTEM") {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
@@ -98,7 +98,8 @@ class NotificationTemplateViewModel @Inject constructor(
                     title = title,
                     body = body,
                     type = type,
-                    scheduledAt = scheduledAt
+                    scheduledAt = scheduledAt,
+                    targetUrl = targetUrl
                 )
                 adminApiService.createNotificationTemplate(request)
                 loadTemplates()
@@ -113,14 +114,15 @@ class NotificationTemplateViewModel @Inject constructor(
         }
     }
 
-    fun updateTemplate(id: String, title: String, body: String, scheduledAt: String?) {
+    fun updateTemplate(id: String, title: String, body: String, scheduledAt: String?, targetUrl: String?) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
                 val request = com.group1.pandqapplication.admin.data.remote.dto.UpdateNotificationTemplateRequest(
                     title = title,
                     body = body,
-                    scheduledAt = scheduledAt
+                    scheduledAt = scheduledAt,
+                    targetUrl = targetUrl
                 )
                 adminApiService.updateNotificationTemplate(id, request)
                 loadTemplates()

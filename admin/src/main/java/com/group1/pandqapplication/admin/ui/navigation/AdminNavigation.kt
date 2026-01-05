@@ -43,4 +43,5 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object ChangePassword : AdminScreen("change_password", "Change Password", Icons.Default.ManageAccounts)
     object NotificationTemplates : AdminScreen("notification_templates", "Push Campaigns", Icons.Default.Email)
     object NotificationList : AdminScreen("notification_list", "Inbox", Icons.Default.Notifications)
+    object ReturnScreen : AdminScreen("return_screen", "Return", Icons.Default.Login)
 }

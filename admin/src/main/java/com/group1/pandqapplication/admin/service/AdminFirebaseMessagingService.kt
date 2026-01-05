@@ -16,6 +16,9 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class AdminFirebaseMessagingService : FirebaseMessagingService() {
 
+    @javax.inject.Inject
+    lateinit var settingsManager: com.group1.pandqapplication.admin.data.AdminSettingsManager
+
     companion object {
         private const val TAG = "AdminFCM"
     }
@@ -32,6 +35,12 @@ class AdminFirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "=== ADMIN APP RECEIVED FCM MESSAGE ===")
         Log.d(TAG, "From: ${remoteMessage.from}")
         Log.d(TAG, "Message ID: ${remoteMessage.messageId}")
+
+        // Check if push notifications are enabled
+        if (!settingsManager.isPushNotificationEnabledSync()) {
+            Log.d(TAG, "Push notifications disabled in settings, skipping notification display")
+            return
+        }
 
         // Handle notification payload (when app is in foreground)
         remoteMessage.notification?.let { notification ->

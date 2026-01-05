@@ -192,33 +192,42 @@ private fun ProfileContent(
 
 @Composable
 fun ProfileTopAppBar(onBackClick: () -> Unit, onSettingsClick: () -> Unit) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        IconButton(
-            onClick = onBackClick,
+        // Add spacer for status bar
+        Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+        
+        Row(
             modifier = Modifier
-                .size(40.dp)
-                .background(Color.Transparent, CircleShape)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
-        }
-        Text(
-            text = "Admin Profile",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        IconButton(
-            onClick = onSettingsClick,
-            modifier = Modifier
-                .size(40.dp)
-                .background(Color.Transparent, CircleShape)
-        ) {
-            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onBackground)
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color.Transparent, CircleShape)
+            ) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
+            }
+            Text(
+                text = "Admin Profile",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            IconButton(
+                onClick = onSettingsClick,
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color.Transparent, CircleShape)
+            ) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onBackground)
+            }
         }
     }
 }

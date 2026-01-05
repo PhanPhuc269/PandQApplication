@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,22 +36,36 @@ fun AdminSettingsScreen(
     onChangePassword: () -> Unit = {},
     userName: String = "Admin",
     userRole: String = "Administrator",
-    avatarUrl: String? = null
+    avatarUrl: String? = null,
+    onLogout: () -> Unit = {},
+    viewModel: AdminSettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
-    Scaffold(
-        containerColor = Color(0xFFF8F9FA), // Soft gray background
-        topBar = {
-            SettingsTopBar(onBackClick)
-        }
-    ) { paddingValues ->
+    val uiState by viewModel.uiState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    
+    // Check biometric availability
+    val biometricManager = remember { androidx.biometric.BiometricManager.from(context) }
+    val isBiometricAvailable = remember {
+        biometricManager.canAuthenticate(
+            androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
+            androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
+        ) == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F9FA))
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            // Top Spacer for Status Bar + Top Bar + Padding
+            Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+            Spacer(modifier = Modifier.height(56.dp + 16.dp))
             
             // Profile Card
             SettingsProfileCard(
@@ -62,88 +77,55 @@ fun AdminSettingsScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Account Settings
-            SettingsSectionTitle("Account")
+            // All Settings
             SettingsCard {
                 SettingsItem(
                     icon = Icons.Outlined.Lock,
                     iconColor = Color(0xFFec3713),
-                    title = "Change Password",
-                    subtitle = "Update your security",
+                    title = "Đổi mật khẩu",
+                    subtitle = "Cập nhật bảo mật",
                     onClick = onChangePassword
                 )
-                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.1f))
-                SettingsItem(
-                    icon = Icons.Outlined.Security,
-                    iconColor = Color(0xFF10B981),
-                    title = "Two-Factor Auth",
-                    subtitle = "Enhanced security",
-                    onClick = {} // Future implementation
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Notification Settings
-            SettingsSectionTitle("Notifications")
-            SettingsCard {
-                var pushEnabled by remember { mutableStateOf(true) }
-                var emailEnabled by remember { mutableStateOf(false) }
                 
+                // Biometric Toggle - only show if device supports biometrics
+                if (isBiometricAvailable) {
+                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.1f))
+                    SettingsSwitchItem(
+                        icon = Icons.Outlined.Fingerprint,
+                        iconColor = Color(0xFF10B981),
+                        title = "Xác thực sinh trắc học",
+                        checked = uiState.isBiometricEnabled,
+                        onCheckedChange = { viewModel.toggleBiometric(it) }
+                    )
+                }
+                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.1f))
+                
+                // Push Notification Toggle
                 SettingsSwitchItem(
                     icon = Icons.Outlined.NotificationsActive,
                     iconColor = Color(0xFFF59E0B),
-                    title = "Push Notifications",
-                    checked = pushEnabled,
-                    onCheckedChange = { pushEnabled = it }
+                    title = "Thông báo đẩy",
+                    checked = uiState.isPushNotificationEnabled,
+                    onCheckedChange = { viewModel.togglePushNotification(it) }
                 )
                 HorizontalDivider(color = Color.LightGray.copy(alpha = 0.1f))
+                
+                // Return Screen Toggle
                 SettingsSwitchItem(
-                    icon = Icons.Outlined.Email,
-                    iconColor = Color(0xFF3B82F6),
-                    title = "Email Alerts",
-                    checked = emailEnabled,
-                    onCheckedChange = { emailEnabled = it }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // App Settings
-            SettingsSectionTitle("App Settings")
-            SettingsCard {
-                SettingsItem(
-                    icon = Icons.Outlined.DarkMode,
-                    iconColor = Color(0xFF6366F1),
-                    title = "Appearance",
-                    rightContent = {
-                        Text(
-                            text = "Light",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
-                        )
-                    }
-                )
-                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.1f))
-                SettingsItem(
-                    icon = Icons.Outlined.Language,
-                    iconColor = Color(0xFFEC4899),
-                    title = "Language",
-                    rightContent = {
-                        Text(
-                            text = "English",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
-                        )
-                    }
+                    icon = Icons.Outlined.Wallpaper,
+                    iconColor = Color(0xFF8B5CF6),
+                    title = "Màn hình chờ",
+                    checked = uiState.isReturnScreenEnabled,
+                    onCheckedChange = { viewModel.toggleReturnScreen(it) }
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             // Logout Button
+            // Logout Button
             Button(
-                onClick = {}, // Implement logout logic if needed passed from parent
+                onClick = onLogout,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -161,43 +143,60 @@ fun AdminSettingsScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Log Out",
+                    text = "Đăng xuất",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
             }
             
             Spacer(modifier = Modifier.height(32.dp))
+            
+            // Bottom Spacer for Navigation Bar
+            Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+            Spacer(modifier = Modifier.height(24.dp))
         }
+
+        SettingsTopBar(
+             onBackClick = onBackClick,
+             modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
 
 @Composable
-fun SettingsTopBar(onBackClick: () -> Unit) {
+fun SettingsTopBar(onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         color = Color.White,
         shadowElevation = 2.dp,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .height(56.dp) // Compact height
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBackIosNew,
-                    contentDescription = "Back",
-                    tint = Color.Black,
-                    modifier = Modifier.size(20.dp)
+        Column {
+            // Spacer to avoid covering status bar content
+            Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp) // Compact height
+                    .padding(horizontal = 8.dp)
+            ) {
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBackIosNew,
+                        contentDescription = "Quay lại",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Text(
+                    text = "Cài đặt",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.Black,
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
-            Text(
-                text = "Settings",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = Color.Black,
-                modifier = Modifier.padding(start = 8.dp)
-            )
         }
     }
 }

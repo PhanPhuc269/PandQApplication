@@ -1,5 +1,9 @@
 package com.group1.pandqapplication.admin.ui.dashboard
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,6 +70,7 @@ fun AdminDashboardScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToCustomer: () -> Unit = {},
     onNavigateToShipping: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
     onMenuClick: () -> Unit = {},
     userName: String = "Admin",
     avatarUrl: String? = null
@@ -138,84 +144,82 @@ fun AdminDashboardScreen(
         isVisible = true
     }
 
-    Scaffold(
-        topBar = { 
-            DashboardAppbar(
-                onAvatarClick = onNavigateToProfile, 
-                onMenuClick = onMenuClick,
-                userName = userName,
-                avatarUrl = avatarUrl
-            ) 
-        },
-        containerColor = Color.Transparent // Transparent to show gradient
-    ) { paddingValues ->
-        Box(
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFFFFFFFF), Color(0xFFF1F5F9))
+                )
+            )
+    ) {
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF8F9FA), Color(0xFFE2E8F0))
-                    )
-                )
-                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            contentPadding = PaddingValues(
+                top = 64.dp + WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 16.dp, 
+                bottom = 24.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            )
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                contentPadding = PaddingValues(bottom = 24.dp)
-            ) {
-                // Overview Section
-                item {
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = isVisible,
-                        enter = androidx.compose.animation.slideInVertically(initialOffsetY = { 50 }) + androidx.compose.animation.fadeIn()
-                    ) {
-                        OverviewSection(overviewData)
-                    }
+            // Overview Section
+            item {
+                AnimatedVisibility(
+                    visible = isVisible,
+                    enter = slideInVertically(initialOffsetY = { 50 }) + fadeIn()
+                ) {
+                    OverviewSection(overviewData)
                 }
+            }
 
-                // Quick Actions Section
-                item {
-                     androidx.compose.animation.AnimatedVisibility(
-                        visible = isVisible,
-                        enter = androidx.compose.animation.slideInVertically(initialOffsetY = { 50 }, animationSpec = androidx.compose.animation.core.tween(delayMillis = 100)) + androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(delayMillis = 100))
-                    ) {
-                        QuickActionsSection(
-                            actions = quickActions,
-                            onActionClick = { actionTitle ->
-                                // Navigation logic keeps same...
-                                when(actionTitle) {
-                                    "Manage Orders" -> onNavigateToOrders()
-                                    "Promotions" -> onNavigateToPromotions()
-                                    "Add Product" -> onNavigateToAddProduct()
-                                    "Analytics" -> onNavigateToAnalytics()
-                                    "Inventory" -> onNavigateToInventory()
-                                    "Category" -> onNavigateToCategory()
-                                    "Branch" -> onNavigateToBranch()
-                                    "Supplier" -> onNavigateToSupplier()
-                                    "Roles" -> onNavigateToRoles()
-                                    "Settings" -> onNavigateToSettings()
-                                    "Customer" -> onNavigateToCustomer()
-                                    "Shipping" -> onNavigateToShipping()
-                                }
+            // Quick Actions Section
+            item {
+                    AnimatedVisibility(
+                    visible = isVisible,
+                    enter = slideInVertically(initialOffsetY = { 50 }, animationSpec = tween(delayMillis = 100)) + fadeIn(animationSpec = tween(delayMillis = 100))
+                ) {
+                    QuickActionsSection(
+                        actions = quickActions,
+                        onActionClick = { actionTitle ->
+                            when(actionTitle) {
+                                "Manage Orders" -> onNavigateToOrders()
+                                "Promotions" -> onNavigateToPromotions()
+                                "Add Product" -> onNavigateToAddProduct()
+                                "Analytics" -> onNavigateToAnalytics()
+                                "Inventory" -> onNavigateToInventory()
+                                "Category" -> onNavigateToCategory()
+                                "Branch" -> onNavigateToBranch()
+                                "Supplier" -> onNavigateToSupplier()
+                                "Roles" -> onNavigateToRoles()
+                                "Settings" -> onNavigateToSettings()
+                                "Customer" -> onNavigateToCustomer()
+                                "Shipping" -> onNavigateToShipping()
                             }
-                        )
-                    }
+                        }
+                    )
                 }
+            }
 
-                // Recent Activity Section
-                item {
-                     androidx.compose.animation.AnimatedVisibility(
-                        visible = isVisible,
-                        enter = androidx.compose.animation.slideInVertically(initialOffsetY = { 50 }, animationSpec = androidx.compose.animation.core.tween(delayMillis = 200)) + androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(delayMillis = 200))
-                    ) {
-                        RecentActivitySection(recentActivities)
-                    }
+            // Recent Activity Section
+            item {
+                    AnimatedVisibility(
+                    visible = isVisible,
+                    enter = slideInVertically(initialOffsetY = { 50 }, animationSpec = tween(delayMillis = 200)) + fadeIn(animationSpec = tween(delayMillis = 200))
+                ) {
+                    RecentActivitySection(recentActivities)
                 }
             }
         }
+        
+        DashboardAppbar(
+            onAvatarClick = onNavigateToProfile, 
+            onMenuClick = onMenuClick,
+            onNotificationClick = onNavigateToNotifications,
+            userName = userName,
+            avatarUrl = avatarUrl,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
 
@@ -223,70 +227,78 @@ fun AdminDashboardScreen(
 fun DashboardAppbar(
     onAvatarClick: () -> Unit = {}, 
     onMenuClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     userName: String = "Admin",
-    avatarUrl: String? = null
+    avatarUrl: String? = null,
+    modifier: Modifier = Modifier
 ) {
     // COMPACT HEADER: Reduced padding, specific height, smaller elements
     Surface(
         color = Color.White.copy(alpha = 0.8f),
         shadowElevation = 4.dp,
-        modifier = Modifier.fillMaxWidth().height(64.dp) // Fixed compact height
+        modifier = modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp), // Reduced side padding
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onMenuClick, modifier = Modifier.size(36.dp)) { // Smaller touch target visually
-                    Icon(Icons.Default.Menu, contentDescription = "Menu", modifier = Modifier.size(20.dp))
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                
-                // Avatar - Compact Size
-                Box(
-                    modifier = Modifier
-                        .size(32.dp) // Reduced from 40dp
-                        .clip(CircleShape)
-                        .clickable(onClick = onAvatarClick)
-                ) {
-                     AsyncImage(
-                        model = avatarUrl ?: "https://ui-avatars.com/api/?name=${userName.replace(" ", "+")}&size=128&background=ec3713&color=fff",
-                        contentDescription = "Profile",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                
-                // Text - Compact
-                Column {
-                    Text(
-                        text = "Hello, $userName",
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-            }
+        Column {
+            // Status Bar Spacer
+            Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
             
-            // Notifications - Compact
-            IconButton(
-                onClick = { /* Check notifs */ },
+            Row(
                 modifier = Modifier
-                    .size(36.dp)
-                    .background(Color.Gray.copy(alpha = 0.1f), CircleShape)
+                    .fillMaxWidth()
+                    .height(64.dp) // Fixed compact height
+                    .padding(horizontal = 12.dp), // Reduced side padding
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box {
-                    Icon(Icons.Default.Notifications, contentDescription = "Notifications", modifier = Modifier.size(20.dp), tint = Color(0xFF64748B))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onMenuClick, modifier = Modifier.size(36.dp)) { // Smaller touch target visually
+                        Icon(Icons.Default.Menu, contentDescription = "Menu", modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    // Avatar - Compact Size
                     Box(
                         modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .size(8.dp)
-                            .background(Color(0xFFec3713), CircleShape)
-                            .border(1.dp, Color.White, CircleShape)
-                    )
+                            .size(32.dp) // Reduced from 40dp
+                            .clip(CircleShape)
+                            .clickable(onClick = onAvatarClick)
+                    ) {
+                         AsyncImage(
+                            model = avatarUrl ?: "https://ui-avatars.com/api/?name=${userName.replace(" ", "+")}&size=128&background=ec3713&color=fff",
+                            contentDescription = "Profile",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    
+                    // Text - Compact
+                    Column {
+                        Text(
+                            text = "Hello, $userName",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+                
+                // Notifications - Compact
+                IconButton(
+                    onClick = onNotificationClick,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(Color.Gray.copy(alpha = 0.1f), CircleShape)
+                ) {
+                    Box {
+                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", modifier = Modifier.size(20.dp), tint = Color(0xFF64748B))
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(8.dp)
+                                .background(Color(0xFFec3713), CircleShape)
+                                .border(1.dp, Color.White, CircleShape)
+                        )
+                    }
                 }
             }
         }
@@ -555,7 +567,7 @@ fun QuickActionCard(action: QuickAction, onClick: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = TextAlign.Center
         )
     }
 }
