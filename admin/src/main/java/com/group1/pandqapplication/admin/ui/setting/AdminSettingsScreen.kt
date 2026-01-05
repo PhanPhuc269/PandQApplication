@@ -64,7 +64,12 @@ import com.group1.pandqapplication.shared.ui.theme.SettingsTextSecondaryLight
 
 @Composable
 fun AdminSettingsScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onEditProfile: () -> Unit = {},
+    onChangePassword: () -> Unit = {},
+    userName: String = "Admin",
+    userRole: String = "Administrator",
+    avatarUrl: String? = null
 ) {
     val isDarkTheme = false
     
@@ -118,7 +123,7 @@ fun AdminSettingsScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         AsyncImage(
-                            model = "https://lh3.googleusercontent.com/aida-public/AB6AXuDhseOwGn5wt-Qonlzclmbg28_VixzFNtwWAIhSZIxrQ73UUZrBDLnVGbUuNFYaG5UW1T97UL3IpUWvCi4-NMC-erB4TxllxJAOIJB_cj2IRUwiFuz-bHePG_J0IzdV8muPa2vo8FFER6x7DXodYdAXHR0DqidNzUhEmlLxG9ALJE7V7KoKmW3kQIfvQ0Z5rcsTOte7RAXf_9vjgUAeuOAkaPh3ekjCBgFXPACv9nsWq9upP2YcAMe24g59p0rqvt4Yys_1KdHhEs0",
+                            model = avatarUrl ?: "https://ui-avatars.com/api/?name=${userName.replace(" ", "+")}&size=128&background=ec3713&color=fff",
                             contentDescription = "Avatar",
                             modifier = Modifier
                                 .size(80.dp)
@@ -129,13 +134,13 @@ fun AdminSettingsScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
                             Text(
-                                "Nguyen Van A",
+                                userName,
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = textPrimary
                             )
                             Text(
-                                "Administrator",
+                                userRole,
                                 fontSize = 16.sp,
                                 color = textSecondary
                             )
@@ -149,7 +154,7 @@ fun AdminSettingsScreen(
                         .height(40.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(iconBgColor) // Using icon bg for button bg as per HTML (stone-200/800)
-                        .clickable { },
+                        .clickable { onEditProfile() },
                     contentAlignment = Alignment.Center
                 ) {
                      Text("Edit Profile", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
@@ -158,7 +163,7 @@ fun AdminSettingsScreen(
 
             // Account Security
             SettingsGroup("Account Security", surfaceColor, textPrimary) {
-                SettingsItem(Icons.Default.Lock, "Change Password", textPrimary, textSecondary, iconBgColor)
+                SettingsItem(Icons.Default.Lock, "Change Password", textPrimary, textSecondary, iconBgColor, onClick = onChangePassword)
                 SettingsItem(Icons.Default.Shield, "Two-Factor Authentication", textPrimary, textSecondary, iconBgColor)
             }
 
@@ -238,12 +243,13 @@ fun SettingsItem(
     title: String,
     textPrimary: Color,
     textSecondary: Color,
-    iconBgColor: Color
+    iconBgColor: Color,
+    onClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
+            .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 12.dp), // min-h-[56px] ~ 14dp padding vertical effectively
         verticalAlignment = Alignment.CenterVertically
     ) {
