@@ -70,16 +70,7 @@ fun AdminProfileScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { ProfileTopAppBar(onBackClick = onBackClick, onSettingsClick = onNavigateToSettings) },
-        bottomBar = {
-            ProfileBottomBar(
-                isSaving = isSaving,
-                onSave = { viewModel.saveProfile() },
-                onLogout = {
-                    viewModel.logout()
-                    onLogout()
-                }
-            )
-        },
+
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         when (val state = profileState) {
@@ -122,6 +113,8 @@ fun AdminProfileScreen(
                     onLastNameChange = viewModel::onLastNameChange,
                     onEditAvatar = { imagePickerLauncher.launch("image/*") },
                     onChangePassword = onChangePassword,
+                    isSaving = isSaving,
+                    onSave = { viewModel.saveProfile() },
                     paddingValues = paddingValues
                 )
             }
@@ -138,6 +131,8 @@ private fun ProfileContent(
     onLastNameChange: (String) -> Unit,
     onEditAvatar: () -> Unit,
     onChangePassword: () -> Unit,
+    isSaving: Boolean,
+    onSave: () -> Unit,
     paddingValues: PaddingValues
 ) {
     Column(
@@ -165,7 +160,39 @@ private fun ProfileContent(
             onLastNameChange = onLastNameChange
         )
 
+
+
+        SecuritySection(onChangePassword = onChangePassword)
+
         Divider(modifier = Modifier.padding(16.dp), color = Color.LightGray.copy(alpha = 0.3f))
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Save Changes Button
+        Button(
+            onClick = onSave,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF137fec)),
+            enabled = !isSaving
+        ) {
+            if (isSaving) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    text = "Save Changes",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White
+                )
+            }
+        }
     }
 }
 
@@ -473,75 +500,7 @@ fun SecuritySection(onChangePassword: () -> Unit = {}) {
     }
 }
 
-@Composable
-fun ProfileBottomBar(
-    isSaving: Boolean = false,
-    onSave: () -> Unit = {},
-    onLogout: () -> Unit = {}
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
-        shadowElevation = 8.dp,
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.3f))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Button(
-                onClick = onSave,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF137fec)),
-                enabled = !isSaving
-            ) {
-                if (isSaving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text(
-                        text = "Save Changes",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "VER 1.0.2",
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
-                    color = Color.Gray
-                )
-                
-                Row(
-                    modifier = Modifier.clickable { onLogout() },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Logout, contentDescription = null, tint = Color.Red, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Log Out",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.Red
-                    )
-                }
-            }
-        }
-    }
-}
+
 
 @Preview
 @Composable

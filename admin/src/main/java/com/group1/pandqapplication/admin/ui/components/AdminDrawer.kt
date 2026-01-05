@@ -46,9 +46,15 @@ fun AdminDrawerContent(
         // --- Header Section ---
         Column(
             modifier = Modifier
-                .padding(top = 56.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
+                .padding(top = 16.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { onNavigate(AdminScreen.Profile.route) }
+                    .padding(4.dp)
+            ) {
                 Box {
                     AsyncImage(
                         model = avatarUrl ?: "https://ui-avatars.com/api/?name=${userName.replace(" ", "+")}&size=128&background=ec3713&color=fff",
@@ -126,7 +132,7 @@ fun AdminDrawerContent(
             )
 
             // Operations Modules
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             DrawerSectionHeader("Operations")
             DrawerItem(
                 label = "Category Management",
@@ -172,7 +178,7 @@ fun AdminDrawerContent(
             )
 
             // Marketing
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             DrawerSectionHeader("Marketing")
             DrawerItem(
                 label = "Promotions",
@@ -190,7 +196,7 @@ fun AdminDrawerContent(
             )
 
             // Analytics
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             DrawerSectionHeader("Insights")
             DrawerItem(
                 label = "Reports & Analytics",
@@ -205,7 +211,7 @@ fun AdminDrawerContent(
         Column(
             modifier = Modifier
                 .background(Color.Gray.copy(alpha = 0.05f))
-                .padding(12.dp)
+                .padding(4.dp)
         ) {
             DrawerItem(
                 label = "System Settings",
@@ -250,15 +256,7 @@ fun AdminDrawerContent(
                 }
             }
             
-            Text(
-                text = "v2.4.0 (Build 204)",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
+
         }
     }
 }
@@ -266,9 +264,9 @@ fun AdminDrawerContent(
 @Composable
 fun DrawerSectionHeader(title: String) {
     Text(
-        text = title.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-        color = Color.Gray,
+        text = title,
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     )
 }
@@ -293,7 +291,7 @@ fun DrawerItem(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

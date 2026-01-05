@@ -242,46 +242,45 @@ fun AdminLoginScreen(
     val isLoading = authState is AdminAuthState.Loading
     val hasExistingSession = authState is AdminAuthState.Authenticated
 
-    Scaffold(containerColor = backgroundLight) { paddingValues ->
-        Column(
+    Scaffold { paddingValues ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color(0xFFF8FAFC), Color(0xFFE2E8F0))
+                    )
+                )
                 .padding(paddingValues)
         ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                if (!hasExistingSession) {
-                    IconButton(
-                        onClick = onBackClick,
-                        modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE2E8F0))
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.size(40.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = primaryColor.copy(alpha = 0.1f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, primaryColor.copy(alpha = 0.2f))
                     ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = textColor)
+                        Text(
+                            text = "SYSTEM ACCESS",
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = primaryColor,
+                            letterSpacing = 1.sp
+                        )
                     }
-                } else {
+
                     Spacer(modifier = Modifier.size(40.dp))
                 }
-
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = Color(0xFFE2E8F0),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCBD5E1))
-                ) {
-                    Text(
-                        text = "SYSTEM ACCESS",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = textSecondaryColor,
-                        letterSpacing = 1.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.size(40.dp))
-            }
 
             Column(
                 modifier = Modifier
@@ -292,19 +291,17 @@ fun AdminLoginScreen(
                 // Branding
                 Box(
                     modifier = Modifier
-                        .size(64.dp)
-                        .shadow(10.dp, RoundedCornerShape(16.dp), spotColor = primaryColor.copy(alpha = 0.5f))
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(primaryColor, Color(0xFF1a8cff), Color(0xFF005bb5)),
-                                start = Offset(0f, 0f),
-                                end = Offset(100f, 100f)
-                            )
-                        ),
+                        .size(100.dp)
+                        .shadow(15.dp, CircleShape, spotColor = primaryColor.copy(alpha = 0.5f))
+                        .clip(CircleShape)
+                        .background(Color.White),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.AdminPanelSettings, contentDescription = "Admin", tint = Color.White, modifier = Modifier.size(32.dp))
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.group1.pandqapplication.admin.R.mipmap.ic_launcher),
+                        contentDescription = "App Logo",
+                        modifier = Modifier.size(100.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -413,7 +410,7 @@ fun AdminLoginScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(32.dp))
 
                 // Login Button
                 if (!hasExistingSession || showPasswordForRelogin) {
@@ -450,15 +447,17 @@ fun AdminLoginScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        androidx.compose.material3.HorizontalDivider(modifier = Modifier.weight(1f), color = borderColor)
-                        Text(
-                            text = "QUICK ACCESS",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = textSecondaryColor,
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            fontWeight = FontWeight.Medium
-                        )
-                        androidx.compose.material3.HorizontalDivider(modifier = Modifier.weight(1f), color = borderColor)
+                        if (biometricCapability == BiometricCapability.AVAILABLE || !hasExistingSession) {
+                            androidx.compose.material3.HorizontalDivider(modifier = Modifier.weight(1f), color = borderColor)
+                            Text(
+                                text = "QUICK ACCESS",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = textSecondaryColor,
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                fontWeight = FontWeight.Medium
+                            )
+                            androidx.compose.material3.HorizontalDivider(modifier = Modifier.weight(1f), color = borderColor)
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -492,14 +491,10 @@ fun AdminLoginScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text(
-                    text = "v2.4.0 Admin Build • Secure Connection",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = textSecondaryColor,
-                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                )
+
             }
         }
+    }
     }
 
     // Forgot Password Dialog
