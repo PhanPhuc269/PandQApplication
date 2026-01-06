@@ -287,7 +287,7 @@ fun DashboardAppbar(
                     onClick = onNotificationClick,
                     modifier = Modifier
                         .size(36.dp)
-                        .background(Color.Gray.copy(alpha = 0.1f), CircleShape)
+//                        .background(Color.Gray.copy(alpha = 0.1f), CircleShape)
                 ) {
                     Box {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifications", modifier = Modifier.size(20.dp), tint = Color(0xFF64748B))
