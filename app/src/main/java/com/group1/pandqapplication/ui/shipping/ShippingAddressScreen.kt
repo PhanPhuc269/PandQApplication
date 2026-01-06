@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.group1.pandqapplication.shared.data.remote.dto.AddressDto
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,51 +61,56 @@ fun ShippingAddressScreen(
     Scaffold(
         containerColor = backgroundColor,
         topBar = {
-            Column {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(backgroundColor.copy(alpha = 0.95f))
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                ) {
-                    IconButton(
-                        onClick = onBackClick,
+            Surface(
+                color = backgroundColor.copy(alpha = 0.95f),
+                shadowElevation = 0.dp
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+                    Box(
                         modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .size(40.dp)
-                            .background(Color.Black.copy(alpha = 0.05f), CircleShape)
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBackIosNew,
-                            contentDescription = "Back",
-                            modifier = Modifier.size(20.dp),
-                            tint = Color.Gray
+                        IconButton(
+                            onClick = onBackClick,
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .size(40.dp)
+                                .background(Color.Black.copy(alpha = 0.05f), CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBackIosNew,
+                                contentDescription = "Back",
+                                modifier = Modifier.size(20.dp),
+                                tint = Color.Gray
+                            )
+                        }
+                        
+                        Text(
+                            text = "Địa chỉ giao hàng",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.Center)
                         )
+                        
+                        IconButton(
+                            onClick = { /* TODO: Focus add form */ },
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .size(40.dp)
+                                .background(Color.Black.copy(alpha = 0.05f), CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add",
+                                modifier = Modifier.size(24.dp),
+                                tint = primaryColor
+                            )
+                        }
                     }
-                    
-                    Text(
-                        text = "Địa chỉ giao hàng",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                    
-                    IconButton(
-                        onClick = { /* TODO: Focus add form */ },
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .size(40.dp)
-                            .background(Color.Black.copy(alpha = 0.05f), CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Add",
-                            modifier = Modifier.size(24.dp),
-                            tint = primaryColor
-                        )
-                    }
+                    HorizontalDivider(color = Color(0xFFE5E7EB))
                 }
-                HorizontalDivider(color = Color(0xFFE5E7EB))
             }
         }
     ) { paddingValues ->

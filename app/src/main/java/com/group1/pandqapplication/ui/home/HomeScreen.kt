@@ -63,6 +63,14 @@ import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDto
 import java.text.NumberFormat
 import java.util.Locale
+import android.app.Activity
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.core.view.WindowCompat
+import com.group1.pandqapplication.R
 
 // Data Model for Banner (keep mock for now)
 data class Banner(
@@ -84,6 +92,19 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val primaryColor = Color(0xFFec3713)
 
+    val backgroundColor = Color(0xFFF8F6F6)
+
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+
+            window.statusBarColor = Color.Transparent.toArgb()
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+        }
+    }
+
     // Mock Banners (keep for promotional content)
     val banners = listOf(
         Banner("iPhone 15 Pro Max", "Khám phá sức mạnh titan.", "https://lh3.googleusercontent.com/aida-public/AB6AXuAY8N6iyZ08u0SWafLXu9qKNEsbrwHuGcz3Hja6KeV4O4hutLoqq7UteVA4YOxkLe_mYFe-_E00HU4DJPrFiE_JQ_BMJDDxawi_7x7vdjVxdy4XduOnHDFtlOgJG2seHE0cIm8FCjLBfSWYlvTmBtKsCu4T7l8CbuLwyjBtkYaVYSng6FgEiZzeXuIGE96fkmh1Ph5oeO2Q8rFhO-lUFnREG9qTvBliG1WV8QTVD2kDSE-C9_eKqZEIvIkg8P94lMmWVZczwITcPkU"),
@@ -98,14 +119,15 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFFF8F6F6))
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 12.dp),
+                    .statusBarsPadding()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Icon(
-                    imageVector = Icons.Filled.ElectricalServices,
+                //dùng icon app
+                Image(
+                    painter = painterResource(id = R.mipmap.ic_launcher),
                     contentDescription = "Logo",
-                    tint = Color(0xFF1F2937),
                     modifier = Modifier.size(28.dp)
                 )
                 Text(

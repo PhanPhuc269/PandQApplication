@@ -42,7 +42,7 @@ fun MainScreen(
             BottomNavigationBar(navController = navController)
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
             NavHost(
                 navController = navController,
                 startDestination = BottomNavItem.Home.route
