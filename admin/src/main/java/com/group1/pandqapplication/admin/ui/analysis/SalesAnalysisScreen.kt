@@ -22,32 +22,36 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.group1.pandqapplication.admin.data.remote.dto.CategorySaleItemDto
+import com.group1.pandqapplication.admin.data.remote.dto.DailyRevenueDto
+import com.group1.pandqapplication.admin.data.remote.dto.TopProductDto
 import com.group1.pandqapplication.shared.ui.theme.AnalysisCardDark
 import com.group1.pandqapplication.shared.ui.theme.AnalysisCardLight
-import com.group1.pandqapplication.shared.ui.theme.AnalysisGraphBlue
-import com.group1.pandqapplication.shared.ui.theme.AnalysisGraphPurple
-import com.group1.pandqapplication.shared.ui.theme.AnalysisGraphRed
 import com.group1.pandqapplication.shared.ui.theme.AnalysisNegative
 import com.group1.pandqapplication.shared.ui.theme.AnalysisPositive
 import com.group1.pandqapplication.shared.ui.theme.AnalysisTextPrimaryDark
@@ -57,17 +61,30 @@ import com.group1.pandqapplication.shared.ui.theme.AnalysisTextSecondaryLight
 import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundDark
 import com.group1.pandqapplication.shared.ui.theme.CheckoutBackgroundLight
 import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
+import java.math.BigDecimal
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun SalesAnalysisScreen(
-    onBackClick: () -> Unit = {}
+    initialDateRange: String? = null,
+    onBackClick: () -> Unit = {},
+    viewModel: SalesAnalysisViewModel = hiltViewModel()
 ) {
-    val isDarkTheme = false
+    val uiState by viewModel.uiState.collectAsState()
     
-    val backgroundColor = if (isDarkTheme) CheckoutBackgroundDark else CheckoutBackgroundLight
-    val cardColor = if (isDarkTheme) AnalysisCardDark else AnalysisCardLight
-    val textPrimary = if (isDarkTheme) AnalysisTextPrimaryDark else AnalysisTextPrimaryLight
-    val textSecondary = if (isDarkTheme) AnalysisTextSecondaryDark else AnalysisTextSecondaryLight
+    // Sync initial date range from navigation
+    androidx.compose.runtime.LaunchedEffect(initialDateRange) {
+        initialDateRange?.let { viewModel.setDateRange(it) }
+    }
+    
+    // Colors - sync with AdminAnalyticsScreen
+    val backgroundColor = Color(0xFFF8F9FA)
+    val primaryColor = Color(0xFF137fec)
+    val positiveColor = Color(0xFF10B981)
+    val negativeColor = Color(0xFFEF4444)
+    val textPrimary = Color(0xFF1F2937)
+    val textSecondary = Color.Gray
 
     Scaffold(
         containerColor = backgroundColor,
@@ -101,7 +118,7 @@ fun SalesAnalysisScreen(
                         modifier = Modifier.align(Alignment.CenterEnd)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Share, // iOS share icon usually, typical share is close
+                            imageVector = Icons.Default.Share,
                             contentDescription = "Share",
                             tint = textPrimary
                         )
@@ -110,232 +127,343 @@ fun SalesAnalysisScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Date Range Selector
-            item {
-                LazyRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
-                ) {
-                    item {
-                        DateChip("30 ngày qua", true, ProductPrimary, textPrimary)
-                    }
-                    item {
-                        DateChip("Tháng này", false, ProductPrimary, textPrimary)
-                    }
-                    item {
-                        DateChip("Năm nay", false, ProductPrimary, textPrimary)
-                    }
-                    item {
-                        DateChip("Tùy chỉnh", false, ProductPrimary, textPrimary, hasIcon = true)
-                    }
-                }
-            }
-
-            // KPI Stats Grid
-            item {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        KPIItem(
-                            modifier = Modifier.weight(1f),
-                            title = "Tổng doanh thu",
-                            value = "₫1.2B",
-                            change = "+5.2%",
-                            isPositive = true,
-                            cardColor = cardColor,
-                            textPrimary = textPrimary,
-                            textSecondary = textSecondary
-                        )
-                        KPIItem(
-                            modifier = Modifier.weight(1f),
-                            title = "Tỷ lệ chuyển đổi",
-                            value = "3.5%",
-                            change = "-1.8%",
-                            isPositive = false,
-                            cardColor = cardColor,
-                            textPrimary = textPrimary,
-                            textSecondary = textSecondary
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        KPIItem(
-                            modifier = Modifier.weight(1f),
-                            title = "Giá trị trung bình",
-                            value = "₫2.5M",
-                            change = "+2.1%",
-                            isPositive = true,
-                            cardColor = cardColor,
-                            textPrimary = textPrimary,
-                            textSecondary = textSecondary
-                        )
-                        KPIItem(
-                            modifier = Modifier.weight(1f),
-                            title = "Tổng đơn hàng",
-                            value = "480",
-                            change = "+7.0%",
-                            isPositive = true,
-                            cardColor = cardColor,
-                            textPrimary = textPrimary,
-                            textSecondary = textSecondary
-                        )
-                    }
-                }
-            }
-
-            // Revenue Chart Header
-            item {
-                Text(
-                    text = "Xu hướng doanh thu",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textPrimary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-
-            // Bar Chart
-            item {
+        when {
+            uiState.isLoading -> {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(cardColor)
-                        .padding(16.dp)
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column {
-                        Text("Doanh thu theo ngày", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textSecondary)
-                        Text("₫85.4M", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("01 Th05 - 07 Th05", fontSize = 14.sp, color = textSecondary)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("+15%", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = AnalysisPositive)
-                        }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Mock Chart Area
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(160.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            // Data: T2 90%, T3 100%, T4 80%, T5 30% (Selected), T6 30%, T7 80%, CN 90%
-                            BarItem("T2", 0.9f, false, ProductPrimary, textSecondary)
-                            BarItem("T3", 1.0f, false, ProductPrimary, textSecondary)
-                            BarItem("T4", 0.8f, false, ProductPrimary, textSecondary)
-                            BarItem("T5", 0.3f, true, ProductPrimary, ProductPrimary) 
-                            BarItem("T6", 0.3f, false, ProductPrimary, textSecondary)
-                            BarItem("T7", 0.8f, false, ProductPrimary, textSecondary)
-                            BarItem("CN", 0.9f, false, ProductPrimary, textSecondary)
-                        }
-                    }
+                    CircularProgressIndicator(color = primaryColor)
                 }
             }
-
-            // Best Sellers Header
-            item {
-                Text(
-                    text = "Sản phẩm bán chạy nhất",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textPrimary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-
-            // Ranked List
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(cardColor)
-                ) {
-                    RankedItem(1, "Tai nghe Pro Max", "₫2,490,000", "120 sp", "https://lh3.googleusercontent.com/aida-public/AB6AXuB2po5X-W-JmG5H8Wf5gGA0od4HZezHWFB46I7H8QuESP04KoOpr9Z-swM-Y4pjl0VVx1uzNvepNtZJ9VkN0qghG00xKHuX7vk_XPAxqcFkUY1Ewpy0_UxWZndEGGcnBgqlUiakCSQ62_u9hIbF47S-VQh63NpWa8iWlKm-DWhnah_Ymp8-zvEZWAPU544beuM2q4auGT3905OfYuxNLiouPXJIyoVtQzSDGLW84zOnH6YFGLKKkLH9o-GDJfiHRn-wnJIhpFJbel0", textPrimary, textSecondary)
-                    HorizontalDivider(color = Color(0xFFE5E5EA))
-                    RankedItem(2, "Điện thoại Galaxy S23", "₫18,990,000", "95 sp", "https://lh3.googleusercontent.com/aida-public/AB6AXuAf1bLvJ9dxGxkhA6QkUtYczr-4rtjhmGf1suKXLI8rtY3WbRKLgI96qHnIMa2aoX2lXz7JgV4jGj8_dtZAeCoaxog7zQuV0brN1UdndHgeHqIpzVM01fyIdS9WKwpis-XIC68QuoQrNNZ92L7ROGnsuUGmCIpepr07SxV3AxzUSpCkBTr7d9CE54sbOGuto5jqdyZmIbGwLLQ6K7yj4ku0GAST_u2RQnpxgbW710zAH33HbHCLFWEpakDKBeG6n5zYCaF8EODfwvw", textPrimary, textSecondary)
-                    HorizontalDivider(color = Color(0xFFE5E5EA))
-                    RankedItem(3, "Đồng hồ thông minh Fit 5", "₫4,150,000", "88 sp", "https://lh3.googleusercontent.com/aida-public/AB6AXuA21d6gmlVbgiy17Pu-EBQn_30XbBq09vlP_DAehPMl_nTlz3eHq1OzuSdqlZsRB31tB_bMn4frPoZLkd2_XoBsYU-er13rrXtVsB9FT3J2fpGbEq-s-7PHhQdn7ZIwJdwq9q_235bxla5U8OJPZquwR4tR2505TtglhdMfJ-Thf32xMGih-7M8-YC0xzA67wykmJi-OiPk_xCTjydyZqOy7u1nLUmHCRZpoKlfcI2sJLfitqET1n8eFCnLze6_Zb3n-zSgkSJBN5s", textPrimary, textSecondary)
-                    RankedItem(4, "Laptop Air M2", "₫27,500,000", "72 sp", "https://lh3.googleusercontent.com/aida-public/AB6AXuAFbCn83J3wUM9SPujNn3ZkyOAjzADqmKdnSv1olY80Q-iQoXaqWVIn_h4lF-ArCLX5OBJkg9jtOO6p17XQ5Nm5tpItuGGt862ZX_hcgF-tKUcXjvJtBoIvR7Pda9-zcViuYjGcJW7YIFrJYLFVuw2xbFpqu8-Bl21TxzjRVLXCzn7t2Xu43b1j9dNJ-6gLosK9QEobpZ2PQRkLXbZ0bZn7jeymFLGtRE3mFLXhLsj1wdTBmHdtQR_saDGxawCLpszMD8DZjjwn0n4", textPrimary, textSecondary)
-                }
-            }
-
-            // Category Analysis Header
-            item {
-                Text(
-                    text = "Phân tích Theo danh mục",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textPrimary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-
-            // Donut Chart
-            item {
+            uiState.error != null -> {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(cardColor)
-                        .padding(16.dp)
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(200.dp)) {
-                            Canvas(modifier = Modifier.size(160.dp)) {
-                                val strokeWidth = 16.dp.toPx()
-                                // Blue: 60% -> 216 deg
-                                drawArc(
-                                    color = AnalysisGraphBlue,
-                                    startAngle = -90f,
-                                    sweepAngle = 216f,
-                                    useCenter = false,
-                                    style = androidx.compose.ui.graphics.drawscope.Stroke(strokeWidth, cap = StrokeCap.Round)
+                        Text(
+                            text = uiState.error ?: "Unknown error",
+                            color = textSecondary,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        TextButton(onClick = { viewModel.retry() }) {
+                            Icon(Icons.Default.Refresh, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Thử lại")
+                        }
+                    }
+                }
+            }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    // Date Range Selector
+                    item {
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
+                        ) {
+                            item {
+                                DateChip("7 ngày qua", uiState.selectedRange == "7d", primaryColor, textPrimary) {
+                                    viewModel.setDateRange("7d")
+                                }
+                            }
+                            item {
+                                DateChip("30 ngày qua", uiState.selectedRange == "30d", primaryColor, textPrimary) {
+                                    viewModel.setDateRange("30d")
+                                }
+                            }
+                            item {
+                                DateChip("90 ngày qua", uiState.selectedRange == "90d", primaryColor, textPrimary) {
+                                    viewModel.setDateRange("90d")
+                                }
+                            }
+                            item {
+                                DateChip("Tùy chỉnh", false, primaryColor, textPrimary, hasIcon = true) {}
+                            }
+                        }
+                    }
+
+                    // KPI Stats Grid
+                    item {
+                        val overview = uiState.overview
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                KPIItem(
+                                    modifier = Modifier.weight(1f),
+                                    title = "Tổng doanh thu",
+                                    value = formatCurrency(overview?.totalRevenue),
+                                    change = formatPercent(overview?.revenueChangePercent),
+                                    isPositive = (overview?.revenueChangePercent ?: 0.0) >= 0,
+                                    cardColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+                                    textPrimary = textPrimary,
+                                    textSecondary = textSecondary
                                 )
-                                // Purple: 25% -> 90 deg. Start at -90 + 216 + gap?
-                                // HTML uses dashed stroke-dasharray. Here simplified usage.
-                                drawArc(
-                                    color = AnalysisGraphPurple,
-                                    startAngle = -90f + 216f + 10f, // manual gap
-                                    sweepAngle = 90f - 10f,
-                                    useCenter = false,
-                                    style = androidx.compose.ui.graphics.drawscope.Stroke(strokeWidth, cap = StrokeCap.Round)
-                                )
-                                // Red: 15% -> 54 deg
-                                drawArc(
-                                    color = AnalysisGraphRed,
-                                    startAngle = -90f + 216f + 90f + 10f,
-                                    sweepAngle = 54f - 10f,
-                                    useCenter = false,
-                                    style = androidx.compose.ui.graphics.drawscope.Stroke(strokeWidth, cap = StrokeCap.Round)
+                                KPIItem(
+                                    modifier = Modifier.weight(1f),
+                                    title = "Tỷ lệ chuyển đổi",
+                                    value = "${overview?.conversionRate ?: 0.0}%",
+                                    change = formatPercent(overview?.conversionChangePercent),
+                                    isPositive = (overview?.conversionChangePercent ?: 0.0) >= 0,
+                                    cardColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+                                    textPrimary = textPrimary,
+                                    textSecondary = textSecondary
                                 )
                             }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                KPIItem(
+                                    modifier = Modifier.weight(1f),
+                                    title = "Giá trị trung bình",
+                                    value = formatCurrency(overview?.averageOrderValue),
+                                    change = formatPercent(overview?.averageOrderChangePercent),
+                                    isPositive = (overview?.averageOrderChangePercent ?: 0.0) >= 0,
+                                    cardColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+                                    textPrimary = textPrimary,
+                                    textSecondary = textSecondary
+                                )
+                                KPIItem(
+                                    modifier = Modifier.weight(1f),
+                                    title = "Tổng đơn hàng",
+                                    value = "${overview?.totalOrders ?: 0}",
+                                    change = formatPercent(overview?.ordersChangePercent),
+                                    isPositive = (overview?.ordersChangePercent ?: 0.0) >= 0,
+                                    cardColor = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+                                    textPrimary = textPrimary,
+                                    textSecondary = textSecondary
+                                )
+                            }
+                        }
+                    }
+
+                    // Revenue Chart Header
+                    item {
+                        Text(
+                            text = "Xu hướng doanh thu",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textPrimary,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+
+                    // Revenue Line Chart
+                    item {
+                        val chartData = uiState.revenueChart
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                                .padding(16.dp)
+                        ) {
+                            Column {
+                                val dailyRevenues = chartData?.dailyRevenues ?: emptyList()
+                                
+                                Text("Doanh thu theo ngày", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textSecondary)
+                                Text(formatCurrency(chartData?.totalRevenue), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(chartData?.dateRangeLabel ?: "", fontSize = 14.sp, color = textSecondary)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    val positiveColor = Color(0xFF10B981)
+                                    val negativeColor = Color(0xFFEF4444)
+                                    Text(formatPercent(chartData?.changePercent), fontSize = 14.sp, fontWeight = FontWeight.Medium, 
+                                        color = if ((chartData?.changePercent ?: 0.0) >= 0) positiveColor else negativeColor)
+                                }
+                                
+                                Spacer(modifier = Modifier.height(24.dp))
+                                
+                                // Line Chart Area
+                                Box(modifier = Modifier.fillMaxWidth().height(192.dp)) {
+                                    if (dailyRevenues.isNotEmpty()) {
+                                        Canvas(modifier = Modifier.fillMaxSize()) {
+                                            val width = size.width
+                                            val height = size.height
+                                            val maxRevenue = dailyRevenues.maxOfOrNull { it.revenue ?: java.math.BigDecimal.ZERO } ?: java.math.BigDecimal.ONE
+                                            
+                                            // Calculate points
+                                            val points = dailyRevenues.mapIndexed { index, daily ->
+                                                val x = width * (index.toFloat() / (dailyRevenues.size - 1).coerceAtLeast(1))
+                                                val yPercent = if (maxRevenue > java.math.BigDecimal.ZERO) {
+                                                    1 - ((daily.revenue ?: java.math.BigDecimal.ZERO).toFloat() / maxRevenue.toFloat())
+                                                } else 0.5f
+                                                Pair(x, height * yPercent.coerceIn(0.05f, 0.95f))
+                                            }
+                                            
+                                            if (points.size > 1) {
+                                                val path = androidx.compose.ui.graphics.Path().apply {
+                                                    moveTo(points[0].first, points[0].second)
+                                                    for (i in 1 until points.size) {
+                                                        val prev = points[i - 1]
+                                                        val curr = points[i]
+                                                        val controlX1 = prev.first + (curr.first - prev.first) / 2
+                                                        val controlX2 = prev.first + (curr.first - prev.first) / 2
+                                                        cubicTo(controlX1, prev.second, controlX2, curr.second, curr.first, curr.second)
+                                                    }
+                                                }
+
+                                                // Fill Gradient
+                                                val fillPath = androidx.compose.ui.graphics.Path().apply {
+                                                    addPath(path)
+                                                    lineTo(width, height)
+                                                    lineTo(0f, height)
+                                                    close()
+                                                }
+                                                
+                                                drawPath(
+                                                    path = fillPath,
+                                                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                                        colors = listOf(Color(0xFF137fec).copy(alpha = 0.4f), Color(0xFF137fec).copy(alpha = 0f))
+                                                    )
+                                                )
+
+                                                // Stroke
+                                                drawPath(
+                                                    path = path,
+                                                    color = Color(0xFF137fec),
+                                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+                                                )
+
+                                                // Points
+                                                points.forEach { (x, y) ->
+                                                    drawCircle(
+                                                        color = Color(0xFF137fec),
+                                                        radius = 4.dp.toPx(),
+                                                        center = androidx.compose.ui.geometry.Offset(x, y),
+                                                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+                                                    )
+                                                    drawCircle(
+                                                        color = Color.White,
+                                                        radius = 2.dp.toPx(),
+                                                        center = androidx.compose.ui.geometry.Offset(x, y)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // X-axis labels
+                                if (dailyRevenues.isNotEmpty()) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                                    ) {
+                                        dailyRevenues.forEach { daily ->
+                                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                                                Text(
+                                                    daily.dayLabel ?: "", 
+                                                    style = androidx.compose.material3.MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp), 
+                                                    color = Color.Gray,
+                                                    maxLines = 1,
+                                                    textAlign = TextAlign.Center,
+                                                    overflow = TextOverflow.Visible,
+                                                    softWrap = false
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Best Sellers Header
+                    item {
+                        Text(
+                            text = "Sản phẩm bán chạy nhất",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textPrimary,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+
+                    // Ranked List
+                    item {
+                        val products = uiState.topProducts?.products ?: emptyList()
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                        ) {
+                            products.forEachIndexed { index, product ->
+                                RankedItem(
+                                    product = product,
+                                    textPrimary = textPrimary,
+                                    textSecondary = textSecondary
+                                )
+                                if (index < products.size - 1) {
+                                    HorizontalDivider(color = Color(0xFFE5E5EA))
+                                }
+                            }
+                        }
+                    }
+
+                    // Category Analysis Header
+                    item {
+                        Text(
+                            text = "Phân tích Theo danh mục",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textPrimary,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+
+                    // Donut Chart
+                    item {
+                        val categoryData = uiState.categorySales
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(androidx.compose.material3.MaterialTheme.colorScheme.surface)
+                                .padding(16.dp)
+                        ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Tổng", fontSize = 12.sp, color = textSecondary)
-                                Text("₫1.2B", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(200.dp)) {
+                                    DonutChart(categories = categoryData?.categories ?: emptyList())
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text("Tổng", fontSize = 12.sp, color = textSecondary)
+                                        Text(formatCurrency(categoryData?.totalRevenue), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                                    }
+                                }
+                                
+                                Spacer(modifier = Modifier.height(24.dp))
+                                
+                                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    categoryData?.categories?.forEach { category ->
+                                        LegendItem(
+                                            label = category.categoryName ?: "",
+                                            value = "${String.format("%.1f", category.percentage)}%",
+                                            color = parseColor(category.colorHex),
+                                            textPrimary = textPrimary
+                                        )
+                                    }
+                                }
                             }
                         }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            LegendItem("Điện thoại", "60%", AnalysisGraphBlue, textPrimary)
-                            LegendItem("Laptop", "25%", AnalysisGraphPurple, textPrimary)
-                            LegendItem("Phụ kiện", "15%", AnalysisGraphRed, textPrimary)
-                        }
+                    }
+                    
+                    // Bottom spacing
+                    item {
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
             }
@@ -343,21 +471,47 @@ fun SalesAnalysisScreen(
     }
 }
 
+// ==================== Helper Functions ====================
+
+private fun formatCurrency(value: BigDecimal?): String {
+    if (value == null) return "₫0"
+    val formatted = NumberFormat.getNumberInstance(Locale("vi", "VN")).format(value)
+    return "₫$formatted"
+}
+
+private fun formatPercent(value: Double?): String {
+    if (value == null) return "0%"
+    val sign = if (value >= 0) "+" else ""
+    return "$sign${String.format("%.1f", value)}%"
+}
+
+private fun parseColor(hex: String?): Color {
+    if (hex == null) return Color.Gray
+    return try {
+        Color(android.graphics.Color.parseColor(hex))
+    } catch (e: Exception) {
+        Color.Gray
+    }
+}
+
+// ==================== Composable Components ====================
+
 @Composable
 fun DateChip(
     text: String,
     isSelected: Boolean,
     primaryColor: Color,
     textColor: Color,
-    hasIcon: Boolean = false
+    hasIcon: Boolean = false,
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .height(36.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) primaryColor else Color(0xFFE4E4E7)) // zinc-200
-            .padding(horizontal = 12.dp)
-            .clickable { },
+            .background(if (isSelected) primaryColor else Color(0xFFE4E4E7))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -365,7 +519,7 @@ fun DateChip(
             text = text,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
-            color = if (isSelected) Color.White else Color(0xFF18181B) // zinc-900 hardcoded for light bg
+            color = if (isSelected) Color.White else Color(0xFF18181B)
         )
         if (hasIcon) {
             Spacer(modifier = Modifier.width(4.dp))
@@ -390,6 +544,9 @@ fun KPIItem(
     textPrimary: Color,
     textSecondary: Color
 ) {
+    val positiveColor = Color(0xFF10B981)
+    val negativeColor = Color(0xFFEF4444)
+    
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -397,49 +554,36 @@ fun KPIItem(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textSecondary)
-        Text(value, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-        Text(change, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = if (isPositive) AnalysisPositive else AnalysisNegative)
+        Text(
+            text = title, 
+            fontSize = 14.sp, 
+            fontWeight = FontWeight.Medium, 
+            color = textSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = value, 
+            fontSize = 24.sp, 
+            fontWeight = FontWeight.Bold, 
+            color = textPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = change, 
+            fontSize = 14.sp, 
+            fontWeight = FontWeight.Medium, 
+            color = if (isPositive) positiveColor else negativeColor,
+            maxLines = 1
+        )
     }
 }
 
-@Composable
-fun androidx.compose.foundation.layout.RowScope.BarItem(
-    label: String,
-    heightRatio: Float,
-    isActive: Boolean,
-    primaryColor: Color,
-    labelColor: Color
-) {
-    Column(
-        modifier = Modifier.weight(1f).fillMaxHeight(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Bottom
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.8f) // Spacing
-                .fillMaxHeight(heightRatio)
-                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                .background(if (isActive) primaryColor else primaryColor.copy(alpha = 0.2f))
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
-            color = if (isActive) primaryColor else labelColor
-        )
-    }
-}
 
 @Composable
 fun RankedItem(
-    rank: Int,
-    name: String,
-    price: String,
-    count: String,
-    imageUrl: String,
+    product: TopProductDto,
     textPrimary: Color,
     textSecondary: Color
 ) {
@@ -450,7 +594,7 @@ fun RankedItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = rank.toString(),
+            text = "${product.rank ?: 0}",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = textSecondary,
@@ -459,7 +603,7 @@ fun RankedItem(
         )
         Spacer(modifier = Modifier.width(16.dp))
         AsyncImage(
-            model = imageUrl,
+            model = product.imageUrl ?: "",
             contentDescription = null,
             modifier = Modifier
                 .size(48.dp)
@@ -469,10 +613,37 @@ fun RankedItem(
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(name, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(price, fontSize = 14.sp, color = textSecondary)
+            Text(
+                product.productName ?: "", 
+                fontWeight = FontWeight.SemiBold, 
+                fontSize = 16.sp, 
+                color = textPrimary, 
+                maxLines = 1, 
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(formatCurrency(product.price), fontSize = 14.sp, color = textSecondary)
         }
-        Text(count, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = textPrimary)
+        Text("${product.quantitySold ?: 0} sp", fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = textPrimary)
+    }
+}
+
+@Composable
+fun DonutChart(categories: List<CategorySaleItemDto>) {
+    Canvas(modifier = Modifier.size(160.dp)) {
+        val strokeWidth = 16.dp.toPx()
+        var startAngle = -90f
+        
+        categories.forEach { category ->
+            val sweepAngle = ((category.percentage ?: 0.0) / 100 * 360).toFloat()
+            drawArc(
+                color = parseColor(category.colorHex),
+                startAngle = startAngle,
+                sweepAngle = sweepAngle - 5f, // Gap between segments
+                useCenter = false,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(strokeWidth, cap = StrokeCap.Round)
+            )
+            startAngle += sweepAngle
+        }
     }
 }
 
@@ -495,10 +666,4 @@ fun LegendItem(
         }
         Text(value, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = textPrimary)
     }
-}
-
-@Preview
-@Composable
-fun PreviewSalesAnalysisScreen() {
-    SalesAnalysisScreen()
 }

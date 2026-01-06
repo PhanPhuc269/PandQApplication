@@ -3,17 +3,26 @@ package com.group1.pandqapplication.admin.data.remote
 import com.group1.pandqapplication.admin.data.remote.dto.CreateNotificationTemplateRequest
 import com.group1.pandqapplication.admin.data.remote.dto.NotificationTemplateDto
 import com.group1.pandqapplication.admin.data.remote.dto.UpdateNotificationTemplateRequest
+import com.group1.pandqapplication.admin.data.remote.dto.FullAnalyticsDto
+import com.group1.pandqapplication.admin.data.remote.dto.SalesOverviewDto
+import com.group1.pandqapplication.admin.data.remote.dto.RevenueChartDto
+import com.group1.pandqapplication.admin.data.remote.dto.TopProductsDto
+import com.group1.pandqapplication.admin.data.remote.dto.CategorySalesDto
+import com.group1.pandqapplication.admin.data.remote.dto.DailyAnalyticsDetailDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
- * Admin-specific API service for notification templates.
+ * Admin-specific API service for notification templates and analytics.
  */
 interface AdminApiService {
+
+    // ==================== Notification Templates ====================
 
     @GET("api/v1/admin/notification-templates")
     suspend fun getNotificationTemplates(): List<NotificationTemplateDto>
@@ -38,4 +47,31 @@ interface AdminApiService {
 
     @DELETE("api/v1/admin/notification-templates/{id}")
     suspend fun deleteNotificationTemplate(@Path("id") id: String)
+
+    // ==================== Analytics ====================
+
+    @GET("api/v1/analytics/full")
+    suspend fun getFullAnalytics(@Query("range") range: String = "30d"): FullAnalyticsDto
+
+    @GET("api/v1/analytics/sales-overview")
+    suspend fun getSalesOverview(@Query("range") range: String = "30d"): SalesOverviewDto
+
+    @GET("api/v1/analytics/revenue-chart")
+    suspend fun getRevenueChart(@Query("range") range: String = "7d"): RevenueChartDto
+
+    @GET("api/v1/analytics/top-products")
+    suspend fun getTopProducts(
+        @Query("limit") limit: Int = 4,
+        @Query("range") range: String = "30d",
+        @Query("sortBy") sortBy: String = "quantity"
+    ): TopProductsDto
+
+    @GET("api/v1/analytics/category-sales")
+    suspend fun getCategorySales(
+        @Query("range") range: String = "30d",
+        @Query("sortBy") sortBy: String = "revenue"
+    ): CategorySalesDto
+
+    @GET("api/v1/analytics/daily/{date}")
+    suspend fun getDailyAnalyticsDetail(@Path("date") date: String): DailyAnalyticsDetailDto
 }
