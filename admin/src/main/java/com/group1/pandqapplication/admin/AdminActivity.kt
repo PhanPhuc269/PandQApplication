@@ -74,7 +74,6 @@ class AdminActivity : FragmentActivity() {
         setContent {
             MaterialTheme {
                 val navController = rememberNavController()
-                // BYPASS LOGIN - Original: var currentRoute by remember { mutableStateOf(AdminScreen.Dashboard.route) }
                 var currentRoute by remember { mutableStateOf(AdminScreen.Login.route) }
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
