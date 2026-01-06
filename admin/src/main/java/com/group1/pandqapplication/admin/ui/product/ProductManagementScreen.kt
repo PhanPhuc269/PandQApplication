@@ -138,7 +138,7 @@ fun ProductManagementScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(56.dp)
                     .background(searchBg, RoundedCornerShape(8.dp)),
                 verticalAlignment = Alignment.CenterVertically
             ) {

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -285,7 +286,8 @@ fun AddProductScreen(
                                       thumbnailUrl = images.firstOrNull() ?: "https://via.placeholder.com/150", 
                                       status = "ACTIVE", 
                                       images = images,
-                                      specifications = specifications
+                                      specifications = specifications,
+                                      stock = stock
                                   )
                               }
                           },
@@ -671,7 +673,7 @@ fun LabelInput(
             placeholder = { Text(placeholder, color = labelColor.copy(alpha = 0.5f), fontSize = 16.sp) },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(if (isMultiLine) 120.dp else 48.dp)
+                .defaultMinSize(minHeight = if (isMultiLine) 120.dp else 56.dp) // Increased to 56dp standard or let it wrap
                 .clip(RoundedCornerShape(8.dp))
                 .border(if (hasError) 1.dp else 0.dp, if (hasError) AddProductError else Color.Transparent, RoundedCornerShape(8.dp)),
             colors = TextFieldDefaults.colors(
