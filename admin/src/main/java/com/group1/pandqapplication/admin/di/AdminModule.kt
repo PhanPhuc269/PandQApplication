@@ -59,4 +59,12 @@ object AdminModule {
     ): AnalyticsRepository {
         return AnalyticsRepository(adminApiService)
     }
+
+    @Provides
+    @Singleton
+    fun provideCustomerRepository(
+        adminApiService: AdminApiService
+    ): com.group1.pandqapplication.admin.data.repository.CustomerRepository {
+        return com.group1.pandqapplication.admin.data.repository.CustomerRepository(adminApiService)
+    }
 }

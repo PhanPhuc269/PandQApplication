@@ -43,4 +43,5 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object NotificationTemplates : AdminScreen("notification_templates", "Notifications", Icons.Default.Notifications)
     object AnalyticsDetail : AdminScreen("analytics_detail?reportType={reportType}&range={range}", "Analytics Detail", Icons.Default.BarChart)
     object DailyAnalyticsDetail : AdminScreen("daily_analytics_detail/{date}", "Daily Analytics", Icons.Default.BarChart)
+    object CustomerDetail : AdminScreen("customer_detail/{customerId}", "Customer Detail", Icons.Default.ManageAccounts)
 }

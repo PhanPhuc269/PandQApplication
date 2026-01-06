@@ -74,4 +74,27 @@ interface AdminApiService {
 
     @GET("api/v1/analytics/daily/{date}")
     suspend fun getDailyAnalyticsDetail(@Path("date") date: String): DailyAnalyticsDetailDto
+
+    // ==================== Customer Management ====================
+
+    @GET("api/v1/customers")
+    suspend fun getCustomers(
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20,
+        @Query("search") search: String? = null,
+        @Query("tier") tier: String? = null,
+        @Query("status") status: String? = null
+    ): com.group1.pandqapplication.admin.data.remote.dto.CustomerListResponse
+
+    @GET("api/v1/customers/{id}")
+    suspend fun getCustomerDetail(@Path("id") id: String): com.group1.pandqapplication.admin.data.remote.dto.CustomerDetailDto
+
+    @PUT("api/v1/customers/{id}/status")
+    suspend fun updateCustomerStatus(
+        @Path("id") id: String,
+        @Body request: com.group1.pandqapplication.admin.data.remote.dto.UpdateStatusRequest
+    )
+
+    @GET("api/v1/customers/stats")
+    suspend fun getCustomerStats(): com.group1.pandqapplication.admin.data.remote.dto.CustomerStatsDto
 }

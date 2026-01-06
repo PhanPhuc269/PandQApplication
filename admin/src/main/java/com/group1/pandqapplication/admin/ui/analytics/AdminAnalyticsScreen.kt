@@ -18,6 +18,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.*
@@ -55,6 +57,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminAnalyticsScreen(
+    onBackClick: () -> Unit = {},
     onNavigateToDetail: (String, String) -> Unit = { _, _ -> },
     onNavigateToDailyDetail: (String) -> Unit = {},
     viewModel: AdminAnalyticsViewModel = hiltViewModel()
@@ -78,6 +81,7 @@ fun AdminAnalyticsScreen(
     val comparisonLabel = when (uiState.selectedRange) {
         "7d" -> "so với tuần trước"
         "30d" -> "so với tháng trước"
+        "90d" -> "so với quý trước"
         else -> "so với kỳ trước"
     }
 
@@ -137,21 +141,43 @@ fun AdminAnalyticsScreen(
         }
     }
 
+    val backgroundColor = Color(0xFFF8F9FA)
+    val textPrimary = Color(0xFF1F2937)
+    val textSecondary = Color(0xFF6B7280)
+    val borderColor = Color(0xFFE5E7EB)
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { 
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(backgroundColor)
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(32.dp),
+                            tint = textSecondary
+                        )
+                    }
                     Text(
-                        "Tổng quan doanh thu",
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                        text = "Tổng quan doanh thu",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textPrimary,
+                        modifier = Modifier.align(Alignment.Center)
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF8F9FA)
-                )
-            )
+                }
+                HorizontalDivider(color = borderColor)
+            }
         },
-        containerColor = Color(0xFFF8F9FA)
+        containerColor = backgroundColor
     ) { paddingValues ->
         if (uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
@@ -251,7 +277,8 @@ fun AdminAnalyticsScreen(
                             totalProductsSold = uiState.totalProductsSold,
                             productsChangePercent = uiState.productsChangePercent,
                             newCustomers = uiState.newCustomers,
-                            customersChangePercent = uiState.customersChangePercent
+                            customersChangePercent = uiState.customersChangePercent,
+                            comparisonLabel = comparisonLabel
                         )
                     }
 
@@ -560,7 +587,8 @@ fun KeyMetricsGrid(
     totalProductsSold: Long,
     productsChangePercent: Double,
     newCustomers: Long,
-    customersChangePercent: Double
+    customersChangePercent: Double,
+    comparisonLabel: String
 ) {
     // Optimal order: Revenue (most important) → Orders → Products → New Customers
     Column(
@@ -578,7 +606,8 @@ fun KeyMetricsGrid(
                 iconBgColor = Color(0xFFD1FAE5),
                 label = "Tổng doanh thu",
                 value = formatCurrency(totalRevenue),
-                changePercent = revenueChangePercent
+                changePercent = revenueChangePercent,
+                comparisonLabel = comparisonLabel
             )
             MetricCard(
                 modifier = Modifier.weight(1f),
@@ -587,7 +616,8 @@ fun KeyMetricsGrid(
                 iconBgColor = Color(0xFFEBF4FF),
                 label = "Số đơn hàng",
                 value = totalOrders.toString(),
-                changePercent = ordersChangePercent
+                changePercent = ordersChangePercent,
+                comparisonLabel = comparisonLabel
             )
         }
         Row(
@@ -601,7 +631,8 @@ fun KeyMetricsGrid(
                 iconBgColor = Color(0xFFFFEDD5),
                 label = "Số sản phẩm",
                 value = totalProductsSold.toString(),
-                changePercent = productsChangePercent
+                changePercent = productsChangePercent,
+                comparisonLabel = comparisonLabel
             )
             MetricCard(
                 modifier = Modifier.weight(1f),
@@ -610,7 +641,8 @@ fun KeyMetricsGrid(
                 iconBgColor = Color(0xFFEDE9FE),
                 label = "Khách mới",
                 value = newCustomers.toString(),
-                changePercent = customersChangePercent
+                changePercent = customersChangePercent,
+                comparisonLabel = comparisonLabel
             )
         }
     }
@@ -649,12 +681,6 @@ fun MetricCard(
             }
             Text(value, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                Icon(
-                    if (isPositiveChange) Icons.Outlined.TrendingUp else Icons.Outlined.TrendingDown,
-                    contentDescription = null,
-                    tint = if (isPositiveChange) Color(0xFF10B981) else Color(0xFFEF4444),
-                    modifier = Modifier.size(14.dp)
-                )
                 Text(
                     "${if (isPositiveChange) "+" else ""}${String.format("%.1f", kotlin.math.abs(changePercent))}% $comparisonLabel",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
