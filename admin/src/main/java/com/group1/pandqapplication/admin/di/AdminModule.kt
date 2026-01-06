@@ -5,6 +5,7 @@ import com.group1.pandqapplication.admin.data.AdminUserManager
 import com.group1.pandqapplication.admin.data.remote.AdminApiService
 import com.group1.pandqapplication.admin.data.repository.AdminAuthRepository
 import com.group1.pandqapplication.admin.data.repository.AdminAuthRepositoryImpl
+import com.group1.pandqapplication.admin.data.repository.AnalyticsRepository
 import com.group1.pandqapplication.shared.data.remote.AppApiService
 import com.group1.pandqapplication.shared.util.Constants
 import dagger.Module
@@ -49,5 +50,13 @@ object AdminModule {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(AdminApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnalyticsRepository(
+        adminApiService: AdminApiService
+    ): AnalyticsRepository {
+        return AnalyticsRepository(adminApiService)
     }
 }

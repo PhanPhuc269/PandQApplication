@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import kotlinx.coroutines.launch
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -12,6 +14,8 @@ import androidx.compose.ui.Modifier
 import com.group1.pandqapplication.admin.ui.orders.AdminOrderManagementScreen
 import com.group1.pandqapplication.admin.ui.dashboard.AdminDashboardScreen
 import com.group1.pandqapplication.admin.ui.analytics.AdminAnalyticsScreen
+import com.group1.pandqapplication.admin.ui.analytics.AnalyticsDetailScreen
+import com.group1.pandqapplication.admin.ui.analytics.DailyAnalyticsDetailScreen
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Divider
@@ -36,7 +40,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.navigation
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.group1.pandqapplication.admin.data.AdminUserManager
-import com.group1.pandqapplication.admin.ui.analysis.SalesAnalysisScreen
+
 import com.group1.pandqapplication.admin.ui.components.AdminDrawerContent
 import com.group1.pandqapplication.admin.ui.navigation.AdminScreen
 import com.group1.pandqapplication.admin.ui.promotions.AdminPromotionsScreen
@@ -239,12 +243,39 @@ class AdminActivity : FragmentActivity() {
                         }
                         composable(AdminScreen.Analytics.route) {
                             AdminAnalyticsScreen(
-                                onNavigateToSalesAnalysis = { navController.navigate(AdminScreen.SalesAnalysis.route) }
+                                onNavigateToDetail = { reportType, range -> 
+                                    navController.navigate("analytics_detail?reportType=$reportType&range=$range") 
+                                },
+                                onNavigateToDailyDetail = { date ->
+                                    navController.navigate("daily_analytics_detail/$date")
+                                }
                             )
                         }
-                        composable(AdminScreen.SalesAnalysis.route) {
-                            SalesAnalysisScreen(onBackClick = { navController.popBackStack() })
+                        composable(
+                            route = AdminScreen.AnalyticsDetail.route,
+                            arguments = listOf(
+                                navArgument("reportType") { type = NavType.StringType },
+                                navArgument("range") { type = NavType.StringType; defaultValue = "30d" }
+                            )
+                        ) {
+                            AnalyticsDetailScreen(
+                                onBackClick = { navController.popBackStack() }
+                            )
                         }
+
+                        composable(
+                            route = AdminScreen.DailyAnalyticsDetail.route,
+                            arguments = listOf(
+                                navArgument("date") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            val date = backStackEntry.arguments?.getString("date") ?: ""
+                            DailyAnalyticsDetailScreen(
+                                date = date,
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+
                         
                         // Sub-screens
                         composable(AdminScreen.CategoryManagement.route) {
