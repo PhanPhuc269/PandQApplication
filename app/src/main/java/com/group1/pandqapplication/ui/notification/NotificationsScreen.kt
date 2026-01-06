@@ -145,7 +145,10 @@ fun NotificationsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        .background(backgroundColor)
+                        .statusBarsPadding() // Đẩy xuống khỏi Status Bar TRƯỚC
+                        .height(56.dp)       // Chiều cao chuẩn AppBar SAU
+                        .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(

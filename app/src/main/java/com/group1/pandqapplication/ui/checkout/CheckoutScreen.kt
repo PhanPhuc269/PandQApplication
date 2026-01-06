@@ -13,7 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.material3.Surface
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -178,29 +183,36 @@ fun CheckoutScreen(
         containerColor = backgroundColor,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(backgroundColor)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            Surface(
+                color = backgroundColor,
+                shadowElevation = 0.dp
             ) {
-                IconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = textPrimary
-                    )
+                Column {
+                    Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        IconButton(
+                            onClick = onBackClick,
+                            modifier = Modifier.align(Alignment.CenterStart)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = textPrimary
+                            )
+                        }
+                        Text(
+                            text = "Thanh toán",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textPrimary,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
                 }
-                Text(
-                    text = "Thanh toán",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textPrimary,
-                    modifier = Modifier.align(Alignment.Center)
-                )
             }
         },
         bottomBar = {

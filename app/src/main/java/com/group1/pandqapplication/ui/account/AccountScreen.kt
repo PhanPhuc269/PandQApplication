@@ -31,6 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,25 +57,28 @@ fun AccountScreen(
                 color = backgroundColor,
                 shadowElevation = 1.dp
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                     IconButton(onClick = {}) {
-                         Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = Color(0xFF1F2937))
+                Column {
+                    Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                         IconButton(onClick = {}) {
+                             Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = Color(0xFF1F2937))
+                        }
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                             Text(
+                                 "Hồ sơ cá nhân", 
+                                 fontWeight = FontWeight.Bold, 
+                                 fontSize = 18.sp, 
+                                 color = Color(0xFF111827)
+                             ) 
+                        }
+                        Spacer(modifier = Modifier.size(48.dp)) // Balance right side
                     }
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                         Text(
-                             "Hồ sơ cá nhân", 
-                             fontWeight = FontWeight.Bold, 
-                             fontSize = 18.sp, 
-                             color = Color(0xFF111827)
-                         ) 
-                    }
-                    Spacer(modifier = Modifier.size(48.dp)) // Balance right side
                 }
             }
         }

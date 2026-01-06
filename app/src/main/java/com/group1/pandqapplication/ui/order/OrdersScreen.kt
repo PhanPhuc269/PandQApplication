@@ -78,22 +78,22 @@ fun OrdersScreen(
                 color = backgroundColor,
                 shadowElevation = 1.dp
             ) {
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .background(backgroundColor)
+                        .statusBarsPadding() // Đẩy xuống khỏi Status Bar
+                        .height(56.dp)       // Chiều cao chuẩn AppBar
+                        .padding(horizontal = 16.dp)
                 ) {
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        Text(
-                            "Lịch sử đơn hàng",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = Color(0xFF111827)
-                        )
-                    }
-                    Spacer(modifier = Modifier.size(48.dp))
+                    Text(
+                        "Lịch sử đơn hàng",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color(0xFF111827),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+
                 }
             }
         }

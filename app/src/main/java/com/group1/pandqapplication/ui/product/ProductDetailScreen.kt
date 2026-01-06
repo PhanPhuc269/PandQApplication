@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +39,11 @@ import com.group1.pandqapplication.shared.data.remote.dto.RelatedProductDto
 import com.group1.pandqapplication.shared.data.remote.dto.ReviewDto
 import java.text.NumberFormat
 import java.util.Locale
+import android.app.Activity
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -76,10 +83,22 @@ fun ProductDetailScreen(
 
 
 
+    // Configure status bar for this screen (transparent with white icons)
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = Color.Transparent.toArgb()
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            // White icons for dark image header
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+        }
+    }
 
     // Main Content
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
+            contentWindowInsets = WindowInsets(0.dp),
             bottomBar = {
                 if (!uiState.isLoading && uiState.product != null) {
                     BottomCartBar(
@@ -308,7 +327,8 @@ fun ProductImageHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.5f), Color.Transparent)))
-                .padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 12.dp),
+                .statusBarsPadding()
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
