@@ -5,8 +5,10 @@ import com.group1.pandqapplication.shared.util.Constants
 import com.group1.pandqapplication.shared.data.remote.ApiService
 import com.group1.pandqapplication.shared.data.remote.AppApiService
 import com.group1.pandqapplication.shared.data.remote.LocationIQService
+import com.group1.pandqapplication.shared.data.remote.api.ChatApiService
 import com.group1.pandqapplication.shared.data.repository.AddressRepository
 import com.group1.pandqapplication.shared.data.repository.AddressRepositoryImpl
+import com.group1.pandqapplication.shared.data.repository.ChatRepository
 import com.group1.pandqapplication.shared.data.remote.AuthInterceptor
 import com.group1.pandqapplication.shared.data.repository.ProductRepository
 import com.group1.pandqapplication.shared.data.repository.ProductRepositoryImpl
@@ -114,6 +116,18 @@ object NetworkModule {
     @Singleton
     fun provideUserRepository(appApiService: AppApiService): UserRepository {
         return UserRepositoryImpl(appApiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideChatApiService(retrofit: Retrofit): ChatApiService {
+        return retrofit.create(ChatApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideChatRepository(chatApiService: ChatApiService): ChatRepository {
+        return ChatRepository(chatApiService)
     }
 
     @Provides

@@ -52,6 +52,7 @@ fun ProductDetailScreen(
     onCartClick: () -> Unit,
     onProductClick: (String) -> Unit = {},
     userId: String = "",
+    navController: androidx.navigation.NavController? = null,
     viewModel: ProductDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -108,7 +109,8 @@ fun ProductDetailScreen(
                         onDecrease = { viewModel.decreaseQuantity() },
                         primaryColor = primaryColor,
                         onCartClick = onCartClick,
-                        onAddToCart = { viewModel.addToCart(userId) }
+                        onAddToCart = { viewModel.addToCart(userId) },
+                        onChatClick = { navController?.navigate("chat_screen/${uiState.product!!.id}") }
                     )
                 }
             }
@@ -872,6 +874,7 @@ fun BottomCartBar(
     primaryColor: Color,
     onCartClick: () -> Unit = {},
     onAddToCart: () -> Unit = {},
+    onChatClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -919,6 +922,17 @@ fun BottomCartBar(
             ) {
                 Icon(Icons.Filled.ShoppingBag, contentDescription = null, modifier = Modifier.size(20.dp))
                 Text("Thêm vào giỏ", modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold)
+            }
+
+            // Chat Button
+            Button(
+                onClick = onChatClick,
+                modifier = Modifier.height(48.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+            ) {
+                Icon(Icons.Filled.Chat, contentDescription = null, modifier = Modifier.size(20.dp))
+                Text("Chat", modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold)
             }
         }
     }

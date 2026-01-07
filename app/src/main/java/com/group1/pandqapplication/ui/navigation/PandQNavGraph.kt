@@ -183,7 +183,8 @@ fun PandQNavGraph(
                 onProductClick = { productId ->
                     navController.navigate(Screen.ProductDetail.createRoute(productId))
                 },
-                userId = mainViewModel.getCurrentUserId()
+                userId = mainViewModel.getCurrentUserId(),
+                navController = navController
             )
         }
         composable(Screen.Cart.route) {
@@ -387,6 +388,19 @@ fun PandQNavGraph(
                 onBackClick = {
                     navController.popBackStack()
                 }
+            )
+        }
+        composable(
+            route = Screen.ChatScreen.route,
+            arguments = listOf(navArgument("productId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId") ?: ""
+            com.group1.pandqapplication.ui.chat.screen.ChatScreen(
+                productId = productId,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                userId = mainViewModel.getCurrentUserId()
             )
         }
 
