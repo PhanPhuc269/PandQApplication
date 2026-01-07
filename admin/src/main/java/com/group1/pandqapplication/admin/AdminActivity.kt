@@ -59,6 +59,7 @@ import com.group1.pandqapplication.admin.ui.promotions.CreatePromotionScreen
 import com.group1.pandqapplication.admin.ui.profile.AdminProfileScreen
 import com.group1.pandqapplication.admin.ui.setting.AdminSettingsScreen
 import com.group1.pandqapplication.admin.ui.customer.CustomerListScreen
+import com.group1.pandqapplication.admin.ui.customer.CustomerDetailScreen
 import com.group1.pandqapplication.admin.ui.shipping.ShippingManagementScreen
 import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
@@ -243,6 +244,7 @@ class AdminActivity : FragmentActivity() {
                         }
                         composable(AdminScreen.Analytics.route) {
                             AdminAnalyticsScreen(
+                                onBackClick = { navController.popBackStack() },
                                 onNavigateToDetail = { reportType, range -> 
                                     navController.navigate("analytics_detail?reportType=$reportType&range=$range") 
                                 },
@@ -363,7 +365,20 @@ class AdminActivity : FragmentActivity() {
                             )
                         }
                         composable(AdminScreen.CustomerList.route) {
-                            CustomerListScreen(onBackClick = { navController.popBackStack() })
+                            CustomerListScreen(
+                                onBackClick = { navController.popBackStack() },
+                                onCustomerClick = { customerId ->
+                                    navController.navigate("customer_detail/$customerId")
+                                }
+                            )
+                        }
+                        composable(
+                            route = AdminScreen.CustomerDetail.route,
+                            arguments = listOf(androidx.navigation.navArgument("customerId") { type = androidx.navigation.NavType.StringType })
+                        ) {
+                            CustomerDetailScreen(
+                                onBackClick = { navController.popBackStack() }
+                            )
                         }
                         composable(AdminScreen.ShippingManagement.route) {
                             ShippingManagementScreen(onBackClick = { navController.popBackStack() })
