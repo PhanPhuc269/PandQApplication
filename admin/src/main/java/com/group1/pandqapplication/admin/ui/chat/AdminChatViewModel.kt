@@ -1,5 +1,7 @@
 package com.group1.pandqapplication.admin.ui.chat
 
+import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.shared.data.remote.dto.ChatMessage
@@ -8,7 +10,9 @@ import com.group1.pandqapplication.shared.data.remote.dto.MessageType
 import com.group1.pandqapplication.shared.data.remote.dto.ProductChat
 import com.group1.pandqapplication.shared.data.remote.dto.ProductChatDto
 import com.group1.pandqapplication.shared.data.repository.ChatRepository
+import com.group1.pandqapplication.shared.util.FileUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -34,6 +38,7 @@ data class AdminChatScreenState(
  */
 @HiltViewModel
 class AdminChatViewModel @Inject constructor(
+    @ApplicationContext private val application: android.content.Context,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
@@ -56,6 +61,8 @@ class AdminChatViewModel @Inject constructor(
                     )
                     // Load messages
                     loadChatMessages(chat.id)
+                    // Mark all messages as read when opening chat
+                    markAllAsRead(chat.id)
                 }.onFailure { error ->
                     _state.value = _state.value.copy(
                         isLoading = false,
@@ -114,6 +121,39 @@ class AdminChatViewModel @Inject constructor(
     }
 
     /**
+     * Upload and send an image in the chat.
+     */
+    fun sendImage(chatId: String, imageUri: String) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isSending = true)
+                // Convert URI to actual file path
+                val filePath = FileUtil.getFilePathFromUri(application, Uri.parse(imageUri))
+                chatRepository.uploadChatImage(chatId, filePath).collect { result ->
+                    result.onSuccess { message ->
+                        val newMessage = convertMessageDtoToModel(message)
+                        _state.value = _state.value.copy(
+                            messages = _state.value.messages + newMessage,
+                            isSending = false,
+                            error = null
+                        )
+                    }.onFailure { error ->
+                        _state.value = _state.value.copy(
+                            isSending = false,
+                            error = error.message ?: "Failed to upload image"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isSending = false,
+                    error = e.message ?: "Error processing image"
+                )
+            }
+        }
+    }
+
+    /**
      * Refresh messages - called periodically to fetch new messages.
      */
     fun refreshMessages(chatId: String) {
@@ -124,8 +164,29 @@ class AdminChatViewModel @Inject constructor(
                         messages = messages.map { convertMessageDtoToModel(it) },
                         error = null
                     )
+                    // Mark as read when refreshing too
+                    markAllAsRead(chatId)
                 }.onFailure { error ->
                     // Silently fail on refresh
+                }
+            }
+        }
+    }
+
+    /**
+     * Mark all messages in this chat as read.
+     */
+    fun markAllAsRead(chatId: String) {
+        viewModelScope.launch {
+            chatRepository.markAllAsRead(chatId).collect { result ->
+                result.onSuccess {
+                    // Update local message states to read
+                    val updatedMessages = _state.value.messages.map { 
+                        it.copy(isRead = true) 
+                    }
+                    _state.value = _state.value.copy(messages = updatedMessages)
+                }.onFailure {
+                    // Silently fail
                 }
             }
         }
@@ -173,7 +234,12 @@ class AdminChatViewModel @Inject constructor(
             messageType = messageType,
             isRead = dto.isRead ?: false,
             readAt = dto.readAt,
-            createdAt = dto.createdAt ?: ""
+            createdAt = dto.createdAt ?: "",
+            imageUrl = dto.imageUrl,
+            productContextId = dto.productContextId,
+            productContextName = dto.productContextName,
+            productContextImage = dto.productContextImage,
+            productContextPrice = dto.productContextPrice
         )
     }
 }

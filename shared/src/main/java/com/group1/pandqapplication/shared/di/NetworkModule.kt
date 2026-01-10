@@ -6,6 +6,7 @@ import com.group1.pandqapplication.shared.data.remote.ApiService
 import com.group1.pandqapplication.shared.data.remote.AppApiService
 import com.group1.pandqapplication.shared.data.remote.LocationIQService
 import com.group1.pandqapplication.shared.data.remote.api.ChatApiService
+import com.group1.pandqapplication.shared.data.remote.service.CloudinaryService
 import com.group1.pandqapplication.shared.data.repository.AddressRepository
 import com.group1.pandqapplication.shared.data.repository.AddressRepositoryImpl
 import com.group1.pandqapplication.shared.data.repository.ChatRepository
@@ -148,5 +149,16 @@ object NetworkModule {
             .client(simpleClient)
             .build()
             .create(LocationIQService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCloudinaryService(): CloudinaryService {
+        // CloudinaryService for unsigned uploads
+        // Configuration from BuildConfig or hardcoded values
+        val cloudName = "dz8u6d4pr"  // From local.properties
+        val uploadPreset = "uppaedmp"  // From local.properties
+        
+        return CloudinaryService(cloudName, uploadPreset)
     }
 }

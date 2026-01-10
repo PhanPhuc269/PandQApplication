@@ -44,7 +44,8 @@ class ProductDetailViewModel @Inject constructor(
     private val apiService: ApiService,
     private val authRepository: AuthRepository,
     savedStateHandle: SavedStateHandle,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val productContextHolder: com.group1.pandqapplication.ui.chat.ProductContextHolder
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
@@ -78,6 +79,29 @@ class ProductDetailViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /**
+     * Set product context for chat screen - call before navigating to chat.
+     */
+    fun prepareForChat() {
+        val product = _uiState.value.product ?: return
+        val imageUrl = product.images?.firstOrNull()?.imageUrl ?: product.thumbnailUrl ?: ""
+        val priceFormatted = formatPriceVND(product.price)
+        android.util.Log.d("ProductDetailVM", "prepareForChat: holder hashCode=${productContextHolder.hashCode()}")
+        android.util.Log.d("ProductDetailVM", "prepareForChat: id=${product.id}, name=${product.name}, image=$imageUrl, price=$priceFormatted")
+        productContextHolder.setContext(
+            id = product.id,
+            name = product.name,
+            image = imageUrl,
+            price = priceFormatted
+        )
+        android.util.Log.d("ProductDetailVM", "After setContext: holder.name=${productContextHolder.productName}, holder.image=${productContextHolder.productImage}")
+    }
+
+    private fun formatPriceVND(price: Double): String {
+        val priceVND = price.toLong()
+        return String.format("%,d₫", priceVND).replace(",", ".")
     }
 
     fun loadReviews() {

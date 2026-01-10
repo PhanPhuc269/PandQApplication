@@ -135,6 +135,7 @@ class NotificationViewModel @Inject constructor(
         return when (state.selectedFilter) {
             "Orders" -> state.notifications.filter { it.type == "ORDER_UPDATE" }
             "Promos" -> state.notifications.filter { it.type == "PROMOTION" }
+            "Chats" -> state.notifications.filter { it.type == "CHAT_MESSAGE" }
             else -> state.notifications
         }
     }

@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ElectricalServices
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -71,6 +72,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.core.view.WindowCompat
 import com.group1.pandqapplication.R
+import com.group1.pandqapplication.ui.components.FloatingContactButton
 
 // Data Model for Banner (keep mock for now)
 data class Banner(
@@ -87,6 +89,7 @@ fun HomeScreen(
     onSearchClick: () -> Unit,
     onCategoryClick: (String) -> Unit = {},
     onCartClick: () -> Unit = {},
+    onChatClick: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -149,17 +152,18 @@ fun HomeScreen(
             }
         }
     ) { paddingValues ->
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = primaryColor)
+        Box(modifier = Modifier.fillMaxSize()) {
+            when {
+                uiState.isLoading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = primaryColor)
+                    }
                 }
-            }
             uiState.error != null -> {
                 Box(
                     modifier = Modifier
@@ -413,6 +417,15 @@ fun HomeScreen(
                     }
                 }
             }
+        }
+        
+            // Floating Contact Button
+            FloatingContactButton(
+                onClick = onChatClick,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 16.dp)
+            )
         }
     }
 }

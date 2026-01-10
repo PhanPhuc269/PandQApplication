@@ -102,6 +102,13 @@ class MainActivity : ComponentActivity() {
         intent.getStringExtra("target_url")?.let { targetUrl ->
             Log.d("DeepLink", "Received deep link from notification: $targetUrl")
             pendingDeepLink = targetUrl
+            return
+        }
+        
+        // 3. Try chat_id extra (from chat notifications)
+        intent.getStringExtra("chat_id")?.let { chatId ->
+            Log.d("DeepLink", "Received chat_id from notification: $chatId")
+            pendingDeepLink = "chat/$chatId"
         }
     }
 }

@@ -3,7 +3,9 @@ package com.group1.pandqapplication.shared.data.remote.api
 import com.group1.pandqapplication.shared.data.remote.dto.ChatMessageDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductChatDto
 import com.group1.pandqapplication.shared.data.remote.dto.SendMessageRequestDto
+import com.group1.pandqapplication.shared.data.remote.dto.SendImageMessageRequestDto
 import com.group1.pandqapplication.shared.data.remote.dto.StartChatRequestDto
+import okhttp3.MultipartBody
 import retrofit2.http.*
 import java.util.UUID
 
@@ -30,6 +32,12 @@ interface ChatApiService {
     suspend fun getActiveChat(
         @Path("productId") productId: String
     ): ProductChatDto
+
+    /**
+     * Get general chat with admin (continuous thread, not product-specific).
+     */
+    @GET("/api/v1/chats/general")
+    suspend fun getGeneralChat(): ProductChatDto
 
     /**
      * Get specific chat details.
@@ -117,4 +125,29 @@ interface ChatApiService {
     suspend fun getUnreadCount(
         @Path("chatId") chatId: String
     ): Long
+
+    /**
+     * Upload image for chat message.
+     */
+    @Multipart
+    @POST("/api/v1/chats/{chatId}/upload-image")
+    suspend fun uploadChatImage(
+        @Path("chatId") chatId: String,
+        @Part file: MultipartBody.Part
+    ): ChatMessageDto
+
+    /**
+     * Send an image message with URL (for Cloudinary client-side upload).
+     * 
+     * Flow:
+     * 1. Client uploads image to Cloudinary
+     * 2. Cloudinary returns the public URL
+     * 3. Client sends this URL to server via this endpoint
+     * 4. Server creates a chat message with the URL
+     */
+    @POST("/api/v1/chats/{chatId}/send-image-message")
+    suspend fun sendImageMessage(
+        @Path("chatId") chatId: String,
+        @Body request: SendImageMessageRequestDto
+    ): ChatMessageDto
 }

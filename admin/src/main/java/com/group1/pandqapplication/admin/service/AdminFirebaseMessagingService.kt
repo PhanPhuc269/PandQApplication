@@ -66,16 +66,18 @@ class AdminFirebaseMessagingService : FirebaseMessagingService() {
         val body = data["body"] ?: return
         val type = data["type"]
         val targetUrl = data["targetUrl"]
+        val chatId = data["chatId"]
 
         // Always prefix with [Admin] to distinguish from customer app
-        showNotification("$title", body, type, targetUrl)
+        showNotification("$title", body, type, targetUrl, chatId)
     }
 
     private fun showNotification(
         title: String,
         body: String,
         type: String? = null,
-        targetUrl: String? = null
+        targetUrl: String? = null,
+        chatId: String? = null
     ) {
         Log.d(TAG, "Showing ADMIN notification: $title")
         
@@ -86,6 +88,7 @@ class AdminFirebaseMessagingService : FirebaseMessagingService() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             type?.let { putExtra("notification_type", it) }
             targetUrl?.let { putExtra("target_url", it) }
+            chatId?.let { putExtra("chat_id", it) }
         }
 
         val pendingIntent = PendingIntent.getActivity(

@@ -110,7 +110,10 @@ fun ProductDetailScreen(
                         primaryColor = primaryColor,
                         onCartClick = onCartClick,
                         onAddToCart = { viewModel.addToCart(userId) },
-                        onChatClick = { navController?.navigate("chat_screen/${uiState.product!!.id}") }
+                        onChatClick = { 
+                            viewModel.prepareForChat()
+                            navController?.navigate("chat_screen/${uiState.product!!.id}") 
+                        }
                     )
                 }
             }
@@ -929,7 +932,7 @@ fun BottomCartBar(
                 onClick = onChatClick,
                 modifier = Modifier.height(48.dp),
                 shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC3713))
             ) {
                 Icon(Icons.Filled.Chat, contentDescription = null, modifier = Modifier.size(20.dp))
                 Text("Chat", modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold)

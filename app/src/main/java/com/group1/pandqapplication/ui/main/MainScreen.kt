@@ -33,7 +33,8 @@ fun MainScreen(
     onUserGuideClick: () -> Unit = {}, // Added param
     onNavigateToOrder: (String?) -> Unit = { orderId -> orderId?.let { onOrderClick(it) } }, // Navigate to order with orderId
     onNavigateToProduct: (String?) -> Unit = { id -> id?.let { onProductClick(it) } }, // Navigate to product with optional productId
-    onNavigateToPromotion: (String?) -> Unit = { _ -> } // Navigate to promotion
+    onNavigateToPromotion: (String?) -> Unit = { _ -> }, // Navigate to promotion
+    onChatClick: () -> Unit = {} // Added chat click handler
 ) {
     val navController = rememberNavController()
 
@@ -53,7 +54,8 @@ fun MainScreen(
                         onProductClick = onProductClick,
                         onSearchClick = onSearchClick,
                         onCategoryClick = onCategoryClick,
-                        onCartClick = onCartClick
+                        onCartClick = onCartClick,
+                        onChatClick = onChatClick
                     )
                 }
                 composable(BottomNavItem.Orders.route) { 
@@ -86,6 +88,10 @@ fun MainScreen(
                                 targetUrl.contains("promotions") || targetUrl.contains("coupons") || targetUrl.contains("flash-sale") -> {
                                     val promoId = targetUrl.substringAfterLast("/")
                                     onNavigateToPromotion(promoId)
+                                }
+                                targetUrl.contains("chat") -> {
+                                    // Navigate to chat screen
+                                    onChatClick()
                                 }
                             }
                         }

@@ -38,17 +38,19 @@ class PandQFirebaseMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
         Log.d(TAG, "Message received from: ${remoteMessage.from}")
 
-        // Handle notification payload (when app is in foreground)
+        // Handle data payload (preferred - gives full control over notification display)
+        if (remoteMessage.data.isNotEmpty()) {
+            Log.d(TAG, "Data payload: ${remoteMessage.data}")
+            handleDataPayload(remoteMessage.data)
+            return // Exit early - data payload handled, no need to show notification again
+        }
+
+        // Fallback: Handle notification payload only if no data payload present
+        // This prevents duplicate notifications when both payloads are sent
         remoteMessage.notification?.let { notification ->
             Log.d(TAG, "Notification Title: ${notification.title}")
             Log.d(TAG, "Notification Body: ${notification.body}")
             showNotification(notification.title ?: "", notification.body ?: "")
-        }
-
-        // Handle data payload
-        if (remoteMessage.data.isNotEmpty()) {
-            Log.d(TAG, "Data payload: ${remoteMessage.data}")
-            handleDataPayload(remoteMessage.data)
         }
     }
 
@@ -68,15 +70,17 @@ class PandQFirebaseMessagingService : FirebaseMessagingService() {
         val body = data["body"] ?: return
         val type = data["type"]
         val targetUrl = data["targetUrl"]
+        val chatId = data["chatId"]
 
-        showNotification(title, body, type, targetUrl)
+        showNotification(title, body, type, targetUrl, chatId)
     }
 
     private fun showNotification(
         title: String,
         body: String,
         type: String? = null,
-        targetUrl: String? = null
+        targetUrl: String? = null,
+        chatId: String? = null
     ) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -85,6 +89,7 @@ class PandQFirebaseMessagingService : FirebaseMessagingService() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             type?.let { putExtra("notification_type", it) }
             targetUrl?.let { putExtra("target_url", it) }
+            chatId?.let { putExtra("chat_id", it) }
         }
 
         val pendingIntent = PendingIntent.getActivity(

@@ -64,7 +64,7 @@ data class NotificationUiModel(
 )
 
 enum class NotificationType {
-    ORDER, PROMO, SYSTEM, FEEDBACK
+    ORDER, PROMO, SYSTEM, FEEDBACK, CHAT
 }
 
 // Helper to convert API data to UI model
@@ -73,6 +73,7 @@ private fun NotificationDto.toUiModel(): NotificationUiModel {
         "ORDER_UPDATE" -> NotificationType.ORDER
         "PROMOTION" -> NotificationType.PROMO
         "SYSTEM" -> NotificationType.SYSTEM
+        "CHAT_MESSAGE" -> NotificationType.CHAT
         else -> NotificationType.FEEDBACK
     }
     
@@ -128,6 +129,7 @@ fun NotificationsScreen(
     val filteredNotifications = when (uiState.selectedFilter) {
         "Orders" -> allNotifications.filter { it.type == NotificationType.ORDER }
         "Promos" -> allNotifications.filter { it.type == NotificationType.PROMO }
+        "Chats" -> allNotifications.filter { it.type == NotificationType.CHAT }
         else -> allNotifications
     }
 
@@ -185,7 +187,7 @@ fun NotificationsScreen(
                     .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val filters = listOf("All" to "Tất cả", "Orders" to "Đơn hàng", "Promos" to "Khuyến mãi")
+                val filters = listOf("All" to "Tất cả", "Orders" to "Đơn hàng", "Promos" to "Khuyến mãi", "Chats" to "Tin nhắn")
                 filters.forEach { (key, label) ->
                     val isSelected = uiState.selectedFilter == key
                     Box(
@@ -423,6 +425,7 @@ fun NotificationItem(notification: NotificationUiModel, onClick: () -> Unit = {}
                 NotificationType.PROMO -> Triple(Icons.Filled.Percent, Color(0xFFFFE4E6), primaryColor)
                 NotificationType.SYSTEM -> Triple(Icons.Filled.NotificationImportant, Color(0xFFF3F4F6), Color(0xFF4B5563))
                 NotificationType.FEEDBACK -> Triple(Icons.Filled.Chat, Color(0xFFDCFCE7), Color(0xFF166534))
+                NotificationType.CHAT -> Triple(Icons.Filled.Chat, Color(0xFFE0F2FE), Color(0xFF0284C7))
             }
 
             // Special case icons

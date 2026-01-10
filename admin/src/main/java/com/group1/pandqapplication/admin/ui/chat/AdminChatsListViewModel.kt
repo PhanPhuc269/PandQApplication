@@ -51,6 +51,24 @@ class AdminChatsListViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Refresh chats without showing loading indicator.
+     */
+    fun refreshChats() {
+        viewModelScope.launch {
+            chatRepository.getAllChats().collect { result ->
+                result.onSuccess { chats ->
+                    _state.value = _state.value.copy(
+                        chats = chats.map { convertDtoToModel(it) },
+                        error = null
+                    )
+                }.onFailure {
+                    // Silently fail on refresh
+                }
+            }
+        }
+    }
+
     private fun convertDtoToModel(dto: ProductChatDto): ProductChat {
         return ProductChat(
             id = dto.id,
@@ -71,6 +89,7 @@ class AdminChatsListViewModel @Inject constructor(
             closedAt = dto.closedAt,
             lastMessageAt = dto.lastMessageAt,
             lastMessagePreview = dto.lastMessagePreview,
+            lastMessageSenderRole = dto.lastMessageSenderRole,
             messages = emptyList()
         )
     }

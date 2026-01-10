@@ -12,7 +12,12 @@ data class StartChatRequestDto(
 
 data class SendMessageRequestDto(
     val message: String,
-    val messageType: String = "TEXT"  // TEXT, IMAGE, FILE, SYSTEM
+    val messageType: String = "TEXT",  // TEXT, IMAGE, FILE, SYSTEM
+    // Product context - for displaying "Đang hỏi về [Product]" divider
+    val productContextId: String? = null,
+    val productContextName: String? = null,
+    val productContextImage: String? = null,
+    val productContextPrice: String? = null
 )
 
 // ========== Response DTOs ==========
@@ -25,6 +30,8 @@ data class ProductChatDto(
     val productName: String? = null,
     @SerializedName("productImage")
     val productImage: String? = null,
+    @SerializedName("productPrice")
+    val productPrice: String? = null,
     @SerializedName("customerId")
     val customerId: String? = null,
     @SerializedName("customerName")
@@ -53,6 +60,8 @@ data class ProductChatDto(
     val lastMessageAt: String? = null,
     @SerializedName("lastMessagePreview")
     val lastMessagePreview: String? = null,
+    @SerializedName("lastMessageSenderRole")
+    val lastMessageSenderRole: String? = null,  // ADMIN or CUSTOMER
     @SerializedName("messages")
     val messages: List<ChatMessageDto>? = null
 )
@@ -78,7 +87,18 @@ data class ChatMessageDto(
     @SerializedName("readAt")
     val readAt: String? = null,
     @SerializedName("createdAt")
-    val createdAt: String? = null
+    val createdAt: String? = null,
+    @SerializedName("imageUrl")
+    val imageUrl: String? = null,
+    // Product context - for displaying "Đang hỏi về [Product]" divider
+    @SerializedName("productContextId")
+    val productContextId: String? = null,
+    @SerializedName("productContextName")
+    val productContextName: String? = null,
+    @SerializedName("productContextImage")
+    val productContextImage: String? = null,
+    @SerializedName("productContextPrice")
+    val productContextPrice: String? = null
 )
 
 // ========== Domain Models ==========
@@ -88,6 +108,7 @@ data class ProductChat(
     val productId: String = "",
     val productName: String = "",
     val productImage: String? = null,
+    val productPrice: String = "",
     val customerId: String = "",
     val customerName: String = "",
     val customerAvatar: String? = null,
@@ -102,6 +123,7 @@ data class ProductChat(
     val closedAt: String? = null,
     val lastMessageAt: String? = null,
     val lastMessagePreview: String? = null,
+    val lastMessageSenderRole: String? = null,  // ADMIN or CUSTOMER
     val messages: List<ChatMessage> = emptyList()
 )
 
@@ -116,7 +138,13 @@ data class ChatMessage(
     val messageType: MessageType = MessageType.TEXT,
     val isRead: Boolean = false,
     val readAt: String? = null,
-    val createdAt: String = ""
+    val createdAt: String = "",
+    val imageUrl: String? = null,
+    // Product context - for displaying "Đang hỏi về [Product]" divider
+    val productContextId: String? = null,
+    val productContextName: String? = null,
+    val productContextImage: String? = null,
+    val productContextPrice: String? = null
 )
 
 enum class ChatStatus {
