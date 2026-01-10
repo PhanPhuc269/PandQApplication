@@ -2,6 +2,7 @@ package com.group1.pandqapplication.admin.ui.chat
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
@@ -29,6 +30,8 @@ import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -74,6 +77,9 @@ fun AdminChatScreen(
     
     // State for fullscreen image viewer
     var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
+    
+    // State for media picker dialog
+    var showMediaPickerDialog by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -85,6 +91,79 @@ fun AdminChatScreen(
                 isUploadingImage = false
             }
         }
+    }
+    
+    val videoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { videoUri: Uri? ->
+        if (videoUri != null) {
+            isUploadingImage = true
+            scope.launch {
+                viewModel.sendImage(chatId, videoUri.toString())
+                isUploadingImage = false
+            }
+        }
+    }
+    
+    // Media picker dialog
+    if (showMediaPickerDialog) {
+        AlertDialog(
+            onDismissRequest = { showMediaPickerDialog = false },
+            title = { Text("Chọn loại media", color = Color.White) },
+            text = {
+                Column {
+                    TextButton(
+                        onClick = {
+                            showMediaPickerDialog = false
+                            imagePickerLauncher.launch("image/*")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Image,
+                                contentDescription = "Image",
+                                tint = Color(0xFFEC6B45)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Chọn ảnh", color = Color.White)
+                        }
+                    }
+                    TextButton(
+                        onClick = {
+                            showMediaPickerDialog = false
+                            videoPickerLauncher.launch("video/*")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Videocam,
+                                contentDescription = "Video",
+                                tint = Color(0xFFEC6B45)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Chọn video", color = Color.White)
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showMediaPickerDialog = false }) {
+                    Text("Hủy", color = Color.Gray)
+                }
+            },
+            containerColor = Color(0xFF2a2a2a)
+        )
     }
     
     // Fullscreen image dialog
@@ -252,8 +331,8 @@ fun AdminChatScreen(
                     messageText = ""
                 }
             },
-            onImageClick = {
-                imagePickerLauncher.launch("image/*")
+            onMediaClick = {
+                showMediaPickerDialog = true
             },
             isLoading = state.isSending || isUploadingImage,
             isUploadingImage = isUploadingImage
@@ -424,38 +503,84 @@ private fun AdminChatMessageBubble(
                     )
                 }
 
-                // Image - clickable to view fullscreen (no filename)
+                // Image/Video - clickable to view fullscreen (no filename)
                 if (!message.imageUrl.isNullOrEmpty()) {
                     if (message.message.isNotEmpty() && message.messageType != MessageType.IMAGE) {
                         Spacer(modifier = Modifier.height(8.dp))
                     }
+                    
+                    // Check if it's a video based on URL
+                    val isVideo = message.imageUrl!!.contains("/video/") || 
+                                  message.imageUrl!!.endsWith(".mp4") ||
+                                  message.imageUrl!!.endsWith(".mov") ||
+                                  message.imageUrl!!.endsWith(".avi") ||
+                                  message.imageUrl!!.endsWith(".webm")
+                    
+                    val context = LocalContext.current
+                    
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(200.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(Color(0xFF3a3a3a))
-                            .clickable { onImageClick(message.imageUrl!!) },
+                            .clickable { 
+                                if (isVideo) {
+                                    // Open video with external player
+                                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                                        setDataAndType(Uri.parse(message.imageUrl), "video/*")
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    try {
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Không tìm thấy ứng dụng để phát video", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    onImageClick(message.imageUrl!!)
+                                }
+                            },
                         contentAlignment = Alignment.Center
                     ) {
-                        var isLoading by remember { mutableStateOf(true) }
-                        
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(32.dp),
-                                color = Color(0xFFEC6B45),
-                                strokeWidth = 2.dp
+                        if (isVideo) {
+                            // Video thumbnail with play icon
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PlayCircle,
+                                    contentDescription = "Play video",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(64.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "Nhấn để xem video",
+                                    color = Color.White.copy(alpha = 0.7f),
+                                    fontSize = 12.sp
+                                )
+                            }
+                        } else {
+                            var isLoading by remember { mutableStateOf(true) }
+                            
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(32.dp),
+                                    color = Color(0xFFEC6B45),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                            
+                            AsyncImage(
+                                model = message.imageUrl,
+                                contentDescription = "Chat image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                                onSuccess = { isLoading = false },
+                                onError = { isLoading = false }
                             )
                         }
-                        
-                        AsyncImage(
-                            model = message.imageUrl,
-                            contentDescription = "Chat image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                            onSuccess = { isLoading = false },
-                            onError = { isLoading = false }
-                        )
                     }
                 }
 
@@ -517,7 +642,7 @@ private fun AdminChatInputBar(
     messageText: String,
     onMessageChange: (String) -> Unit,
     onSendClick: () -> Unit,
-    onImageClick: () -> Unit,
+    onMediaClick: () -> Unit,
     isLoading: Boolean,
     isUploadingImage: Boolean
 ) {
@@ -552,7 +677,7 @@ private fun AdminChatInputBar(
                 }
             } else {
                 IconButton(
-                    onClick = onImageClick,
+                    onClick = onMediaClick,
                     modifier = Modifier
                         .size(40.dp)
                         .background(
@@ -562,7 +687,7 @@ private fun AdminChatInputBar(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Image,
-                        contentDescription = "Upload image",
+                        contentDescription = "Upload media",
                         tint = Color(0xFFEC6B45),
                         modifier = Modifier.size(20.dp)
                     )
