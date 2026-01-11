@@ -106,4 +106,34 @@ interface AdminApiService {
 
     @GET("api/v1/customers/stats")
     suspend fun getCustomerStats(): com.group1.pandqapplication.admin.data.remote.dto.CustomerStatsDto
+
+    // ==================== Promotion Management ====================
+
+    @GET("api/v1/promotions")
+    suspend fun getPromotions(): List<com.group1.pandqapplication.admin.data.remote.dto.PromotionDto>
+
+    @GET("api/v1/promotions/{id}")
+    suspend fun getPromotionById(@Path("id") id: String): com.group1.pandqapplication.admin.data.remote.dto.PromotionDto
+
+    @GET("api/v1/promotions/code/{code}")
+    suspend fun getPromotionByCode(@Path("code") code: String): com.group1.pandqapplication.admin.data.remote.dto.PromotionDto
+
+    @POST("api/v1/promotions")
+    suspend fun createPromotion(
+        @Body request: com.group1.pandqapplication.admin.data.remote.dto.CreatePromotionRequest
+    ): com.group1.pandqapplication.admin.data.remote.dto.PromotionDto
+
+    @PUT("api/v1/promotions/{id}")
+    suspend fun updatePromotion(
+        @Path("id") id: String,
+        @Body request: com.group1.pandqapplication.admin.data.remote.dto.UpdatePromotionRequest
+    ): com.group1.pandqapplication.admin.data.remote.dto.PromotionDto
+
+    @DELETE("api/v1/promotions/{id}")
+    suspend fun deletePromotion(@Path("id") id: String)
+
+    @POST("api/v1/promotions/validate")
+    suspend fun validatePromotion(
+        @Body request: com.group1.pandqapplication.admin.data.remote.dto.ValidatePromotionRequest
+    ): com.group1.pandqapplication.admin.data.remote.dto.ValidatePromotionResponse
 }

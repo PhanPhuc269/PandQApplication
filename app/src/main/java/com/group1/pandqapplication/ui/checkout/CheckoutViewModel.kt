@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.shared.data.remote.AppApiService
 import com.group1.pandqapplication.shared.data.remote.dto.PaymentDetailsDto
 import com.group1.pandqapplication.shared.data.remote.dto.SepayCreateQRRequest
+import com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionRequest
 import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayCreateOrderRequest
+import java.math.BigDecimal
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +31,13 @@ data class CheckoutUiState(
     val sepayContent: String? = null,
     // Payment details from API
     val paymentDetails: PaymentDetailsDto? = null,
-    val isLoadingPaymentDetails: Boolean = false
+    val isLoadingPaymentDetails: Boolean = false,
+    // Promotion state
+    val promoCode: String = "",
+    val isValidatingPromo: Boolean = false,
+    val promotionValid: Boolean? = null,
+    val promotionMessage: String? = null,
+    val discountAmount: BigDecimal = BigDecimal.ZERO
 )
 
 sealed class PaymentResult {
@@ -312,6 +320,89 @@ class CheckoutViewModel @Inject constructor(
                     it.copy(paymentError = "Lỗi kiểm tra: ${e.message}") 
                 }
             }
+        }
+    }
+
+    // ==================== Promotion Validation ====================
+
+    /**
+     * Cập nhật mã khuyến mãi từ input field
+     */
+    fun updatePromoCode(code: String) {
+        _uiState.update { it.copy(promoCode = code.uppercase()) }
+    }
+
+    /**
+     * Validate mã giảm giá với backend
+     */
+    fun validatePromoCode() {
+        val promoCode = _uiState.value.promoCode
+        if (promoCode.isBlank()) {
+            _uiState.update { 
+                it.copy(
+                    promotionValid = false,
+                    promotionMessage = "Vui lòng nhập mã giảm giá"
+                )
+            }
+            return
+        }
+
+        val orderTotal = _uiState.value.paymentDetails?.finalAmount?.let { BigDecimal(it) }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isValidatingPromo = true, promotionMessage = null) }
+
+            try {
+                val request = ValidatePromotionRequest(
+                    promoCode = promoCode,
+                    orderTotal = orderTotal
+                )
+
+                val response = apiService.validatePromotion(request)
+
+                if (response.valid) {
+                    _uiState.update {
+                        it.copy(
+                            isValidatingPromo = false,
+                            promotionValid = true,
+                            promotionMessage = response.message ?: "Áp dụng mã thành công!",
+                            discountAmount = response.discountAmount ?: BigDecimal.ZERO
+                        )
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isValidatingPromo = false,
+                            promotionValid = false,
+                            promotionMessage = response.message ?: "Mã không hợp lệ",
+                            discountAmount = BigDecimal.ZERO
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isValidatingPromo = false,
+                        promotionValid = false,
+                        promotionMessage = "Lỗi kiểm tra mã: ${e.message}",
+                        discountAmount = BigDecimal.ZERO
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Xóa mã khuyến mãi
+     */
+    fun clearPromoCode() {
+        _uiState.update {
+            it.copy(
+                promoCode = "",
+                promotionValid = null,
+                promotionMessage = null,
+                discountAmount = BigDecimal.ZERO
+            )
         }
     }
 }

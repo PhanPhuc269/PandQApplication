@@ -46,6 +46,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.group1.pandqapplication.admin.data.remote.dto.DiscountType
 import com.group1.pandqapplication.shared.ui.theme.PromotionBackgroundDark
 import com.group1.pandqapplication.shared.ui.theme.PromotionBackgroundLight
 import com.group1.pandqapplication.shared.ui.theme.PromotionBorderDark
@@ -60,8 +67,11 @@ import com.group1.pandqapplication.shared.ui.theme.PromotionTextSecondaryLight
 
 @Composable
 fun CreatePromotionScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    viewModel: PromotionViewModel = hiltViewModel()
 ) {
+    val createState by viewModel.createState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     val isDarkTheme = false
 
     val backgroundColor = if (isDarkTheme) PromotionBackgroundDark else PromotionBackgroundLight
@@ -70,8 +80,26 @@ fun CreatePromotionScreen(
     val textSecondary = if (isDarkTheme) PromotionTextSecondaryDark else PromotionTextSecondaryLight
     val borderColor = if (isDarkTheme) PromotionBorderDark else PromotionBorderLight
 
+    // Handle success - navigate back
+    LaunchedEffect(createState.isSuccess) {
+        if (createState.isSuccess) {
+            snackbarHostState.showSnackbar("Tạo khuyến mãi thành công!")
+            viewModel.resetCreateState()
+            onBackClick()
+        }
+    }
+
+    // Show error
+    LaunchedEffect(createState.error) {
+        createState.error?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
+        }
+    }
+
     Scaffold(
         containerColor = backgroundColor,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Column {
                 Box(
@@ -116,22 +144,31 @@ fun CreatePromotionScreen(
                 )
                 // Just styling the button
                 Button(
-                    onClick = { /* Save */ },
+                    onClick = { viewModel.createPromotion() },
+                    enabled = !createState.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
-                        .padding(top = 1.dp), // Space for divider line
+                        .padding(top = 1.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PromotionPrimary,
                         contentColor = Color.White
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = "Lưu khuyến mãi",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    if (createState.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Lưu khuyến mãi",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         }

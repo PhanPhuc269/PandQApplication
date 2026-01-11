@@ -9,10 +9,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material.icons.filled.MoreVert
@@ -31,13 +33,39 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.group1.pandqapplication.admin.data.remote.dto.PromotionDto
+import com.group1.pandqapplication.admin.data.remote.dto.DiscountType as DtoDiscountType
+import com.group1.pandqapplication.admin.data.remote.dto.PromotionStatus as DtoPromotionStatus
 import com.group1.pandqapplication.shared.ui.theme.PandQApplicationTheme
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
-fun AdminPromotionsScreen(onNavigateToCreatePromotion: () -> Unit = {}) {
-    val promotions = remember { dummyPromotions }
+fun AdminPromotionsScreen(
+    onNavigateToCreatePromotion: () -> Unit = {},
+    viewModel: PromotionViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Reactive filtered list - tự động cập nhật khi uiState thay đổi
+    val filteredPromotions by remember(uiState.promotions, uiState.searchQuery, uiState.selectedFilter) {
+        derivedStateOf { viewModel.getFilteredPromotions() }
+    }
+    
     var selectedFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Active", "Scheduled", "Expired")
+
+    // Map filter string to enum
+    LaunchedEffect(selectedFilter) {
+        val filter = when (selectedFilter) {
+            "Active" -> PromotionFilter.ACTIVE
+            "Scheduled" -> PromotionFilter.SCHEDULED
+            "Expired" -> PromotionFilter.EXPIRED
+            else -> PromotionFilter.ALL
+        }
+        viewModel.setFilter(filter)
+    }
 
     Scaffold(
         topBar = {
@@ -60,8 +88,8 @@ fun AdminPromotionsScreen(onNavigateToCreatePromotion: () -> Unit = {}) {
             ) {
                 // Search Bar
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = uiState.searchQuery,
+                    onValueChange = { viewModel.setSearchQuery(it) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
@@ -70,13 +98,28 @@ fun AdminPromotionsScreen(onNavigateToCreatePromotion: () -> Unit = {}) {
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = "Search", tint = Color.Gray)
                     },
+                    trailingIcon = {
+                        if (uiState.searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.setSearchQuery("") }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Clear",
+                                    tint = Color.Gray
+                                )
+                            }
+                        }
+                    },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    singleLine = true
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(
+                        onSearch = { /* Search is live, no action needed */ }
+                    )
                 )
 
                 // Chips
@@ -95,13 +138,33 @@ fun AdminPromotionsScreen(onNavigateToCreatePromotion: () -> Unit = {}) {
                 }
             }
 
+            // Loading indicator
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFFec3713))
+                }
+            }
+
+            // Error message
+            uiState.error?.let { error ->
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
             // Promotions List
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(promotions) { promotion ->
+                items(filteredPromotions) { promotionDto ->
+                    val promotion = promotionDto.toUiModel()
                     PromotionCard(promotion)
                 }
             }
@@ -109,12 +172,83 @@ fun AdminPromotionsScreen(onNavigateToCreatePromotion: () -> Unit = {}) {
     }
 }
 
+/**
+ * Convert PromotionDto từ API sang UI model
+ */
+private fun PromotionDto.toUiModel(): Promotion {
+    val uiStatus = when {
+        status == DtoPromotionStatus.INACTIVE -> PromotionStatus.EXPIRED
+        startDate != null && isDateInFuture(startDate) -> PromotionStatus.SCHEDULED
+        status == DtoPromotionStatus.ACTIVE -> PromotionStatus.ACTIVE
+        else -> PromotionStatus.DRAFT
+    }
+
+    val discountText = when (type) {
+        DtoDiscountType.PERCENTAGE -> "${value?.toInt() ?: 0}% OFF"
+        DtoDiscountType.FIXED_AMOUNT -> "${formatCurrency(value)} OFF"
+        DtoDiscountType.FREE_SHIPPING -> "Free Shipping"
+    }
+
+    val extraInfo = when (uiStatus) {
+        PromotionStatus.ACTIVE -> endDate?.let { "Ends ${formatDate(it)}" } ?: ""
+        PromotionStatus.SCHEDULED -> startDate?.let { "Starts ${formatDate(it)}" } ?: ""
+        else -> ""
+    }
+
+    val usageLabel = when (uiStatus) {
+        PromotionStatus.ACTIVE -> "Used:"
+        PromotionStatus.SCHEDULED -> "Limit:"
+        PromotionStatus.EXPIRED -> "Total Used:"
+        else -> ""
+    }
+
+    val usageValue = if (quantityLimit != null && quantityLimit > 0) {
+        "${usageCount ?: 0}/$quantityLimit"
+    } else {
+        "${usageCount ?: 0}"
+    }
+
+    return Promotion(
+        title = name,
+        description = description ?: "Created recently",
+        status = uiStatus,
+        discountText = discountText,
+        code = code,
+        extraInfo = extraInfo,
+        usageLabel = usageLabel,
+        usageValue = usageValue
+    )
+}
+
+private fun isDateInFuture(dateStr: String): Boolean {
+    return try {
+        val date = LocalDateTime.parse(dateStr)
+        date.isAfter(LocalDateTime.now())
+    } catch (e: Exception) {
+        false
+    }
+}
+
+private fun formatDate(dateStr: String): String {
+    return try {
+        val date = LocalDateTime.parse(dateStr)
+        date.format(DateTimeFormatter.ofPattern("MMM dd"))
+    } catch (e: Exception) {
+        dateStr
+    }
+}
+
+private fun formatCurrency(value: java.math.BigDecimal?): String {
+    return value?.let { "$${it.toInt()}" } ?: "$0"
+}
+
 @Composable
 fun PromotionTopBar(onAddClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -127,7 +261,7 @@ fun PromotionTopBar(onAddClick: () -> Unit) {
             onClick = onAddClick,
             modifier = Modifier
                 .size(40.dp)
-                .background(Color(0xFFec3713), CircleShape) // Primary color
+                .background(Color(0xFFec3713), CircleShape)
         ) {
             Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White)
         }

@@ -402,36 +402,100 @@ fun CheckoutScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                        TextField(
-                           value = "",
-                           onValueChange = {},
+                           value = uiState.promoCode,
+                           onValueChange = { viewModel.updatePromoCode(it) },
                            placeholder = { Text("Nhập mã giảm giá", color = Color.Gray) },
                            modifier = Modifier
                                .weight(1f)
-                               .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+                               .border(
+                                   width = 1.dp, 
+                                   color = when (uiState.promotionValid) {
+                                       true -> Color(0xFF22C55E) // Green for valid
+                                       false -> Color(0xFFEF4444) // Red for invalid
+                                       null -> borderColor
+                                   }, 
+                                   shape = RoundedCornerShape(12.dp)
+                               )
                                .clip(RoundedCornerShape(12.dp)),
                            colors = TextFieldDefaults.colors(
                                focusedContainerColor = surfaceColor,
                                unfocusedContainerColor = surfaceColor,
                                focusedIndicatorColor = Color.Transparent,
                                unfocusedIndicatorColor = Color.Transparent,
-                               disabledIndicatorColor = Color.Transparent // Hide underline
-                           )
+                               disabledIndicatorColor = Color.Transparent
+                           ),
+                           singleLine = true,
+                           enabled = !uiState.isValidatingPromo
                        )
                        
                        Spacer(modifier = Modifier.width(8.dp))
                        
                        Box(
                            modifier = Modifier
-                               .background(CheckoutPrimary.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
-                               .padding(horizontal = 20.dp, vertical = 16.dp)
+                               .clickable(enabled = !uiState.isValidatingPromo && uiState.promoCode.isNotBlank()) { 
+                                   viewModel.validatePromoCode() 
+                               }
+                               .background(
+                                   if (uiState.promoCode.isNotBlank()) CheckoutPrimary.copy(alpha = 0.2f) 
+                                   else Color.Gray.copy(alpha = 0.1f), 
+                                   RoundedCornerShape(12.dp)
+                               )
+                               .padding(horizontal = 20.dp, vertical = 16.dp),
+                           contentAlignment = Alignment.Center
                        ) {
-                           Text(
-                               text = "Áp dụng",
-                               fontSize = 14.sp,
-                               fontWeight = FontWeight.SemiBold,
-                               color = CheckoutPrimary
-                           )
+                           if (uiState.isValidatingPromo) {
+                               CircularProgressIndicator(
+                                   modifier = Modifier.size(20.dp),
+                                   color = CheckoutPrimary,
+                                   strokeWidth = 2.dp
+                               )
+                           } else {
+                               Text(
+                                   text = "Áp dụng",
+                                   fontSize = 14.sp,
+                                   fontWeight = FontWeight.SemiBold,
+                                   color = if (uiState.promoCode.isNotBlank()) CheckoutPrimary else Color.Gray
+                               )
+                           }
                        }
+                    }
+                    
+                    // Show validation result message
+                    uiState.promotionMessage?.let { message ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = message,
+                                fontSize = 13.sp,
+                                color = if (uiState.promotionValid == true) Color(0xFF22C55E) else Color(0xFFEF4444),
+                                fontWeight = FontWeight.Medium
+                            )
+                            
+                            // Show clear button if promo was applied successfully
+                            if (uiState.promotionValid == true) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Xóa",
+                                    fontSize = 13.sp,
+                                    color = Color.Gray,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.clickable { viewModel.clearPromoCode() }
+                                )
+                            }
+                        }
+                        
+                        // Show discount amount if valid
+                        if (uiState.promotionValid == true && uiState.discountAmount > java.math.BigDecimal.ZERO) {
+                            Text(
+                                text = "Bạn được giảm: ${String.format("%,.0f₫", uiState.discountAmount)}",
+                                fontSize = 14.sp,
+                                color = CheckoutPrimary,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
                     }
                 }
 
