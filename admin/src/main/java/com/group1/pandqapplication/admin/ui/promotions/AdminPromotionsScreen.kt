@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TimerOff
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,6 +45,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AdminPromotionsScreen(
     onNavigateToCreatePromotion: () -> Unit = {},
+    onBackClick: () -> Unit = {},
     viewModel: PromotionViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -69,7 +71,10 @@ fun AdminPromotionsScreen(
 
     Scaffold(
         topBar = {
-            PromotionTopBar(onAddClick = onNavigateToCreatePromotion)
+            PromotionTopBar(
+                onBackClick = onBackClick,
+                onAddClick = onNavigateToCreatePromotion
+            )
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
@@ -79,6 +84,41 @@ fun AdminPromotionsScreen(
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
         ) {
+            // Stats Cards Section
+            val activeCount = uiState.promotions.count { promotion ->
+                promotion.status == com.group1.pandqapplication.admin.data.remote.dto.PromotionStatus.ACTIVE
+            }
+            val usedTodayCount = uiState.promotions.sumOf { it.usageCount ?: 0 }
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Active promotions card
+                StatsCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.LocalActivity,
+                    iconBackgroundColor = Color(0xFF2196F3),
+                    title = "Đang chạy",
+                    value = activeCount.toString(),
+                    change = "+5% tuần này",
+                    changeColor = Color(0xFF4CAF50)
+                )
+                
+                // Used today card
+                StatsCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.CalendarMonth,
+                    iconBackgroundColor = Color(0xFFFF9800),
+                    title = "Đã dùng hôm nay",
+                    value = usedTodayCount.toString(),
+                    change = "+12% hôm qua",
+                    changeColor = Color(0xFF4CAF50)
+                )
+            }
+            
             // Search and Chips Section
             Column(
                 modifier = Modifier
@@ -243,23 +283,42 @@ private fun formatCurrency(value: java.math.BigDecimal?): String {
 }
 
 @Composable
-fun PromotionTopBar(onAddClick: () -> Unit) {
-    Row(
+fun PromotionTopBar(
+    onBackClick: () -> Unit,
+    onAddClick: () -> Unit
+) {
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
+        // Back button - left
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier.align(Alignment.CenterStart)
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBackIosNew,
+                contentDescription = "Back",
+                tint = Color(0xFFec3713),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        
+        // Title - center
         Text(
             text = "Promotions",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.align(Alignment.Center)
         )
+        
+        // Add button - right
         IconButton(
             onClick = onAddClick,
             modifier = Modifier
+                .align(Alignment.CenterEnd)
                 .size(40.dp)
                 .background(Color(0xFFec3713), CircleShape)
         ) {
@@ -450,6 +509,75 @@ fun PromotionCard(promotion: Promotion) {
                      color = Color.Gray
                  )
             }
+        }
+    }
+}
+
+@Composable
+fun StatsCard(
+    modifier: Modifier = Modifier,
+    icon: ImageVector,
+    iconBackgroundColor: Color,
+    title: String,
+    value: String,
+    change: String,
+    changeColor: Color
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Icon
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(iconBackgroundColor.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconBackgroundColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Title
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Value
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Change indicator
+            Text(
+                text = change,
+                style = MaterialTheme.typography.bodySmall,
+                color = changeColor
+            )
         }
     }
 }

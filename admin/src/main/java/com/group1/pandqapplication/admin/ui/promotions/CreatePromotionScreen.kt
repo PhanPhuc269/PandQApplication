@@ -14,11 +14,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowForwardIos
@@ -47,9 +50,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.group1.pandqapplication.admin.data.remote.dto.DiscountType
@@ -65,6 +74,7 @@ import com.group1.pandqapplication.shared.ui.theme.PromotionTextPrimaryLight
 import com.group1.pandqapplication.shared.ui.theme.PromotionTextSecondaryDark
 import com.group1.pandqapplication.shared.ui.theme.PromotionTextSecondaryLight
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreatePromotionScreen(
     onBackClick: () -> Unit = {},
@@ -105,6 +115,7 @@ fun CreatePromotionScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .statusBarsPadding()
                         .background(backgroundColor.copy(alpha = 0.8f))
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
@@ -186,24 +197,28 @@ fun CreatePromotionScreen(
             SectionTitle(text = "Thông tin chung", textColor = textPrimary)
             CardContainer(cardColor = cardColor, borderColor = borderColor) {
                 // Name
-                InputRow(
+                InputRowWithState(
                     label = "Tên khuyến mãi",
                     placeholder = "VD: Giảm giá Black Friday",
+                    value = createState.name,
+                    onValueChange = { viewModel.updateName(it) },
                     textPrimary = textPrimary,
                     textSecondary = textSecondary,
                     showDivider = true,
                     borderColor = borderColor
                 )
                 // Code
-                InputRow(
+                InputRowWithState(
                     label = "Mã khuyến mãi",
                     placeholder = "VD: BLACKFRIDAY2024",
+                    value = createState.code,
+                    onValueChange = { viewModel.updateCode(it) },
                     textPrimary = textPrimary,
                     textSecondary = textSecondary,
                     showDivider = true,
                     borderColor = borderColor
                 )
-                // Description needs to be TextArea
+                // Description
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -217,8 +232,8 @@ fun CreatePromotionScreen(
                         modifier = Modifier.padding(bottom = 6.dp)
                     )
                     BasicTextField(
-                        value = "",
-                        onValueChange = {},
+                        value = createState.description,
+                        onValueChange = { viewModel.updateDescription(it) },
                         textStyle = TextStyle(
                             fontSize = 16.sp,
                             color = textPrimary,
@@ -226,13 +241,11 @@ fun CreatePromotionScreen(
                         ),
                         modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp),
                         decorationBox = { innerTextField ->
-                            if (false) { // Placeholder logic simply
-                                Text("Nhập mô tả ngắn gọn", color = textSecondary)
-                            } else {
-                                Box {
-                                    if(true) Text("Nhập mô tả ngắn gọn", color = textSecondary) // Hack for empty check
-                                    innerTextField()
+                            Box {
+                                if (createState.description.isEmpty()) {
+                                    Text("Nhập mô tả ngắn gọn", color = textSecondary.copy(alpha = 0.5f))
                                 }
+                                innerTextField()
                             }
                         }
                     )
@@ -242,8 +255,12 @@ fun CreatePromotionScreen(
             // Type & Value
             SectionTitle(text = "Loại & Giá trị", textColor = textPrimary)
             CardContainer(cardColor = cardColor, borderColor = borderColor) {
-                // Segmented Control
-                var selectedTypeIndex by remember { mutableStateOf(0) }
+                // Segmented Control - connected to ViewModel
+                val selectedTypeIndex = when (createState.type) {
+                    DiscountType.PERCENTAGE -> 0
+                    DiscountType.FIXED_AMOUNT -> 1
+                    DiscountType.FREE_SHIPPING -> 2
+                }
                 val types = listOf("Phần trăm", "Số tiền cố định", "Miễn phí vận chuyển")
                 
                 Row(
@@ -261,12 +278,19 @@ fun CreatePromotionScreen(
                                 .height(36.dp)
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(if (selectedTypeIndex == index) PromotionPrimary else Color.Transparent)
-                                .clickable { selectedTypeIndex = index },
+                                .clickable { 
+                                    val type = when (index) {
+                                        0 -> DiscountType.PERCENTAGE
+                                        1 -> DiscountType.FIXED_AMOUNT
+                                        else -> DiscountType.FREE_SHIPPING
+                                    }
+                                    viewModel.updateType(type)
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = title,
-                                fontSize = 12.sp, // Adjusted to fit
+                                fontSize = 12.sp,
                                 fontWeight = if (selectedTypeIndex == index) FontWeight.SemiBold else FontWeight.Medium,
                                 color = if (selectedTypeIndex == index) Color.White else PromotionPrimary,
                                 textAlign = TextAlign.Center
@@ -277,7 +301,7 @@ fun CreatePromotionScreen(
                 
                 HorizontalDivider(color = borderColor)
                 
-                // Value Input
+                // Value Input - connected to ViewModel
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -286,22 +310,25 @@ fun CreatePromotionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Giá trị giảm",
+                        text = when (createState.type) {
+                            DiscountType.FREE_SHIPPING -> "Giảm phí vận chuyển"
+                            else -> "Giá trị giảm"
+                        },
                         fontSize = 16.sp,
                         color = textPrimary
                     )
                     
                     Row(
                         modifier = Modifier
-                            .width(100.dp)
+                            .width(120.dp)
                             .border(1.dp, borderColor, RoundedCornerShape(6.dp))
                             .background(backgroundColor, RoundedCornerShape(6.dp))
                             .padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         BasicTextField(
-                            value = "",
-                            onValueChange = {},
+                            value = createState.value,
+                            onValueChange = { viewModel.updateValue(it) },
                             textStyle = TextStyle(
                                 fontSize = 16.sp,
                                 color = textPrimary,
@@ -309,16 +336,29 @@ fun CreatePromotionScreen(
                             ),
                             modifier = Modifier.weight(1f),
                             singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             decorationBox = { innerTextField ->
                                 Box(contentAlignment = Alignment.CenterEnd) {
-                                    if(true) Text("20", color = textSecondary.copy(alpha = 0.5f))
+                                    if (createState.value.isEmpty()) {
+                                        Text(
+                                            when (createState.type) {
+                                                DiscountType.PERCENTAGE -> "20"
+                                                DiscountType.FREE_SHIPPING -> "100"
+                                                else -> "50000"
+                                            }, 
+                                            color = textSecondary.copy(alpha = 0.5f)
+                                        )
+                                    }
                                     innerTextField()
                                 }
                             }
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "%", // Dynamic based on type? Design shows % hardcoded in screenshot context
+                            text = when (createState.type) {
+                                DiscountType.FIXED_AMOUNT -> "đ"
+                                else -> "%" // PERCENTAGE and FREE_SHIPPING use %
+                            },
                             color = textSecondary
                         )
                     }
@@ -337,7 +377,7 @@ fun CreatePromotionScreen(
                      showDivider = true
                  )
                  
-                 // Min Order Value
+                 // Min Order Value - connected to ViewModel
                  Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -361,8 +401,8 @@ fun CreatePromotionScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         BasicTextField(
-                            value = "",
-                            onValueChange = {},
+                            value = createState.minOrderValue,
+                            onValueChange = { viewModel.updateMinOrderValue(it) },
                             textStyle = TextStyle(
                                 fontSize = 16.sp,
                                 color = textPrimary,
@@ -370,9 +410,12 @@ fun CreatePromotionScreen(
                             ),
                             modifier = Modifier.weight(1f),
                             singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             decorationBox = { innerTextField ->
                                 Box(contentAlignment = Alignment.CenterEnd) {
-                                    if(true) Text("500,000", color = textSecondary.copy(alpha = 0.5f))
+                                    if (createState.minOrderValue.isEmpty()) {
+                                        Text("100,000", color = textSecondary.copy(alpha = 0.5f))
+                                    }
                                     innerTextField()
                                 }
                             }
@@ -389,35 +432,265 @@ fun CreatePromotionScreen(
                      textPrimary = textPrimary,
                      textSecondary = textSecondary,
                      borderColor = borderColor,
-                     showDivider = false
+                     showDivider = true
                  )
+                 
+                 // Quantity Limit - Số lượng voucher
+                 var isUnlimited by remember { mutableStateOf(createState.quantityLimit.isEmpty()) }
+                 
+                 Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Số lượng voucher",
+                        fontSize = 16.sp,
+                        color = textPrimary
+                    )
+                    
+                    if (isUnlimited) {
+                        // Show "Không giới hạn" with click to change
+                        Row(
+                            modifier = Modifier
+                                .clickable { isUnlimited = false }
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Không giới hạn",
+                                fontSize = 16.sp,
+                                color = PromotionPrimary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Default.ArrowForwardIos,
+                                contentDescription = null,
+                                tint = textSecondary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    } else {
+                        // Show input field for quantity
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .width(100.dp)
+                                    .border(1.dp, borderColor, RoundedCornerShape(6.dp))
+                                    .background(backgroundColor, RoundedCornerShape(6.dp))
+                                    .padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                BasicTextField(
+                                    value = createState.quantityLimit,
+                                    onValueChange = { viewModel.updateQuantityLimit(it) },
+                                    textStyle = TextStyle(
+                                        fontSize = 16.sp,
+                                        color = textPrimary,
+                                        textAlign = TextAlign.End
+                                    ),
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    decorationBox = { innerTextField ->
+                                        Box(contentAlignment = Alignment.CenterEnd) {
+                                            if (createState.quantityLimit.isEmpty()) {
+                                                Text("100", color = textSecondary.copy(alpha = 0.5f))
+                                            }
+                                            innerTextField()
+                                        }
+                                    }
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.width(8.dp))
+                            
+                            // Button to switch to unlimited
+                            Text(
+                                text = "∞",
+                                fontSize = 20.sp,
+                                color = PromotionPrimary,
+                                modifier = Modifier
+                                    .clickable {
+                                        isUnlimited = true
+                                        viewModel.updateQuantityLimit("")
+                                    }
+                                    .padding(8.dp)
+                            )
+                        }
+                    }
+                }
             }
             
             // Effective Duration
             SectionTitle(text = "Thời gian hiệu lực", textColor = textPrimary)
             CardContainer(cardColor = cardColor, borderColor = borderColor) {
+                 // Date picker states
+                 var showStartDatePicker by remember { mutableStateOf(false) }
+                 var showEndDatePicker by remember { mutableStateOf(false) }
+                 
+                 val today = java.time.LocalDate.now()
+                 val defaultStartDate = java.time.LocalDateTime.now()
+                 val defaultEndDate = java.time.LocalDateTime.now().plusDays(30)
+                 
+                 // Start date - default to now
+                 val startDateDisplay = if (createState.startDate.isBlank()) {
+                     defaultStartDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm"))
+                 } else {
+                     try {
+                         java.time.LocalDateTime.parse(createState.startDate).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm"))
+                     } catch (e: Exception) { createState.startDate }
+                 }
+                 
                  Row(
                      modifier = Modifier
                         .fillMaxWidth()
+                        .clickable { showStartDatePicker = true }
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                  ) {
                      Text("Ngày bắt đầu", fontSize = 16.sp, color = textPrimary)
-                     Text("10/11/2024, 09:00", fontSize = 16.sp, color = textSecondary)
+                     Row(verticalAlignment = Alignment.CenterVertically) {
+                         Text(startDateDisplay, fontSize = 16.sp, color = PromotionPrimary)
+                         Spacer(modifier = Modifier.width(4.dp))
+                         Icon(
+                             imageVector = Icons.Default.ArrowForwardIos,
+                             contentDescription = null,
+                             tint = textSecondary,
+                             modifier = Modifier.size(14.dp)
+                         )
+                     }
                  }
                  HorizontalDivider(color = borderColor)
+                 
+                 // End date - default to 30 days from now
+                 val endDateDisplay = if (createState.endDate.isBlank()) {
+                     defaultEndDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm"))
+                 } else {
+                     try {
+                         java.time.LocalDateTime.parse(createState.endDate).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy, HH:mm"))
+                     } catch (e: Exception) { createState.endDate }
+                 }
+                 
                  Row(
                      modifier = Modifier
                         .fillMaxWidth()
+                        .clickable { showEndDatePicker = true }
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                  ) {
                      Text("Ngày kết thúc", fontSize = 16.sp, color = textPrimary)
-                     Text("15/11/2024, 23:59", fontSize = 16.sp, color = textSecondary)
+                     Row(verticalAlignment = Alignment.CenterVertically) {
+                         Text(endDateDisplay, fontSize = 16.sp, color = PromotionPrimary)
+                         Spacer(modifier = Modifier.width(4.dp))
+                         Icon(
+                             imageVector = Icons.Default.ArrowForwardIos,
+                             contentDescription = null,
+                             tint = textSecondary,
+                             modifier = Modifier.size(14.dp)
+                         )
+                     }
+                 }
+                 
+                 // Start Date Picker Dialog
+                 if (showStartDatePicker) {
+                     DatePickerDialog(
+                         onDismissRequest = { showStartDatePicker = false },
+                         confirmButton = {
+                             androidx.compose.material3.TextButton(
+                                 onClick = { showStartDatePicker = false }
+                             ) {
+                                 Text("Xác nhận", color = PromotionPrimary)
+                             }
+                         },
+                         dismissButton = {
+                             androidx.compose.material3.TextButton(
+                                 onClick = { showStartDatePicker = false }
+                             ) {
+                                 Text("Hủy", color = textSecondary)
+                             }
+                         }
+                     ) {
+                         val datePickerState = rememberDatePickerState(
+                             initialSelectedDateMillis = System.currentTimeMillis(),
+                             selectableDates = object : SelectableDates {
+                                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                     // Start date must be >= today
+                                     return utcTimeMillis >= today.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                                 }
+                             }
+                         )
+                         
+                         DatePicker(state = datePickerState)
+                         
+                         LaunchedEffect(datePickerState.selectedDateMillis) {
+                             datePickerState.selectedDateMillis?.let { millis ->
+                                 val selectedDate = java.time.Instant.ofEpochMilli(millis)
+                                     .atZone(java.time.ZoneId.systemDefault())
+                                     .toLocalDateTime()
+                                 viewModel.updateStartDate(selectedDate.toString())
+                             }
+                         }
+                     }
+                 }
+                 
+                 // End Date Picker Dialog
+                 if (showEndDatePicker) {
+                     val minEndDate = if (createState.startDate.isBlank()) {
+                         today
+                     } else {
+                         try {
+                             java.time.LocalDateTime.parse(createState.startDate).toLocalDate()
+                         } catch (e: Exception) { today }
+                     }
+                     
+                     DatePickerDialog(
+                         onDismissRequest = { showEndDatePicker = false },
+                         confirmButton = {
+                             androidx.compose.material3.TextButton(
+                                 onClick = { showEndDatePicker = false }
+                             ) {
+                                 Text("Xác nhận", color = PromotionPrimary)
+                             }
+                         },
+                         dismissButton = {
+                             androidx.compose.material3.TextButton(
+                                 onClick = { showEndDatePicker = false }
+                             ) {
+                                 Text("Hủy", color = textSecondary)
+                             }
+                         }
+                     ) {
+                         val endDatePickerState = rememberDatePickerState(
+                             initialSelectedDateMillis = System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000),
+                             selectableDates = object : SelectableDates {
+                                 override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                                     // End date must be >= start date (or today if no start date)
+                                     return utcTimeMillis >= minEndDate.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                                 }
+                             }
+                         )
+                         
+                         DatePicker(state = endDatePickerState)
+                         
+                         LaunchedEffect(endDatePickerState.selectedDateMillis) {
+                             endDatePickerState.selectedDateMillis?.let { millis ->
+                                 val selectedDate = java.time.Instant.ofEpochMilli(millis)
+                                     .atZone(java.time.ZoneId.systemDefault())
+                                     .toLocalDateTime()
+                                     .withHour(23).withMinute(59) // End of day
+                                 viewModel.updateEndDate(selectedDate.toString())
+                             }
+                         }
+                     }
                  }
             }
             
-            // Active Toggle
+            // Active Toggle - connected to ViewModel
             CardContainer(cardColor = cardColor, borderColor = borderColor) {
                 Row(
                    modifier = Modifier
@@ -428,8 +701,8 @@ fun CreatePromotionScreen(
                 ) {
                     Text("Kích hoạt ngay", fontSize = 16.sp, color = textPrimary)
                     Switch(
-                        checked = true, 
-                        onCheckedChange = {},
+                        checked = createState.isActive, 
+                        onCheckedChange = { viewModel.updateIsActive(it) },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
                             checkedTrackColor = PromotionPrimary,
@@ -550,6 +823,54 @@ fun NavRow(
             contentDescription = null,
             tint = textSecondary,
             modifier = Modifier.size(16.dp)
+        )
+    }
+    if (showDivider) {
+        HorizontalDivider(color = borderColor)
+    }
+}
+
+@Composable
+fun InputRowWithState(
+    label: String,
+    placeholder: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    textPrimary: Color,
+    textSecondary: Color,
+    showDivider: Boolean,
+    borderColor: Color
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = textSecondary,
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = TextStyle(
+                fontSize = 16.sp,
+                color = textPrimary,
+                fontWeight = FontWeight.Normal
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            decorationBox = { innerTextField ->
+                Box {
+                    if (value.isEmpty()) {
+                        Text(placeholder, color = textSecondary.copy(alpha = 0.5f))
+                    }
+                    innerTextField()
+                }
+            }
         )
     }
     if (showDivider) {

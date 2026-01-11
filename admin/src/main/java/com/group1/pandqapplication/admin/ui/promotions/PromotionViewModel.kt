@@ -237,8 +237,10 @@ class PromotionViewModel @Inject constructor(
             repository.createPromotion(request).collect { result ->
                 result.fold(
                     onSuccess = {
+                        // Refresh list first, wait a moment for it to complete
+                        loadPromotions()
+                        kotlinx.coroutines.delay(300) // Wait for list to refresh
                         _createState.update { it.copy(isLoading = false, isSuccess = true) }
-                        loadPromotions() // Refresh list
                     },
                     onFailure = { error ->
                         _createState.update { 
