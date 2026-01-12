@@ -192,7 +192,6 @@ class AdminActivity : FragmentActivity() {
                         // Bottom Bar removed
                     ) { innerPadding ->
                     NavHost(
-                        modifier = Modifier.padding(innerPadding),
                         navController = navController,
                         startDestination = AdminScreen.Login.route
                     ) {
