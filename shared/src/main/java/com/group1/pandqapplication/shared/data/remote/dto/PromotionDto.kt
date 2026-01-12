@@ -1,36 +1,43 @@
 package com.group1.pandqapplication.shared.data.remote.dto
 
+import com.google.gson.annotations.SerializedName
 import java.math.BigDecimal
 
 /**
- * DTOs cho Promotion API - dùng cho User app validate mã giảm giá
+ * Request để validate mã giảm giá
  */
-
-// Request validate mã giảm giá
 data class ValidatePromotionRequest(
     val promoCode: String,
-    val orderTotal: BigDecimal? = null,
+    val orderTotal: BigDecimal?,
     val productIds: List<String>? = null,
     val categoryIds: List<String>? = null
 )
 
-// Response validate
+/**
+ * Response từ validate promotion
+ */
 data class ValidatePromotionResponse(
     val valid: Boolean,
-    val message: String? = null,
-    val discountAmount: BigDecimal? = null,
-    val finalAmount: BigDecimal? = null,
-    val promotion: PromotionResponse? = null
+    val message: String?,
+    val discountAmount: BigDecimal?,
+    val finalAmount: BigDecimal?,
+    val promotion: PromotionDto?
 )
 
-// Promotion response (simplified for user app)
-data class PromotionResponse(
+/**
+ * DTO cho Promotion
+ */
+data class PromotionDto(
     val id: String,
     val code: String,
     val name: String,
-    val description: String? = null,
-    val type: String, // PERCENTAGE, FIXED_AMOUNT, FREE_SHIPPING
-    val value: BigDecimal? = null,
-    val minOrderValue: BigDecimal? = null,
-    val endDate: String? = null
+    val type: String,
+    val value: BigDecimal?,
+    val maxDiscountAmount: BigDecimal?,
+    val minOrderValue: BigDecimal?,
+    val startDate: String?,
+    val endDate: String?,
+    val quantityLimit: Int?,
+    val usageCount: Int?,
+    val status: String?
 )

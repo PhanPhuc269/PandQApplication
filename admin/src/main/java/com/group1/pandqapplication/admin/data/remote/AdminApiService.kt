@@ -107,33 +107,23 @@ interface AdminApiService {
     @GET("api/v1/customers/stats")
     suspend fun getCustomerStats(): com.group1.pandqapplication.admin.data.remote.dto.CustomerStatsDto
 
-    // ==================== Promotion Management ====================
+    // ==================== Shipping Management ====================
 
-    @GET("api/v1/promotions")
-    suspend fun getPromotions(): List<com.group1.pandqapplication.admin.data.remote.dto.PromotionDto>
+    @GET("api/v1/orders/status/{status}")
+    suspend fun getOrdersByStatus(@Path("status") status: String): List<com.group1.pandqapplication.admin.data.remote.dto.ShippingOrderDto>
 
-    @GET("api/v1/promotions/{id}")
-    suspend fun getPromotionById(@Path("id") id: String): com.group1.pandqapplication.admin.data.remote.dto.PromotionDto
+    @GET("api/v1/orders")
+    suspend fun getAllOrders(): List<com.group1.pandqapplication.admin.data.remote.dto.ShippingOrderDto>
 
-    @GET("api/v1/promotions/code/{code}")
-    suspend fun getPromotionByCode(@Path("code") code: String): com.group1.pandqapplication.admin.data.remote.dto.PromotionDto
-
-    @POST("api/v1/promotions")
-    suspend fun createPromotion(
-        @Body request: com.group1.pandqapplication.admin.data.remote.dto.CreatePromotionRequest
-    ): com.group1.pandqapplication.admin.data.remote.dto.PromotionDto
-
-    @PUT("api/v1/promotions/{id}")
-    suspend fun updatePromotion(
+    @PUT("api/v1/orders/{id}/assign-carrier")
+    suspend fun assignCarrier(
         @Path("id") id: String,
-        @Body request: com.group1.pandqapplication.admin.data.remote.dto.UpdatePromotionRequest
-    ): com.group1.pandqapplication.admin.data.remote.dto.PromotionDto
+        @Body request: com.group1.pandqapplication.admin.data.remote.dto.AssignCarrierRequest
+    ): com.group1.pandqapplication.admin.data.remote.dto.ShippingOrderDto
 
-    @DELETE("api/v1/promotions/{id}")
-    suspend fun deletePromotion(@Path("id") id: String)
-
-    @POST("api/v1/promotions/validate")
-    suspend fun validatePromotion(
-        @Body request: com.group1.pandqapplication.admin.data.remote.dto.ValidatePromotionRequest
-    ): com.group1.pandqapplication.admin.data.remote.dto.ValidatePromotionResponse
+    @PUT("api/v1/orders/{id}/shipping-status")
+    suspend fun updateShippingStatus(
+        @Path("id") id: String,
+        @Body request: com.group1.pandqapplication.admin.data.remote.dto.UpdateShippingStatusRequest
+    ): com.group1.pandqapplication.admin.data.remote.dto.ShippingOrderDto
 }

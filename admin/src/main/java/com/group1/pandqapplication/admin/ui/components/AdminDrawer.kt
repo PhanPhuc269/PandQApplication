@@ -171,6 +171,13 @@ fun AdminDrawerContent(
                 primaryColor = primaryColor
             )
             DrawerItem(
+                label = "Customer Chats",
+                icon = Icons.Default.Chat,
+                isSelected = currentRoute == AdminScreen.Chats.route,
+                onClick = { onNavigate(AdminScreen.Chats.route) },
+                primaryColor = primaryColor
+            )
+            DrawerItem(
                 label = "Shipping Management",
                 icon = Icons.Default.LocalShipping,
                 isSelected = currentRoute == AdminScreen.ShippingManagement.route,

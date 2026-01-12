@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.LocalOffer
@@ -23,6 +24,7 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object Orders : AdminScreen("orders", "Orders", Icons.Default.ShoppingCart)
     object Promotions : AdminScreen("promotions", "Promotions", Icons.Default.LocalOffer)
     object Analytics : AdminScreen("analytics", "Analytics", Icons.Default.BarChart)
+    object Chats : AdminScreen("chats", "Chats", Icons.Default.Chat)
     
     // Sub-screens (hidden from bottom bar usually, or just part of navigation graph)
     object CategoryManagement : AdminScreen("category_management", "Category", Icons.Default.Widgets)
@@ -33,6 +35,7 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object AddProduct : AdminScreen("add_product?productId={productId}", "Add Product", Icons.Default.AddBox)
 
     object OrderDetails : AdminScreen("order_details", "Order Details", Icons.Default.Receipt)
+    object ChatDetails : AdminScreen("chat_details/{chatId}", "Chat Details", Icons.Default.Chat)
     object CreatePromotion : AdminScreen("create_promotion", "Create Promotion", Icons.Default.Add)
     object Profile : AdminScreen("profile", "Profile", Icons.Default.ManageAccounts)
     object Settings : AdminScreen("settings", "Settings", Icons.Default.Inventory) // Icon placeholder

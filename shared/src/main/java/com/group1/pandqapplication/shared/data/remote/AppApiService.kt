@@ -167,6 +167,12 @@ interface AppApiService {
     @GET("api/v1/orders/{id}")
     suspend fun getOrderById(@Path("id") orderId: String): OrderDto
 
+    // Promotion validation
+    @POST("api/v1/promotions/validate")
+    suspend fun validatePromotion(
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionRequest
+    ): com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionResponse
+
     // Admin Auth endpoints
     @GET("api/v1/auth/verify-admin")
     suspend fun verifyAdmin(): VerifyAdminResponse

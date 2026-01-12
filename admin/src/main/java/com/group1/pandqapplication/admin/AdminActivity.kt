@@ -192,6 +192,7 @@ class AdminActivity : FragmentActivity() {
                         // Bottom Bar removed
                     ) { innerPadding ->
                     NavHost(
+                        modifier = Modifier.padding(innerPadding),
                         navController = navController,
                         startDestination = AdminScreen.Login.route
                     ) {
@@ -442,6 +443,25 @@ class AdminActivity : FragmentActivity() {
                         }
                         composable(AdminScreen.NotificationList.route) {
                             com.group1.pandqapplication.admin.ui.notifications.AdminNotificationScreen()
+                        }
+                        
+                        // Chat routes
+                        composable(AdminScreen.Chats.route) {
+                            com.group1.pandqapplication.admin.ui.chat.AdminChatsListScreen(
+                                onChatSelected = { chatId ->
+                                    navController.navigate("chat_details/$chatId")
+                                }
+                            )
+                        }
+                        composable(
+                            route = AdminScreen.ChatDetails.route,
+                            arguments = listOf(navArgument("chatId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
+                            com.group1.pandqapplication.admin.ui.chat.AdminChatScreen(
+                                chatId = chatId,
+                                onBackClick = { navController.popBackStack() }
+                            )
                         }
 
                     }

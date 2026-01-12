@@ -7,13 +7,13 @@ import com.group1.pandqapplication.shared.data.remote.dto.PaymentDetailsDto
 import com.group1.pandqapplication.shared.data.remote.dto.SepayCreateQRRequest
 import com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionRequest
 import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayCreateOrderRequest
-import java.math.BigDecimal
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 data class CheckoutUiState(
@@ -32,7 +32,7 @@ data class CheckoutUiState(
     // Payment details from API
     val paymentDetails: PaymentDetailsDto? = null,
     val isLoadingPaymentDetails: Boolean = false,
-    // Promotion state
+    // Promo code state
     val promoCode: String = "",
     val isValidatingPromo: Boolean = false,
     val promotionValid: Boolean? = null,
@@ -323,18 +323,18 @@ class CheckoutViewModel @Inject constructor(
         }
     }
 
-    // ==================== Promotion Validation ====================
+    // ==================== Promo Code ====================
 
-    /**
-     * Cập nhật mã khuyến mãi từ input field
-     */
     fun updatePromoCode(code: String) {
-        _uiState.update { it.copy(promoCode = code.uppercase()) }
+        _uiState.update { 
+            it.copy(
+                promoCode = code,
+                promotionValid = null,
+                promotionMessage = null
+            )
+        }
     }
 
-    /**
-     * Validate mã giảm giá với backend
-     */
     fun validatePromoCode() {
         val promoCode = _uiState.value.promoCode
         if (promoCode.isBlank()) {
@@ -392,9 +392,6 @@ class CheckoutViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Xóa mã khuyến mãi
-     */
     fun clearPromoCode() {
         _uiState.update {
             it.copy(
