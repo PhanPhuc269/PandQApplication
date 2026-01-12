@@ -111,6 +111,25 @@ fun CheckoutScreen(
     val borderColor = if (isDarkTheme) CheckoutBorderDark else CheckoutBorderLight
     val dotsInactive = if (isDarkTheme) Color(0xFF673B32) else Color(0xFFD6D3D1)
     
+    // Show Voucher Selection Screen when showVoucherSelection = true
+    if (uiState.showVoucherSelection) {
+        VoucherSelectionScreen(
+            vouchers = uiState.availableVouchers,
+            isLoading = uiState.isLoadingVouchers,
+            selectedShippingVoucher = uiState.selectedShippingVoucher,
+            selectedDiscountVoucher = uiState.selectedDiscountVoucher,
+            promoCode = uiState.promoCode,
+            isValidating = uiState.isValidatingPromo,
+            onVoucherToggle = { viewModel.toggleVoucherInSelection(it) },
+            onPromoCodeChange = { viewModel.updatePromoCode(it) },
+            onApplyPromoCode = { viewModel.validatePromoCode() },
+            isVoucherEligible = { viewModel.isVoucherEligible(it) },
+            onConfirm = { viewModel.confirmVoucherSelection() },
+            onBack = { viewModel.toggleVoucherSelection(false) }
+        )
+        return
+    }
+    
     // Show SePay QR Dialog when QR URL is available
     if (uiState.sepayQrUrl != null) {
         SepayQRDialog(
@@ -249,8 +268,13 @@ fun CheckoutScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
+                        // Calculate adjusted amount with promo discount
+                        val originalAmount = uiState.paymentDetails?.finalAmount ?: 0L
+                        val promoDiscount = if (uiState.promotionValid == true) uiState.discountAmount.toLong() else 0L
+                        val adjustedAmount = (originalAmount - promoDiscount).coerceAtLeast(0L)
+                        
                         val amount = if (uiState.paymentDetails != null) {
-                            formatPrice(uiState.paymentDetails!!.finalAmount)
+                            formatPrice(adjustedAmount)
                         } else {
                             "..."
                         }
@@ -390,13 +414,29 @@ fun CheckoutScreen(
 
                 // Discount Code Section
                 Column {
-                    Text(
-                        text = "Mã giảm giá",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Mã giảm giá",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textPrimary
+                        )
+                        Text(
+                            text = "Xem tất cả >",
+                            fontSize = 14.sp,
+                            color = CheckoutPrimary,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.clickable { 
+                                viewModel.toggleVoucherSelection(true)
+                            }
+                        )
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
@@ -499,100 +539,6 @@ fun CheckoutScreen(
                     }
                 }
 
-                // Promo Code Section
-                Column(modifier = Modifier.padding(bottom = 16.dp)) {
-                    Text(
-                        text = "Mã giảm giá",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                    
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(surfaceColor, RoundedCornerShape(12.dp))
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextField(
-                            value = uiState.promoCode,
-                            onValueChange = { checkoutViewModel.updatePromoCode(it) },
-                            placeholder = { Text("Nhập mã giảm giá", color = textSecondary) },
-                            modifier = Modifier.weight(1f),
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = backgroundColor,
-                                unfocusedContainerColor = backgroundColor,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                focusedTextColor = textPrimary,
-                                unfocusedTextColor = textPrimary
-                            ),
-                            singleLine = true,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        
-                        Button(
-                            onClick = { checkoutViewModel.validatePromoCode() },
-                            enabled = uiState.promoCode.isNotBlank() && !uiState.isValidatingPromo,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = CheckoutPrimary,
-                                contentColor = Color.White,
-                                disabledContainerColor = CheckoutPrimary.copy(alpha = 0.4f)
-                            ),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            if (uiState.isValidatingPromo) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text("Áp dụng", fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                    
-                    // Promo validation message
-                    if (uiState.promotionMessage != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = uiState.promotionMessage!!,
-                            fontSize = 14.sp,
-                            color = if (uiState.promotionValid == true) CheckoutPrimary else Color.Red,
-                            modifier = Modifier.padding(horizontal = 4.dp)
-                        )
-                    }
-                    
-                    // Show discount amount if applied
-                    if (uiState.promotionValid == true && uiState.discountAmount > java.math.BigDecimal.ZERO) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(CheckoutPrimary.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Giảm giá áp dụng:",
-                                fontSize = 14.sp,
-                                color = textPrimary
-                            )
-                            Text(
-                                text = "-${formatPrice(uiState.discountAmount.toInt())}",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = CheckoutPrimary
-                            )
-                        }
-                    }
-                }
-
                 // Order Summary Section
                 Column(modifier = Modifier.padding(bottom = 100.dp)) {
                     Text(
@@ -603,6 +549,15 @@ fun CheckoutScreen(
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                     
+                    // Calculate total discount (from backend + from promo code)
+                    val backendDiscount = uiState.paymentDetails?.discountAmount ?: 0L
+                    val promoDiscount = if (uiState.promotionValid == true) uiState.discountAmount.toLong() else 0L
+                    val totalDiscount = backendDiscount + promoDiscount
+                    
+                    // Calculate adjusted final amount
+                    val originalFinal = uiState.paymentDetails?.finalAmount ?: 0L
+                    val adjustedFinal = (originalFinal - promoDiscount).coerceAtLeast(0L)
+                    
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -612,8 +567,10 @@ fun CheckoutScreen(
                     ) {
                         SummaryRow("Tạm tính", formatPrice(uiState.paymentDetails?.subtotal ?: 0), textSecondary, textPrimary)
                         SummaryRow("Phí vận chuyển", formatPrice(uiState.paymentDetails?.shippingFee ?: 0), textSecondary, textPrimary)
-                        if ((uiState.paymentDetails?.discountAmount ?: 0) > 0) {
-                            SummaryRow("Giảm giá", "-${formatPrice(uiState.paymentDetails?.discountAmount ?: 0)}", textSecondary, CheckoutPrimary)
+                        
+                        // Show discount if any (backend discount + promo discount)
+                        if (totalDiscount > 0) {
+                            SummaryRow("Giảm giá", "-${formatPrice(totalDiscount)}", textSecondary, CheckoutPrimary)
                         }
                         
                         HorizontalDivider(
@@ -633,7 +590,7 @@ fun CheckoutScreen(
                                 color = textPrimary
                             )
                             Text(
-                                text = formatPrice(uiState.paymentDetails?.finalAmount ?: 0),
+                                text = formatPrice(adjustedFinal),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = textPrimary

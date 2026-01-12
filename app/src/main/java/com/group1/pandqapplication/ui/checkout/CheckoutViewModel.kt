@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.shared.data.remote.AppApiService
 import com.group1.pandqapplication.shared.data.remote.dto.PaymentDetailsDto
+import com.group1.pandqapplication.shared.data.remote.dto.PromotionDto
 import com.group1.pandqapplication.shared.data.remote.dto.SepayCreateQRRequest
 import com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionRequest
 import com.group1.pandqapplication.shared.data.remote.dto.ZaloPayCreateOrderRequest
@@ -37,7 +38,15 @@ data class CheckoutUiState(
     val isValidatingPromo: Boolean = false,
     val promotionValid: Boolean? = null,
     val promotionMessage: String? = null,
-    val discountAmount: BigDecimal = BigDecimal.ZERO
+    val discountAmount: BigDecimal = BigDecimal.ZERO,
+    // Voucher selection state - support 2 vouchers (shipping + discount)
+    val availableVouchers: List<PromotionDto> = emptyList(),
+    val isLoadingVouchers: Boolean = false,
+    val selectedShippingVoucher: PromotionDto? = null,
+    val selectedDiscountVoucher: PromotionDto? = null,
+    val shippingDiscount: BigDecimal = BigDecimal.ZERO,
+    val productDiscount: BigDecimal = BigDecimal.ZERO,
+    val showVoucherSelection: Boolean = false
 )
 
 sealed class PaymentResult {
@@ -398,8 +407,155 @@ class CheckoutViewModel @Inject constructor(
                 promoCode = "",
                 promotionValid = null,
                 promotionMessage = null,
-                discountAmount = BigDecimal.ZERO
+                discountAmount = BigDecimal.ZERO,
+                shippingDiscount = BigDecimal.ZERO,
+                productDiscount = BigDecimal.ZERO,
+                selectedShippingVoucher = null,
+                selectedDiscountVoucher = null
             )
         }
+    }
+
+    // ==================== Voucher Selection ====================
+
+    fun loadAllVouchers() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingVouchers = true) }
+            
+            try {
+                val vouchers = apiService.getAllPromotions()
+                _uiState.update {
+                    it.copy(
+                        availableVouchers = vouchers,
+                        isLoadingVouchers = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoadingVouchers = false,
+                        paymentError = "Không thể tải danh sách voucher: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    fun toggleVoucherSelection(show: Boolean) {
+        _uiState.update { it.copy(showVoucherSelection = show) }
+        if (show && _uiState.value.availableVouchers.isEmpty()) {
+            loadAllVouchers()
+        }
+    }
+
+    /**
+     * Toggle chọn/bỏ chọn voucher theo loại (shipping hoặc discount)
+     * Cho phép chọn 1 voucher mỗi loại
+     */
+    fun toggleVoucherInSelection(voucher: PromotionDto) {
+        val isShipping = voucher.type?.uppercase() == "FREE_SHIPPING"
+        
+        _uiState.update { currentState ->
+            if (isShipping) {
+                // Toggle shipping voucher
+                val newSelected = if (currentState.selectedShippingVoucher?.id == voucher.id) null else voucher
+                currentState.copy(selectedShippingVoucher = newSelected)
+            } else {
+                // Toggle discount voucher
+                val newSelected = if (currentState.selectedDiscountVoucher?.id == voucher.id) null else voucher
+                currentState.copy(selectedDiscountVoucher = newSelected)
+            }
+        }
+    }
+
+    /**
+     * Xác nhận chọn voucher và áp dụng discount
+     */
+    fun confirmVoucherSelection() {
+        val shippingVoucher = _uiState.value.selectedShippingVoucher
+        val discountVoucher = _uiState.value.selectedDiscountVoucher
+        val orderTotal = _uiState.value.paymentDetails?.finalAmount?.let { BigDecimal(it) } ?: BigDecimal.ZERO
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isValidatingPromo = true) }
+
+            var shippingDiscount = BigDecimal.ZERO
+            var productDiscount = BigDecimal.ZERO
+            var appliedCode = ""
+            var isValid = false
+            var message = ""
+
+            try {
+                // Validate shipping voucher
+                if (shippingVoucher != null) {
+                    val request = ValidatePromotionRequest(
+                        promoCode = shippingVoucher.code,
+                        orderTotal = orderTotal
+                    )
+                    val response = apiService.validatePromotion(request)
+                    if (response.valid) {
+                        shippingDiscount = response.discountAmount ?: BigDecimal.ZERO
+                        appliedCode = shippingVoucher.code
+                        isValid = true
+                    }
+                }
+
+                // Validate discount voucher
+                if (discountVoucher != null) {
+                    val request = ValidatePromotionRequest(
+                        promoCode = discountVoucher.code,
+                        orderTotal = orderTotal
+                    )
+                    val response = apiService.validatePromotion(request)
+                    if (response.valid) {
+                        productDiscount = response.discountAmount ?: BigDecimal.ZERO
+                        if (appliedCode.isNotEmpty()) appliedCode += ", "
+                        appliedCode += discountVoucher.code
+                        isValid = true
+                    }
+                }
+
+                val totalDiscount = shippingDiscount.add(productDiscount)
+                
+                if (isValid) {
+                    message = "Áp dụng $appliedCode thành công!"
+                } else if (shippingVoucher == null && discountVoucher == null) {
+                    message = ""
+                } else {
+                    message = "Voucher không hợp lệ"
+                }
+
+                _uiState.update {
+                    it.copy(
+                        isValidatingPromo = false,
+                        promoCode = appliedCode,
+                        promotionValid = if (appliedCode.isEmpty()) null else isValid,
+                        promotionMessage = if (message.isEmpty()) null else message,
+                        shippingDiscount = shippingDiscount,
+                        productDiscount = productDiscount,
+                        discountAmount = totalDiscount,
+                        showVoucherSelection = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isValidatingPromo = false,
+                        paymentError = "Lỗi áp dụng voucher: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    fun isVoucherEligible(voucher: PromotionDto): Boolean {
+        // Check if voucher is ACTIVE
+        return voucher.status?.uppercase() == "ACTIVE"
+    }
+
+    fun isVoucherSelected(voucher: PromotionDto): Boolean {
+        val state = _uiState.value
+        return state.selectedShippingVoucher?.id == voucher.id || 
+               state.selectedDiscountVoucher?.id == voucher.id
     }
 }

@@ -173,18 +173,16 @@ interface AppApiService {
         @Body request: com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionRequest
     ): com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionResponse
 
+    // Get all promotions for voucher selection
+    @GET("api/v1/promotions")
+    suspend fun getAllPromotions(): List<com.group1.pandqapplication.shared.data.remote.dto.PromotionDto>
+
     // Admin Auth endpoints
     @GET("api/v1/auth/verify-admin")
     suspend fun verifyAdmin(): VerifyAdminResponse
 
     @GET("api/v1/auth/me")
     suspend fun getCurrentAuthUser(): AdminUserInfo
-
-    // Promotion Validation - for checkout
-    @POST("api/v1/promotions/validate")
-    suspend fun validatePromotion(
-        @Body request: com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionRequest
-    ): com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionResponse
 }
 
 /**

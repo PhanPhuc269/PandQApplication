@@ -120,13 +120,18 @@ class PromotionViewModel @Inject constructor(
         filtered = when (state.selectedFilter) {
             PromotionFilter.ALL -> filtered
             PromotionFilter.ACTIVE -> filtered.filter { 
-                it.status == com.group1.pandqapplication.admin.data.remote.dto.PromotionStatus.ACTIVE 
+                // Status phải là ACTIVE và không phải scheduled (startDate không trong tương lai)
+                it.status == com.group1.pandqapplication.admin.data.remote.dto.PromotionStatus.ACTIVE &&
+                    (it.startDate == null || !isScheduled(it.startDate))
             }
             PromotionFilter.SCHEDULED -> filtered.filter { 
+                // Scheduled = startDate trong tương lai (bất kể status)
                 it.startDate != null && isScheduled(it.startDate) 
             }
             PromotionFilter.EXPIRED -> filtered.filter { 
-                it.endDate != null && isExpired(it.endDate) 
+                // Expired = endDate đã qua hoặc status INACTIVE
+                (it.endDate != null && isExpired(it.endDate)) ||
+                    it.status == com.group1.pandqapplication.admin.data.remote.dto.PromotionStatus.INACTIVE
             }
         }
 
