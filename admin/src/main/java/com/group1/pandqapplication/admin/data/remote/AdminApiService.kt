@@ -106,4 +106,24 @@ interface AdminApiService {
 
     @GET("api/v1/customers/stats")
     suspend fun getCustomerStats(): com.group1.pandqapplication.admin.data.remote.dto.CustomerStatsDto
+
+    // ==================== Shipping Management ====================
+
+    @GET("api/v1/orders/status/{status}")
+    suspend fun getOrdersByStatus(@Path("status") status: String): List<com.group1.pandqapplication.admin.data.remote.dto.ShippingOrderDto>
+
+    @GET("api/v1/orders")
+    suspend fun getAllOrders(): List<com.group1.pandqapplication.admin.data.remote.dto.ShippingOrderDto>
+
+    @PUT("api/v1/orders/{id}/assign-carrier")
+    suspend fun assignCarrier(
+        @Path("id") id: String,
+        @Body request: com.group1.pandqapplication.admin.data.remote.dto.AssignCarrierRequest
+    ): com.group1.pandqapplication.admin.data.remote.dto.ShippingOrderDto
+
+    @PUT("api/v1/orders/{id}/shipping-status")
+    suspend fun updateShippingStatus(
+        @Path("id") id: String,
+        @Body request: com.group1.pandqapplication.admin.data.remote.dto.UpdateShippingStatusRequest
+    ): com.group1.pandqapplication.admin.data.remote.dto.ShippingOrderDto
 }

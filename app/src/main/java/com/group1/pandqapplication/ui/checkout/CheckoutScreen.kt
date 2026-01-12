@@ -435,6 +435,100 @@ fun CheckoutScreen(
                     }
                 }
 
+                // Promo Code Section
+                Column(modifier = Modifier.padding(bottom = 16.dp)) {
+                    Text(
+                        text = "Mã giảm giá",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = textPrimary,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(surfaceColor, RoundedCornerShape(12.dp))
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextField(
+                            value = uiState.promoCode,
+                            onValueChange = { checkoutViewModel.updatePromoCode(it) },
+                            placeholder = { Text("Nhập mã giảm giá", color = textSecondary) },
+                            modifier = Modifier.weight(1f),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = backgroundColor,
+                                unfocusedContainerColor = backgroundColor,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                focusedTextColor = textPrimary,
+                                unfocusedTextColor = textPrimary
+                            ),
+                            singleLine = true,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        
+                        Button(
+                            onClick = { checkoutViewModel.validatePromoCode() },
+                            enabled = uiState.promoCode.isNotBlank() && !uiState.isValidatingPromo,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = CheckoutPrimary,
+                                contentColor = Color.White,
+                                disabledContainerColor = CheckoutPrimary.copy(alpha = 0.4f)
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            if (uiState.isValidatingPromo) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Áp dụng", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                    
+                    // Promo validation message
+                    if (uiState.promotionMessage != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = uiState.promotionMessage!!,
+                            fontSize = 14.sp,
+                            color = if (uiState.promotionValid == true) CheckoutPrimary else Color.Red,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                    
+                    // Show discount amount if applied
+                    if (uiState.promotionValid == true && uiState.discountAmount > java.math.BigDecimal.ZERO) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(CheckoutPrimary.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Giảm giá áp dụng:",
+                                fontSize = 14.sp,
+                                color = textPrimary
+                            )
+                            Text(
+                                text = "-${formatPrice(uiState.discountAmount.toInt())}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = CheckoutPrimary
+                            )
+                        }
+                    }
+                }
+
                 // Order Summary Section
                 Column(modifier = Modifier.padding(bottom = 100.dp)) {
                     Text(
