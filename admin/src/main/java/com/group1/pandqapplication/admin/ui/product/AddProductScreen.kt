@@ -133,6 +133,7 @@ fun AddProductScreen(
             price = product.price.toString()
             // costPrice = product.costPrice?.toString() ?: "" 
             categoryId = product.categoryId ?: ""
+            stock = product.stockQuantity?.toString() ?: ""
             if (images.isEmpty()) {
                 images = product.images?.map { it.imageUrl } ?: emptyList()
             }
@@ -274,7 +275,8 @@ fun AddProductScreen(
                                       thumbnailUrl = images.firstOrNull() ?: "https://via.placeholder.com/150",
                                       status = "ACTIVE", 
                                       images = images,
-                                      specifications = specifications
+                                      specifications = specifications,
+                                      stock = stock
                                   )
                               } else {
                                   viewModel.createProduct(

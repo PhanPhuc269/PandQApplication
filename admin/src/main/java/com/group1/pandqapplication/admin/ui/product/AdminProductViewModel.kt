@@ -169,7 +169,8 @@ class AdminProductViewModel @Inject constructor(
         thumbnailUrl: String,
         status: String,
         images: List<String>,
-        specifications: List<ProductSpecificationDto>
+        specifications: List<ProductSpecificationDto>,
+        stock: String? = null
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, operationSuccess = false, operationError = null)
@@ -183,7 +184,8 @@ class AdminProductViewModel @Inject constructor(
                 thumbnailUrl = thumbnailUrl,
                 status = status,
                 images = images,
-                specifications = specifications
+                specifications = specifications,
+                stockQuantity = stock?.toIntOrNull()
             )
 
             repository.updateProduct(id, request)

@@ -214,7 +214,7 @@ class AdminActivity : FragmentActivity() {
                                 onNavigateToProfile = {
                                     navController.navigate(AdminScreen.Profile.route)
                                 },
-                                onNavigateToInventory = { navController.navigate("product_graph") },
+                                onNavigateToInventory = { navController.navigate("inventory_stats") },
                                 onNavigateToCategory = { navController.navigate(AdminScreen.CategoryManagement.route) },
                                 onNavigateToBranch = { navController.navigate(AdminScreen.BranchManagement.route) },
                                 onNavigateToSupplier = { navController.navigate(AdminScreen.SupplierManagement.route) },
@@ -291,6 +291,14 @@ class AdminActivity : FragmentActivity() {
                         }
                         composable(AdminScreen.BranchManagement.route) {
                             BranchManagementScreen(onBackClick = { navController.popBackStack() })
+                        }
+                        
+                        // Inventory Statistics Screen
+                        composable("inventory_stats") {
+                            InventoryScreen(
+                                onBackClick = { navController.popBackStack() },
+                                onNavigateToAddProduct = { navController.navigate("add_product") }
+                            )
                         }
 
                         // Product Management Graph (Shared ViewModel Scope)

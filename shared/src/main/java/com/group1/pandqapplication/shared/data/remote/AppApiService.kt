@@ -5,6 +5,7 @@ import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
 import com.group1.pandqapplication.shared.data.remote.dto.CreateReviewDto
 import com.group1.pandqapplication.shared.data.remote.dto.CreateAddressRequest
 import com.group1.pandqapplication.shared.data.remote.dto.InitConfigDto
+import com.group1.pandqapplication.shared.data.remote.dto.InventoryStatsDto
 import com.group1.pandqapplication.shared.data.remote.dto.LocationDto
 import com.group1.pandqapplication.shared.data.remote.dto.PaymentDetailsDto
 import com.group1.pandqapplication.shared.data.remote.dto.PaginationResponseDto
@@ -58,6 +59,8 @@ interface AppApiService {
     @DELETE("api/v1/products/{id}")
     suspend fun deleteProduct(@Path("id") id: String)
 
+    @GET("api/v1/inventory/stats")
+    suspend fun getInventoryStats(): InventoryStatsDto
 
     @GET("api/v1/reviews/product/{productId}")
     suspend fun getReviewsByProductId(
