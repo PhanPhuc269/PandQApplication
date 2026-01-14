@@ -235,12 +235,41 @@ class AdminActivity : FragmentActivity() {
                                 }
                             )
                         }
-                        composable(AdminScreen.Promotions.route) {
-                            AdminPromotionsScreen(
-                                onNavigateToCreatePromotion = {
-                                    navController.navigate(AdminScreen.CreatePromotion.route)
+                        
+                        // Promotion Management Graph (Shared ViewModel Scope)
+                        navigation(
+                            startDestination = AdminScreen.Promotions.route,
+                            route = "promotion_graph"
+                        ) {
+                            composable(AdminScreen.Promotions.route) { backStackEntry ->
+                                val parentEntry = remember(backStackEntry) {
+                                    navController.getBackStackEntry("promotion_graph")
                                 }
-                            )
+                                val viewModel: com.group1.pandqapplication.admin.ui.promotions.PromotionViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+                                
+                                AdminPromotionsScreen(
+                                    onNavigateToCreatePromotion = {
+                                        navController.navigate(AdminScreen.CreatePromotion.route)
+                                    },
+                                    onBackClick = {
+                                        navController.navigate(AdminScreen.Dashboard.route) {
+                                            popUpTo(AdminScreen.Dashboard.route) { inclusive = true }
+                                        }
+                                    },
+                                    viewModel = viewModel
+                                )
+                            }
+                            composable(AdminScreen.CreatePromotion.route) { backStackEntry ->
+                                val parentEntry = remember(backStackEntry) {
+                                    navController.getBackStackEntry("promotion_graph")
+                                }
+                                val viewModel: com.group1.pandqapplication.admin.ui.promotions.PromotionViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+                                
+                                CreatePromotionScreen(
+                                    onBackClick = { navController.popBackStack() },
+                                    viewModel = viewModel
+                                )
+                            }
                         }
                         composable(AdminScreen.Analytics.route) {
                             AdminAnalyticsScreen(
@@ -385,9 +414,6 @@ class AdminActivity : FragmentActivity() {
                         }
                         composable(AdminScreen.OrderDetails.route) {
                             AdminOrderDetailsScreen(onBackClick = { navController.popBackStack() })
-                        }
-                        composable(AdminScreen.CreatePromotion.route) {
-                            CreatePromotionScreen(onBackClick = { navController.popBackStack() })
                         }
                         composable(AdminScreen.Login.route) {
                             com.group1.pandqapplication.admin.ui.login.AdminLoginScreen(
