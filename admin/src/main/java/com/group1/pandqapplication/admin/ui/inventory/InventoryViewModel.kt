@@ -13,6 +13,23 @@ import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
 
+enum class InventoryFilter(val displayName: String) {
+    ALL("Tất cả"),
+    IN_STOCK("Còn hàng"),
+    LOW_STOCK("Sắp hết"),
+    OUT_OF_STOCK("Hết hàng"),
+    HAS_RESERVED("Đang giữ")
+}
+
+enum class InventorySortBy(val displayName: String) {
+    NAME_ASC("Tên A-Z"),
+    NAME_DESC("Tên Z-A"),
+    QUANTITY_ASC("SL tăng dần"),
+    QUANTITY_DESC("SL giảm dần"),
+    VALUE_ASC("Giá trị tăng"),
+    VALUE_DESC("Giá trị giảm")
+}
+
 data class InventoryUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -22,7 +39,10 @@ data class InventoryUiState(
     val lowStockItems: List<InventoryItemDto> = emptyList(),
     val allItems: List<InventoryItemDto> = emptyList(),
     val filteredItems: List<InventoryItemDto> = emptyList(),
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val selectedFilter: InventoryFilter = InventoryFilter.ALL,
+    val selectedSortBy: InventorySortBy = InventorySortBy.NAME_ASC,
+    val showFilterSheet: Boolean = false
 )
 
 @HiltViewModel
@@ -67,12 +87,34 @@ class InventoryViewModel @Inject constructor(
 
     fun onSearchQueryChanged(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
-        filterItems()
+        filterAndSortItems()
     }
 
-    private fun filterItems() {
+    fun onFilterChanged(filter: InventoryFilter) {
+        _uiState.value = _uiState.value.copy(selectedFilter = filter)
+        filterAndSortItems()
+    }
+
+    fun onSortByChanged(sortBy: InventorySortBy) {
+        _uiState.value = _uiState.value.copy(selectedSortBy = sortBy)
+        filterAndSortItems()
+    }
+
+    fun toggleFilterSheet() {
+        _uiState.value = _uiState.value.copy(showFilterSheet = !_uiState.value.showFilterSheet)
+    }
+
+    fun hideFilterSheet() {
+        _uiState.value = _uiState.value.copy(showFilterSheet = false)
+    }
+
+    private fun filterAndSortItems() {
         val query = _uiState.value.searchQuery.lowercase().trim()
-        val filtered = if (query.isEmpty()) {
+        val filter = _uiState.value.selectedFilter
+        val sortBy = _uiState.value.selectedSortBy
+
+        // Step 1: Search filter
+        var filtered = if (query.isEmpty()) {
             _uiState.value.allItems
         } else {
             _uiState.value.allItems.filter { item ->
@@ -81,7 +123,31 @@ class InventoryViewModel @Inject constructor(
                 (item.productSku?.lowercase()?.contains(query) == true)
             }
         }
+
+        // Step 2: Status filter
+        filtered = when (filter) {
+            InventoryFilter.ALL -> filtered
+            InventoryFilter.IN_STOCK -> filtered.filter { it.quantity > 10 }
+            InventoryFilter.LOW_STOCK -> filtered.filter { it.quantity in 1..10 }
+            InventoryFilter.OUT_OF_STOCK -> filtered.filter { it.quantity == 0 }
+            InventoryFilter.HAS_RESERVED -> filtered.filter { (it.reservedQuantity ?: 0) > 0 }
+        }
+
+        // Step 3: Sort
+        filtered = when (sortBy) {
+            InventorySortBy.NAME_ASC -> filtered.sortedBy { it.productName.lowercase() }
+            InventorySortBy.NAME_DESC -> filtered.sortedByDescending { it.productName.lowercase() }
+            InventorySortBy.QUANTITY_ASC -> filtered.sortedBy { it.quantity }
+            InventorySortBy.QUANTITY_DESC -> filtered.sortedByDescending { it.quantity }
+            InventorySortBy.VALUE_ASC -> filtered.sortedBy { (it.productPrice ?: 0.0) * it.quantity }
+            InventorySortBy.VALUE_DESC -> filtered.sortedByDescending { (it.productPrice ?: 0.0) * it.quantity }
+        }
+
         _uiState.value = _uiState.value.copy(filteredItems = filtered)
+    }
+
+    private fun filterItems() {
+        filterAndSortItems()
     }
 
     private fun formatCurrency(value: Double): String {

@@ -297,7 +297,10 @@ class AdminActivity : FragmentActivity() {
                         composable("inventory_stats") {
                             InventoryScreen(
                                 onBackClick = { navController.popBackStack() },
-                                onNavigateToAddProduct = { navController.navigate("add_product") }
+                                onNavigateToAddProduct = { navController.navigate("add_product") },
+                                onNavigateToEditProduct = { productId ->
+                                    navController.navigate("add_product?productId=$productId")
+                                }
                             )
                         }
 
