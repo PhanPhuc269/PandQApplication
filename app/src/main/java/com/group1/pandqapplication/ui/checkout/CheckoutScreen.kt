@@ -124,7 +124,7 @@ fun CheckoutScreen(
             onPromoCodeChange = { viewModel.updatePromoCode(it) },
             onApplyPromoCode = { viewModel.validatePromoCode() },
             isVoucherEligible = { viewModel.isVoucherEligible(it) },
-            onConfirm = { viewModel.confirmVoucherSelection() },
+            onConfirm = { viewModel.confirmVoucherSelection(orderId) },
             onBack = { viewModel.toggleVoucherSelection(false) }
         )
         return

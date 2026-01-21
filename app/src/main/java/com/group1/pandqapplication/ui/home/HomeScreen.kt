@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ElectricalServices
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -90,6 +91,7 @@ fun HomeScreen(
     onCategoryClick: (String) -> Unit = {},
     onCartClick: () -> Unit = {},
     onChatClick: () -> Unit = {},
+    onVoucherClick: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -331,6 +333,89 @@ fun HomeScreen(
                                                 onCategoryClick(category.id.toString())
                                             }
                                         )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(24.dp))
+                            }
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // Voucher Section
+                            if (uiState.promotions.isNotEmpty()) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Ưu đãi hôm nay",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF111827)
+                                    )
+                                    Text(
+                                        text = "Xem tất cả",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = primaryColor,
+                                        modifier = Modifier.clickable { onVoucherClick() }
+                                    )
+                                }
+                                
+                                // Horizontal list of vouchers from API
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    items(uiState.promotions) { promo ->
+                                        val isFreeShip = promo.type == "FREE_SHIPPING"
+                                        val bgColor = if (isFreeShip) Color(0xFF00BFA5) else primaryColor
+                                        
+                                        Box(
+                                            modifier = Modifier
+                                                .width(260.dp)
+                                                .height(80.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color.White)
+                                                .clickable { onVoucherClick() }
+                                                .padding(8.dp)
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                // Icon
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(64.dp)
+                                                        .background(bgColor, RoundedCornerShape(4.dp)),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    if (isFreeShip) {
+                                                        Icon(Icons.Filled.LocalShipping, contentDescription = null, tint = Color.White)
+                                                    } else {
+                                                        val displayValue = when (promo.type) {
+                                                            "PERCENTAGE" -> "${promo.value?.toInt() ?: 0}%"
+                                                            "FIXED_AMOUNT" -> "${(promo.value?.toInt() ?: 0) / 1000}k"
+                                                            else -> "GIẢM"
+                                                        }
+                                                        Text(displayValue, color = Color.White, fontWeight = FontWeight.Bold)
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Column {
+                                                    Text(
+                                                        text = promo.name,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 14.sp,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                    Text(
+                                                        text = promo.endDate?.take(10)?.let { "HSD: $it" } ?: "",
+                                                        fontSize = 12.sp,
+                                                        color = Color.Gray
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(24.dp))

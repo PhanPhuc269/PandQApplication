@@ -34,7 +34,8 @@ fun MainScreen(
     onNavigateToOrder: (String?) -> Unit = { orderId -> orderId?.let { onOrderClick(it) } }, // Navigate to order with orderId
     onNavigateToProduct: (String?) -> Unit = { id -> id?.let { onProductClick(it) } }, // Navigate to product with optional productId
     onNavigateToPromotion: (String?) -> Unit = { _ -> }, // Navigate to promotion
-    onChatClick: () -> Unit = {} // Added chat click handler
+    onChatClick: () -> Unit = {},
+    onVoucherClick: () -> Unit = {} // Added voucher click handler
 ) {
     val navController = rememberNavController()
 
@@ -55,7 +56,8 @@ fun MainScreen(
                         onSearchClick = onSearchClick,
                         onCategoryClick = onCategoryClick,
                         onCartClick = onCartClick,
-                        onChatClick = onChatClick
+                        onChatClick = onChatClick,
+                        onVoucherClick = onVoucherClick
                     )
                 }
                 composable(BottomNavItem.Orders.route) { 

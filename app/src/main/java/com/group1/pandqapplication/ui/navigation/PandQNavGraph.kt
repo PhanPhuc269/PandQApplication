@@ -157,6 +157,9 @@ fun PandQNavGraph(
                 onChatClick = {
                     // Navigate directly to chat screen with "general" as productId for support chat
                     navController.navigate(Screen.ChatScreen.createRoute("general"))
+                },
+                onVoucherClick = {
+                    navController.navigate(Screen.VoucherCenter.route)
                 }
             )
         }
@@ -429,5 +432,14 @@ fun PandQNavGraph(
                     navController.navigate(Screen.ChatScreen.createRoute(productId))
                 }
             )
-        }    }
+        }
+        composable(Screen.VoucherCenter.route) {
+            com.group1.pandqapplication.ui.voucher.VoucherCenterScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                userId = mainViewModel.getCurrentUserId()
+            )
+        }
+    }
 }

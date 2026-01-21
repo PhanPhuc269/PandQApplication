@@ -63,6 +63,7 @@ sealed class Screen(val route: String) {
         }
     }
     data object ChatList : Screen("chat_list")
+    data object VoucherCenter : Screen("voucher_center")
 
     data object Policy : Screen("policy")
     data object ProductManagement : Screen("product_management")

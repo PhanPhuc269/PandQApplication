@@ -421,9 +421,38 @@ class CheckoutViewModel @Inject constructor(
     fun loadAllVouchers() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingVouchers = true) }
+            val userId = _uiState.value.paymentDetails?.userId ?: ""
+            
+            if (userId.isEmpty()) {
+                // Guest user or no user info loaded yet
+                _uiState.update { it.copy(isLoadingVouchers = false) }
+                return@launch
+            }
             
             try {
-                val vouchers = apiService.getAllPromotions()
+                // Use getMyVouchers to show only claimed vouchers in user's wallet
+                val response = apiService.getMyVouchers(userId)
+                
+                // Map VoucherResponseDto to PromotionDto for compatibility with UI
+                val vouchers = response.vouchers
+                    .filter { !it.isUsed } // Only show unused vouchers
+                    .map { v ->
+                        PromotionDto(
+                            id = v.id,
+                            code = v.code,
+                            name = v.name,
+                            type = v.discountType ?: "FIXED_AMOUNT",
+                            value = v.value,
+                            maxDiscountAmount = v.maxDiscountAmount,
+                            minOrderValue = v.minOrderValue,
+                            startDate = v.startDate,
+                            endDate = v.endDate,
+                            quantityLimit = v.quantityLimit,
+                            usageCount = v.usageCount,
+                            status = "ACTIVE" // Assuming vouchers in wallet are active/valid for display
+                        )
+                    }
+
                 _uiState.update {
                     it.copy(
                         availableVouchers = vouchers,
@@ -443,7 +472,8 @@ class CheckoutViewModel @Inject constructor(
 
     fun toggleVoucherSelection(show: Boolean) {
         _uiState.update { it.copy(showVoucherSelection = show) }
-        if (show && _uiState.value.availableVouchers.isEmpty()) {
+        // Always reload to get latest status (used/unused)
+        if (show) {
             loadAllVouchers()
         }
     }
@@ -470,10 +500,12 @@ class CheckoutViewModel @Inject constructor(
 
     /**
      * Xác nhận chọn voucher và áp dụng discount
+     * Now calls the backend to actually save the promotion to the order
      */
-    fun confirmVoucherSelection() {
+    fun confirmVoucherSelection(orderId: String) {
         val shippingVoucher = _uiState.value.selectedShippingVoucher
         val discountVoucher = _uiState.value.selectedDiscountVoucher
+        val userId = _uiState.value.paymentDetails?.userId ?: ""
         val orderTotal = _uiState.value.paymentDetails?.finalAmount?.let { BigDecimal(it) } ?: BigDecimal.ZERO
 
         viewModelScope.launch {
@@ -486,42 +518,38 @@ class CheckoutViewModel @Inject constructor(
             var message = ""
 
             try {
-                // Validate shipping voucher
-                if (shippingVoucher != null) {
-                    val request = ValidatePromotionRequest(
-                        promoCode = shippingVoucher.code,
-                        orderTotal = orderTotal
+                // Apply shipping voucher to order (only one voucher can be applied at a time)
+                // If user selected discount voucher, prioritize that
+                val selectedVoucher = discountVoucher ?: shippingVoucher
+                
+                if (selectedVoucher != null && userId.isNotEmpty()) {
+                    // Call API to apply promotion to order
+                    val applyRequest = com.group1.pandqapplication.shared.data.remote.dto.ApplyPromotionRequest(
+                        userId = userId,
+                        promotionId = selectedVoucher.id
                     )
-                    val response = apiService.validatePromotion(request)
-                    if (response.valid) {
-                        shippingDiscount = response.discountAmount ?: BigDecimal.ZERO
-                        appliedCode = shippingVoucher.code
-                        isValid = true
+                    
+                    val updatedOrder = apiService.applyPromotion(orderId, applyRequest)
+                    
+                    // Update local state with the result
+                    val discount = updatedOrder.discountAmount?.let { BigDecimal(it.toString()) } ?: BigDecimal.ZERO
+                    appliedCode = selectedVoucher.code
+                    isValid = true
+                    message = "Áp dụng $appliedCode thành công!"
+                    
+                    if (selectedVoucher == shippingVoucher) {
+                        shippingDiscount = discount
+                    } else {
+                        productDiscount = discount
                     }
-                }
-
-                // Validate discount voucher
-                if (discountVoucher != null) {
-                    val request = ValidatePromotionRequest(
-                        promoCode = discountVoucher.code,
-                        orderTotal = orderTotal
-                    )
-                    val response = apiService.validatePromotion(request)
-                    if (response.valid) {
-                        productDiscount = response.discountAmount ?: BigDecimal.ZERO
-                        if (appliedCode.isNotEmpty()) appliedCode += ", "
-                        appliedCode += discountVoucher.code
-                        isValid = true
-                    }
+                    
+                    // Reload payment details to get updated amounts
+                    loadPaymentDetails(orderId)
                 }
 
                 val totalDiscount = shippingDiscount.add(productDiscount)
                 
-                if (isValid) {
-                    message = "Áp dụng $appliedCode thành công!"
-                } else if (shippingVoucher == null && discountVoucher == null) {
-                    message = ""
-                } else {
+                if (!isValid && (shippingVoucher != null || discountVoucher != null)) {
                     message = "Voucher không hợp lệ"
                 }
 

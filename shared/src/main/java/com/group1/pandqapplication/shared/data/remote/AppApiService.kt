@@ -167,11 +167,35 @@ interface AppApiService {
     @GET("api/v1/orders/{id}")
     suspend fun getOrderById(@Path("id") orderId: String): OrderDto
 
+    // Apply promotion to order before payment
+    @PUT("api/v1/orders/{id}/apply-promotion")
+    suspend fun applyPromotion(
+        @Path("id") orderId: String,
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.ApplyPromotionRequest
+    ): OrderDto
+
     // Promotion validation
     @POST("api/v1/promotions/validate")
     suspend fun validatePromotion(
         @Body request: com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionRequest
     ): com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionResponse
+
+    // Voucher endpoints
+    @GET("api/v1/vouchers/available")
+    suspend fun getAvailableVouchers(
+        @Query("userId") userId: String? = null
+    ): com.group1.pandqapplication.shared.data.remote.dto.VoucherListResponseDto
+
+    @GET("api/v1/vouchers/my-wallet")
+    suspend fun getMyVouchers(
+        @Query("userId") userId: String
+    ): com.group1.pandqapplication.shared.data.remote.dto.VoucherListResponseDto
+
+    @POST("api/v1/vouchers/claim")
+    suspend fun claimVoucher(
+        @Query("userId") userId: String,
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.ClaimVoucherRequest
+    ): com.group1.pandqapplication.shared.data.remote.dto.ClaimVoucherResponse
 
     // Get all promotions for voucher selection
     @GET("api/v1/promotions")

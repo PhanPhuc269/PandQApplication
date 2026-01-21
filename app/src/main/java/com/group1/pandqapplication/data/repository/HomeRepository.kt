@@ -4,6 +4,7 @@ import com.group1.pandqapplication.shared.data.remote.AppApiService
 import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
 import com.group1.pandqapplication.shared.data.remote.dto.PaginationResponseDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDto
+import com.group1.pandqapplication.shared.data.remote.dto.PromotionDto
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -47,5 +48,13 @@ class HomeRepository @Inject constructor(
             Result.failure(e)
         }
     }
-}
 
+    suspend fun getPromotions(): Result<List<PromotionDto>> {
+        return try {
+            val promotions = apiService.getAllPromotions()
+            Result.success(promotions)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
