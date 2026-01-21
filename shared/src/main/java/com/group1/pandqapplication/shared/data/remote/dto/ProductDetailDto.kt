@@ -11,6 +11,7 @@ data class ProductDetailDto(
     val status: String?,
     val averageRating: Double?,
     val reviewCount: Int?,
+    val stockQuantity: Int?,
     val images: List<ProductImageDto>?,
     val specifications: List<ProductSpecificationDto>?,
     val relatedProducts: List<RelatedProductDto>?

@@ -22,7 +22,8 @@ data class UpdateProductRequest(
     val thumbnailUrl: String?,
     val status: String,
     val images: List<String>?,
-    val specifications: List<ProductSpecificationDto>?
+    val specifications: List<ProductSpecificationDto>?,
+    val stockQuantity: Int?
 )
 
 
