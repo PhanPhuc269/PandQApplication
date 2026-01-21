@@ -41,14 +41,17 @@ class VoucherCenterViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(VoucherCenterUiState())
     val uiState: StateFlow<VoucherCenterUiState> = _uiState.asStateFlow()
 
-    init {
-        loadVouchers()
-    }
+    // Don't load in init - wait for userId to be set
+    // This prevents the "jitter" where all vouchers show first, then filtered results
 
     fun setUserId(id: String) {
-        if (_uiState.value.userId != id) {
-            _uiState.update { it.copy(userId = id) }
-            loadVouchers() // Reload when user ID changes
+        val currentUserId = _uiState.value.userId
+        _uiState.update { it.copy(userId = id) }
+        
+        // Load vouchers when userId is set (even if empty, to show all available vouchers)
+        // Only reload if userId actually changed
+        if (currentUserId != id) {
+            loadVouchers()
         }
     }
 
