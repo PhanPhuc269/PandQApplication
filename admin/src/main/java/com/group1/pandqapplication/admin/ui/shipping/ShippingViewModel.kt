@@ -104,9 +104,11 @@ class ShippingViewModel @Inject constructor(
                 ShippingTab.CANCELLED -> order.status == "CANCELLED"
             }
 
-            // Filter by search query
+            // Filter by search query - tìm theo mã đơn, tên khách, SĐT
             val matchesSearch = if (state.searchQuery.isBlank()) true else {
                 order.id.contains(state.searchQuery, ignoreCase = true) ||
+                order.customerName?.contains(state.searchQuery, ignoreCase = true) == true ||
+                order.customerPhone?.contains(state.searchQuery, ignoreCase = true) == true ||
                 parseCustomerName(order.shippingAddress).contains(state.searchQuery, ignoreCase = true)
             }
 
@@ -145,10 +147,11 @@ class ShippingViewModel @Inject constructor(
             try {
                 val request = AssignCarrierRequest(shippingProvider, trackingNumber)
                 apiService.assignCarrier(orderId, request)
+                _uiState.update { it.copy(isProcessing = false) }
                 dismissAssignCarrierDialog()
                 loadOrders() // Refresh
             } catch (e: Exception) {
-                _uiState.update { it.copy(isProcessing = false, error = e.message) }
+                _uiState.update { it.copy(isProcessing = false, error = "Lỗi gán ĐVVC: ${e.message}") }
             }
         }
     }
@@ -171,10 +174,11 @@ class ShippingViewModel @Inject constructor(
             try {
                 val request = UpdateShippingStatusRequest(newStatus)
                 apiService.updateShippingStatus(orderId, request)
+                _uiState.update { it.copy(isProcessing = false) }
                 dismissUpdateStatusDialog()
                 loadOrders() // Refresh
             } catch (e: Exception) {
-                _uiState.update { it.copy(isProcessing = false, error = e.message) }
+                _uiState.update { it.copy(isProcessing = false, error = "Lỗi cập nhật: ${e.message}") }
             }
         }
     }
