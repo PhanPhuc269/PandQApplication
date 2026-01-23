@@ -251,6 +251,9 @@ class AdminActivity : FragmentActivity() {
                                     onNavigateToCreatePromotion = {
                                         navController.navigate(AdminScreen.CreatePromotion.route)
                                     },
+                                    onNavigateToEditPromotion = { promotionId ->
+                                        navController.navigate("edit_promotion/$promotionId")
+                                    },
                                     onBackClick = {
                                         navController.navigate(AdminScreen.Dashboard.route) {
                                             popUpTo(AdminScreen.Dashboard.route) { inclusive = true }
@@ -266,6 +269,25 @@ class AdminActivity : FragmentActivity() {
                                 val viewModel: com.group1.pandqapplication.admin.ui.promotions.PromotionViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
                                 
                                 CreatePromotionScreen(
+                                    promotionId = null,
+                                    onBackClick = { navController.popBackStack() },
+                                    viewModel = viewModel
+                                )
+                            }
+                            composable(
+                                route = "edit_promotion/{promotionId}",
+                                arguments = listOf(
+                                    androidx.navigation.navArgument("promotionId") { type = androidx.navigation.NavType.StringType }
+                                )
+                            ) { backStackEntry ->
+                                val parentEntry = remember(backStackEntry) {
+                                    navController.getBackStackEntry("promotion_graph")
+                                }
+                                val viewModel: com.group1.pandqapplication.admin.ui.promotions.PromotionViewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry)
+                                val promotionId = backStackEntry.arguments?.getString("promotionId")
+                                
+                                CreatePromotionScreen(
+                                    promotionId = promotionId,
                                     onBackClick = { navController.popBackStack() },
                                     viewModel = viewModel
                                 )

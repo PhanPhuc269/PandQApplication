@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material.icons.filled.MoreVert
@@ -45,6 +47,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AdminPromotionsScreen(
     onNavigateToCreatePromotion: () -> Unit = {},
+    onNavigateToEditPromotion: (String) -> Unit = {},
     onBackClick: () -> Unit = {},
     viewModel: PromotionViewModel = hiltViewModel()
 ) {
@@ -57,6 +60,10 @@ fun AdminPromotionsScreen(
     
     var selectedFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Active", "Scheduled", "Expired")
+    
+    // Delete confirmation dialog state
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var promotionToDelete by remember { mutableStateOf<PromotionDto?>(null) }
 
     // Map filter string to enum
     LaunchedEffect(selectedFilter) {
@@ -132,7 +139,8 @@ fun AdminPromotionsScreen(
                     onValueChange = { viewModel.setSearchQuery(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
                     shape = RoundedCornerShape(12.dp),
                     placeholder = { Text("Search by code or name...", color = Color.Gray) },
                     leadingIcon = {
@@ -205,10 +213,55 @@ fun AdminPromotionsScreen(
             ) {
                 items(filteredPromotions) { promotionDto ->
                     val promotion = promotionDto.toUiModel()
-                    PromotionCard(promotion)
+                    PromotionCard(
+                        promotion = promotion,
+                        onEditClick = { onNavigateToEditPromotion(promotionDto.id) },
+                        onDeleteClick = {
+                            promotionToDelete = promotionDto
+                            showDeleteDialog = true
+                        }
+                    )
                 }
             }
         }
+    }
+    
+    // Delete Confirmation Dialog
+    if (showDeleteDialog && promotionToDelete != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { 
+                showDeleteDialog = false
+                promotionToDelete = null
+            },
+            title = { Text("Xác nhận xóa", fontWeight = FontWeight.Bold) },
+            text = { 
+                Text("Bạn có chắc chắn muốn xóa khuyến mãi \"${promotionToDelete?.name}\"?\n\nHành động này không thể hoàn tác.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        promotionToDelete?.let { viewModel.deletePromotion(it.id) }
+                        showDeleteDialog = false
+                        promotionToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFDC2626)
+                    )
+                ) {
+                    Text("Xóa")
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        promotionToDelete = null
+                    }
+                ) {
+                    Text("Hủy")
+                }
+            }
+        )
     }
 }
 
@@ -351,7 +404,13 @@ fun PromotionFilterChip(text: String, isSelected: Boolean, onClick: () -> Unit) 
 }
 
 @Composable
-fun PromotionCard(promotion: Promotion) {
+fun PromotionCard(
+    promotion: Promotion,
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {}
+) {
+    var showMenu by remember { mutableStateOf(false) }
+    
     val icon = when (promotion.status) {
         PromotionStatus.ACTIVE -> Icons.Default.LocalActivity
         PromotionStatus.SCHEDULED -> Icons.Default.CalendarMonth
@@ -381,7 +440,7 @@ fun PromotionCard(promotion: Promotion) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.weight(1f)) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -403,7 +462,38 @@ fun PromotionCard(promotion: Promotion) {
                     )
                 }
             }
-            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Gray)
+            
+            // Dropdown Menu
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Gray)
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Sửa") },
+                        onClick = {
+                            showMenu = false
+                            onEditClick()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFF2563EB))
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Xóa", color = Color(0xFFDC2626)) },
+                        onClick = {
+                            showMenu = false
+                            onDeleteClick()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Delete, contentDescription = null, tint = Color(0xFFDC2626))
+                        }
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
