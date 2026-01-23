@@ -109,6 +109,9 @@ class CheckoutViewModel @Inject constructor(
                 PaymentMethod.SEPAY -> {
                     initiateSepayPayment(orderId)
                 }
+                PaymentMethod.COD -> {
+                    initiateCODPayment(orderId)
+                }
             }
         }
     }
@@ -195,6 +198,44 @@ class CheckoutViewModel @Inject constructor(
                 it.copy(
                     isProcessingPayment = false, 
                     paymentError = "Lỗi kết nối SePay: ${e.message}"
+                ) 
+            }
+        }
+    }
+
+    /**
+     * Initiate COD (Cash on Delivery) payment
+     * Confirms the order immediately without online payment
+     * Order status will be set to PENDING for admin processing
+     */
+    private suspend fun initiateCODPayment(orderId: String) {
+        try {
+            // Call API to confirm COD order
+            val response = apiService.confirmCODOrder(orderId)
+            
+            if (response.status?.uppercase() == "PENDING" || response.id != null) {
+                // COD order confirmed successfully
+                _uiState.update { 
+                    it.copy(
+                        isProcessingPayment = false,
+                        paymentSuccess = true,
+                        paymentError = null
+                    ) 
+                }
+            } else {
+                _uiState.update { 
+                    it.copy(
+                        isProcessingPayment = false, 
+                        paymentError = "Không thể xác nhận đơn hàng COD"
+                    ) 
+                }
+            }
+            
+        } catch (e: Exception) {
+            _uiState.update { 
+                it.copy(
+                    isProcessingPayment = false, 
+                    paymentError = "Lỗi xác nhận đơn hàng: ${e.message}"
                 ) 
             }
         }

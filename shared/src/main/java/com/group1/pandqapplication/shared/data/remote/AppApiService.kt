@@ -122,6 +122,12 @@ interface AppApiService {
         @Path("transactionId") transactionId: String
     ): SepayStatusResponse
 
+    // COD (Cash on Delivery) Payment
+    @PUT("api/v1/orders/{orderId}/confirm-cod")
+    suspend fun confirmCODOrder(
+        @Path("orderId") orderId: String
+    ): OrderDto
+
     // Payment Details - Get order information for checkout
     @GET("api/v1/payments/details/{orderId}")
     suspend fun getPaymentDetails(

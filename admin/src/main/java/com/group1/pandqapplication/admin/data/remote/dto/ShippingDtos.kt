@@ -9,6 +9,8 @@ import java.math.BigDecimal
 data class ShippingOrderDto(
     val id: String,
     val userId: String?,
+    val customerName: String?,     // Tên khách hàng
+    val customerPhone: String?,    // SĐT khách hàng
     val totalAmount: BigDecimal?,
     val shippingFee: BigDecimal?,
     val discountAmount: BigDecimal?,

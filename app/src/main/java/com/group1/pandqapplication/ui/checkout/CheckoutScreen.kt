@@ -70,7 +70,8 @@ import com.group1.pandqapplication.shared.ui.theme.CheckoutTextSecondaryLight
 
 enum class PaymentMethod {
     ZALOPAY,
-    SEPAY
+    SEPAY,
+    COD
 }
 
 @Composable
@@ -393,6 +394,14 @@ fun CheckoutScreen(
                     )
                     
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        PaymentOption(
+                            text = "Thanh toán khi nhận hàng (COD)",
+                            isSelected = uiState.selectedPaymentMethod == PaymentMethod.COD,
+                            surfaceColor = surfaceColor,
+                            borderColor = if (uiState.selectedPaymentMethod == PaymentMethod.COD) CheckoutPrimary else borderColor,
+                            textPrimary = textPrimary,
+                            onClick = { viewModel.selectPaymentMethod(PaymentMethod.COD) }
+                        )
                         PaymentOption(
                             text = "Thanh toán bằng ZaloPay",
                             isSelected = uiState.selectedPaymentMethod == PaymentMethod.ZALOPAY,

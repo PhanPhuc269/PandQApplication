@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -106,7 +107,9 @@ fun ShippingManagementScreen(
     Scaffold(
         containerColor = backgroundColor,
         topBar = {
-            Column {
+            Column(
+                modifier = Modifier.statusBarsPadding()
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -159,14 +162,14 @@ fun ShippingManagementScreen(
                Row(
                    modifier = Modifier
                        .fillMaxWidth()
-                       .height(48.dp)
+                       .height(52.dp)
                        .background(cardColor, RoundedCornerShape(24.dp)),
                    verticalAlignment = Alignment.CenterVertically
                ) {
                    Box(
                        modifier = Modifier
                            .width(48.dp)
-                           .fillMaxSize(),
+                           .height(52.dp),
                        contentAlignment = Alignment.Center
                    ) {
                        Icon(
@@ -345,12 +348,23 @@ fun ShippingOrderCard(
     onUpdateStatus: () -> Unit
 ) {
     val status = order.status ?: "PENDING"
+    
+    // Màu sắc riêng cho từng status
+    val statusPending = Color(0xFFFF9800)      // Cam - Chờ xác nhận
+    val statusConfirmed = Color(0xFF2196F3)     // Xanh dương - Đã xác nhận
+    val statusShipping = Color(0xFF9C27B0)      // Tím - Đang giao
+    val statusDelivered = Color(0xFF4CAF50)     // Xanh lá - Đã giao
+    val statusCompleted = Color(0xFF1B5E20)     // Xanh đậm - Hoàn thành
+    val statusCancelled = Color(0xFFF44336)     // Đỏ - Đã huỷ
+    
     val statusColor = when (status) {
-        "PENDING", "CONFIRMED" -> ShippingStatusPending
-        "SHIPPING" -> ShippingStatusInProgress
-        "DELIVERED", "COMPLETED" -> ShippingStatusSuccess
-        "CANCELLED" -> ShippingStatusCancelled
-        else -> ShippingStatusPending
+        "PENDING" -> statusPending
+        "CONFIRMED" -> statusConfirmed
+        "SHIPPING" -> statusShipping
+        "DELIVERED" -> statusDelivered
+        "COMPLETED" -> statusCompleted
+        "CANCELLED" -> statusCancelled
+        else -> statusPending
     }
     val statusText = when (status) {
         "PENDING" -> "Chờ xác nhận"
@@ -362,15 +376,25 @@ fun ShippingOrderCard(
         else -> status
     }
     val statusIcon = when (status) {
-        "PENDING", "CONFIRMED" -> Icons.Default.Pending
-        "SHIPPING" -> Icons.Default.LocalShipping
-        "DELIVERED", "COMPLETED" -> Icons.Default.CheckCircle
+        "PENDING" -> Icons.Default.Pending             // Pending icon
+        "CONFIRMED" -> Icons.Default.CheckCircle       // Checkmark
+        "SHIPPING" -> Icons.Default.LocalShipping      // Truck icon
+        "DELIVERED" -> Icons.Default.CheckCircle       // Checkmark
+        "COMPLETED" -> Icons.Default.CheckCircle       // Checkmark
         else -> Icons.Default.Pending
     }
 
-    // Parse customer info from shippingAddress
-    val customerName = parseField(order.shippingAddress, "fullName") ?: parseField(order.shippingAddress, "name") ?: "Khách hàng"
-    val address = parseField(order.shippingAddress, "address") ?: parseField(order.shippingAddress, "street") ?: "Địa chỉ không xác định"
+    // Parse customer info - ưu tiên dùng customerName từ API, fallback đến shippingAddress parsing
+    val customerName = order.customerName?.takeIf { it.isNotBlank() } 
+        ?: parseField(order.shippingAddress, "fullName") 
+        ?: parseField(order.shippingAddress, "name") 
+        ?: "Khách hàng"
+    
+    val customerPhone = order.customerPhone?.takeIf { it.isNotBlank() }
+        ?: parseField(order.shippingAddress, "phone")
+    
+    // Parse địa chỉ - thử hiển thị trực tiếp nếu không phải JSON, fallback đến parse JSON
+    val address = getDisplayAddress(order.shippingAddress) ?: "Địa chỉ không xác định"
 
     // Determine button text and action
     val hasCarrier = !order.shippingProvider.isNullOrBlank()
@@ -455,17 +479,73 @@ fun ShippingOrderCard(
             )
         }
         
-        // Action Button
-        if (buttonText != null) {
+        // Action Buttons - Hiển thị 2 button cho tab Chờ xử lý
+        if (status == "PENDING" || status == "CONFIRMED") {
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Button Gán đơn vị (trái) - luôn enabled
+                Button(
+                    onClick = { onAssignCarrier() },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (hasCarrier) Color.LightGray else ShippingPrimary,
+                        contentColor = if (hasCarrier) Color.DarkGray else Color.White
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocalShipping,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (hasCarrier) "Đổi ĐVVC" else "Gán đơn vị",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                
+                // Button Cập nhật trạng thái (phải) - disabled khi chưa gán ĐVVC
+                Button(
+                    onClick = { onUpdateStatus() },
+                    enabled = hasCarrier,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (hasCarrier) ShippingPrimary else Color.LightGray.copy(alpha = 0.5f),
+                        contentColor = if (hasCarrier) Color.White else Color.Gray,
+                        disabledContainerColor = Color.LightGray.copy(alpha = 0.3f),
+                        disabledContentColor = Color.Gray.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Cập nhật",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        } else if (buttonText != null) {
+            // Các tab khác - hiển thị 1 button như cũ
             Spacer(modifier = Modifier.height(16.dp))
             
             Button(
-                onClick = {
-                    when {
-                        status == "PENDING" && !hasCarrier -> onAssignCarrier()
-                        else -> onUpdateStatus()
-                    }
-                },
+                onClick = { onUpdateStatus() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(40.dp),
@@ -494,6 +574,57 @@ fun parseField(json: String?, field: String): String? {
     } catch (e: Exception) {
         null
     }
+}
+
+/**
+ * Build địa chỉ đầy đủ từ các fields trong shippingAddress JSON
+ * Format: address, ward, district, city
+ */
+fun buildFullAddress(json: String?): String? {
+    if (json.isNullOrBlank()) return null
+    
+    val parts = mutableListOf<String>()
+    
+    // Thử lấy địa chỉ chi tiết
+    val address = parseField(json, "address") 
+        ?: parseField(json, "street") 
+        ?: parseField(json, "detailAddress")
+        ?: parseField(json, "fullAddress")
+    if (!address.isNullOrBlank()) parts.add(address)
+    
+    // Thêm phường/xã
+    val ward = parseField(json, "ward")
+    if (!ward.isNullOrBlank()) parts.add(ward)
+    
+    // Thêm quận/huyện
+    val district = parseField(json, "district")
+    if (!district.isNullOrBlank()) parts.add(district)
+    
+    // Thêm thành phố/tỉnh
+    val city = parseField(json, "city") ?: parseField(json, "province")
+    if (!city.isNullOrBlank()) parts.add(city)
+    
+    return if (parts.isNotEmpty()) parts.joinToString(", ") else null
+}
+
+/**
+ * Get display address from shippingAddress
+ * - Nếu là plain text (không phải JSON) -> hiển thị trực tiếp
+ * - Nếu là JSON -> parse và build full address
+ */
+fun getDisplayAddress(shippingAddress: String?): String? {
+    if (shippingAddress.isNullOrBlank()) return null
+    
+    val trimmed = shippingAddress.trim()
+    
+    // Kiểm tra nếu là JSON (bắt đầu bằng { )
+    if (trimmed.startsWith("{")) {
+        // Parse JSON và build full address
+        return buildFullAddress(trimmed)
+    }
+    
+    // Không phải JSON -> hiển thị trực tiếp
+    return trimmed
 }
 
 @Composable
