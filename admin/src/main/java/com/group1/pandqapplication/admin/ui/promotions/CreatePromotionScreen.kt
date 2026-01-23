@@ -77,6 +77,7 @@ import com.group1.pandqapplication.shared.ui.theme.PromotionTextSecondaryLight
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreatePromotionScreen(
+    promotionId: String? = null,
     onBackClick: () -> Unit = {},
     viewModel: PromotionViewModel = hiltViewModel()
 ) {
@@ -90,10 +91,20 @@ fun CreatePromotionScreen(
     val textSecondary = if (isDarkTheme) PromotionTextSecondaryDark else PromotionTextSecondaryLight
     val borderColor = if (isDarkTheme) PromotionBorderDark else PromotionBorderLight
 
+    // Load promotion if editing
+    LaunchedEffect(promotionId) {
+        if (promotionId != null) {
+            viewModel.loadPromotionById(promotionId)
+        } else {
+            viewModel.resetCreateState()
+        }
+    }
+
     // Handle success - navigate back
     LaunchedEffect(createState.isSuccess) {
         if (createState.isSuccess) {
-            snackbarHostState.showSnackbar("Tạo khuyến mãi thành công!")
+            val message = if (createState.isEditMode) "Cập nhật khuyến mãi thành công!" else "Tạo khuyến mãi thành công!"
+            snackbarHostState.showSnackbar(message)
             viewModel.resetCreateState()
             onBackClick()
         }
@@ -131,7 +142,7 @@ fun CreatePromotionScreen(
                         )
                     }
                     Text(
-                        text = "Tạo khuyến mãi",
+                        text = if (createState.isEditMode) "Chỉnh sửa khuyến mãi" else "Tạo khuyến mãi",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = textPrimary,
@@ -155,7 +166,7 @@ fun CreatePromotionScreen(
                 )
                 // Just styling the button
                 Button(
-                    onClick = { viewModel.createPromotion() },
+                    onClick = { viewModel.savePromotion() },
                     enabled = !createState.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -175,7 +186,7 @@ fun CreatePromotionScreen(
                         )
                     } else {
                         Text(
-                            text = "Lưu khuyến mãi",
+                            text = if (createState.isEditMode) "Cập nhật" else "Lưu khuyến mãi",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -275,7 +286,7 @@ fun CreatePromotionScreen(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(36.dp)
+                                .height(44.dp)
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(if (selectedTypeIndex == index) PromotionPrimary else Color.Transparent)
                                 .clickable { 
@@ -290,10 +301,12 @@ fun CreatePromotionScreen(
                         ) {
                             Text(
                                 text = title,
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 fontWeight = if (selectedTypeIndex == index) FontWeight.SemiBold else FontWeight.Medium,
                                 color = if (selectedTypeIndex == index) Color.White else PromotionPrimary,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
+                                lineHeight = 13.sp
                             )
                         }
                     }

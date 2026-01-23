@@ -37,6 +37,7 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object OrderDetails : AdminScreen("order_details", "Order Details", Icons.Default.Receipt)
     object ChatDetails : AdminScreen("chat_details/{chatId}", "Chat Details", Icons.Default.Chat)
     object CreatePromotion : AdminScreen("create_promotion", "Create Promotion", Icons.Default.Add)
+    object EditPromotion : AdminScreen("edit_promotion/{promotionId}", "Edit Promotion", Icons.Default.LocalOffer)
     object Profile : AdminScreen("profile", "Profile", Icons.Default.ManageAccounts)
     object Settings : AdminScreen("settings", "Settings", Icons.Default.Inventory) // Icon placeholder
     object SalesAnalysis : AdminScreen("sales_analysis", "Sales Analysis", Icons.Default.BarChart)

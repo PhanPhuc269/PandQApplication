@@ -35,6 +35,10 @@ data class CreatePromotionUiState(
     val isSuccess: Boolean = false,
     val error: String? = null,
     
+    // Edit mode
+    val editingPromotionId: String? = null,
+    val isEditMode: Boolean = false,
+    
     // Form fields
     val name: String = "",
     val code: String = "",
@@ -275,6 +279,107 @@ class PromotionViewModel @Inject constructor(
                     }
                 )
             }
+        }
+    }
+
+    /**
+     * Load promotion để edit
+     */
+    fun loadPromotionById(id: String) {
+        viewModelScope.launch {
+            _createState.update { it.copy(isLoading = true, error = null) }
+            
+            repository.getPromotionById(id).collect { result ->
+                result.fold(
+                    onSuccess = { promotion ->
+                        _createState.update {
+                            it.copy(
+                                isLoading = false,
+                                isEditMode = true,
+                                editingPromotionId = promotion.id,
+                                name = promotion.name,
+                                code = promotion.code,
+                                description = promotion.description ?: "",
+                                type = promotion.type,
+                                value = promotion.value?.toString() ?: "",
+                                maxDiscountAmount = promotion.maxDiscountAmount?.toString() ?: "",
+                                minOrderValue = promotion.minOrderValue?.toString() ?: "",
+                                startDate = promotion.startDate ?: "",
+                                endDate = promotion.endDate ?: "",
+                                quantityLimit = promotion.quantityLimit?.toString() ?: "",
+                                isActive = promotion.status == com.group1.pandqapplication.admin.data.remote.dto.PromotionStatus.ACTIVE
+                            )
+                        }
+                    },
+                    onFailure = { error ->
+                        _createState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = error.message ?: "Không thể load khuyến mãi"
+                            )
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    /**
+     * Cập nhật khuyến mãi
+     */
+    fun updatePromotion() {
+        val state = _createState.value
+        val id = state.editingPromotionId ?: return
+        
+        // Validate
+        if (state.name.isBlank()) {
+            _createState.update { it.copy(error = "Vui lòng nhập tên khuyến mãi") }
+            return
+        }
+
+        viewModelScope.launch {
+            _createState.update { it.copy(isLoading = true, error = null) }
+
+            val request = UpdatePromotionRequest(
+                name = state.name,
+                description = state.description.ifBlank { null },
+                value = state.value.toBigDecimalOrNull(),
+                maxDiscountAmount = state.maxDiscountAmount.toBigDecimalOrNull(),
+                minOrderValue = state.minOrderValue.toBigDecimalOrNull(),
+                startDate = state.startDate.ifBlank { null },
+                endDate = state.endDate.ifBlank { null },
+                quantityLimit = state.quantityLimit.toIntOrNull(),
+                status = if (state.isActive) com.group1.pandqapplication.admin.data.remote.dto.PromotionStatus.ACTIVE else com.group1.pandqapplication.admin.data.remote.dto.PromotionStatus.INACTIVE
+            )
+
+            repository.updatePromotion(id, request).collect { result ->
+                result.fold(
+                    onSuccess = {
+                        loadPromotions()
+                        kotlinx.coroutines.delay(300)
+                        _createState.update { it.copy(isLoading = false, isSuccess = true) }
+                    },
+                    onFailure = { error ->
+                        _createState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = error.message ?: "Không thể cập nhật khuyến mãi"
+                            )
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    /**
+     * Save promotion - gọi create hoặc update tùy mode
+     */
+    fun savePromotion() {
+        if (_createState.value.isEditMode) {
+            updatePromotion()
+        } else {
+            createPromotion()
         }
     }
 
