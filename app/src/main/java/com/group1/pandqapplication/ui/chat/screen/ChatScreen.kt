@@ -212,7 +212,8 @@ fun ChatScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1a1a1a))
+            .imePadding()
+            .background(Color(0xFFF5F5F5))
     ) {
         // HEADER
         ChatHeaderBar(
@@ -222,7 +223,10 @@ fun ChatScreen(
         )
 
         // MESSAGES LIST
-        Box(modifier = Modifier.weight(1f)) {
+        Box(modifier = Modifier
+            .weight(1f)
+            .background(Color(0xFFFFFFFF))
+        ) {
             if (state.isLoading && state.messages.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -240,7 +244,7 @@ fun ChatScreen(
                             imageVector = Icons.Default.Image,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
-                            tint = Color.DarkGray
+                            tint = Color.LightGray
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -387,8 +391,8 @@ private fun ChatHeaderBar(
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp),
-        color = Color(0xFF2a2a2a),
-        shadowElevation = 4.dp
+        color = Color(0xFFF0F0F0),
+        shadowElevation = 2.dp
     ) {
         Row(
             modifier = Modifier
@@ -400,7 +404,7 @@ private fun ChatHeaderBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.White
+                    tint = Color(0xFF1C1C1E)
                 )
             }
 
@@ -409,7 +413,7 @@ private fun ChatHeaderBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF6B5B5B)),
+                    .background(Color(0xFFEC6B45)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -423,7 +427,7 @@ private fun ChatHeaderBar(
             Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(
                     adminName,
-                    color = Color.White,
+                    color = Color(0xFF1C1C1E),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
@@ -548,7 +552,7 @@ private fun ChatMessageBubble(
             modifier = Modifier
                 .widthIn(max = 280.dp)
                 .background(
-                    color = if (isOwn) Color(0xFFEC6B45) else Color(0xFF4a3a3a),
+                    color = if (isOwn) Color(0xFFEC6B45) else Color(0xFFEEEEEE),
                     shape = RoundedCornerShape(
                         topStart = 16.dp,
                         topEnd = 16.dp,
@@ -570,7 +574,7 @@ private fun ChatMessageBubble(
                 if (message.message.isNotEmpty() && message.messageType != MessageType.IMAGE) {
                     Text(
                         message.message,
-                        color = if (isOwn) Color.White else Color(0xFFD0D0D0),
+                        color = if (isOwn) Color.White else Color(0xFF1C1C1E),
                         fontSize = 14.sp,
                         lineHeight = 18.sp
                     )
@@ -596,7 +600,7 @@ private fun ChatMessageBubble(
                             .fillMaxWidth()
                             .height(200.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF3a3a3a))
+                            .background(Color(0xFFE0E0E0))
                             .clickable { 
                                 if (isVideo) {
                                     // Open video with external player
@@ -696,10 +700,10 @@ private fun QuickReplyButton(
         onClick = onClick,
         modifier = modifier.height(36.dp),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(width = 1.dp, color = Color(0xFF5a5a5a)),
+        border = BorderStroke(width = 1.5.dp, color = Color(0xFFEC6B45)),
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color(0xFFD0D0D0),
-            containerColor = Color(0xFF2a2a2a)
+            contentColor = Color(0xFFEC6B45),
+            containerColor = Color.Transparent
         )
     ) {
         Text(
@@ -724,8 +728,8 @@ private fun ChatInputBar(
         modifier = Modifier
             .fillMaxWidth()
             .imePadding(),
-        color = Color(0xFF2a2a2a),
-        shadowElevation = 4.dp
+        color = Color(0xFFF0F0F0),
+        shadowElevation = 2.dp
     ) {
         Row(
             modifier = Modifier
@@ -740,7 +744,7 @@ private fun ChatInputBar(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF3a3a3a)),
+                        .background(Color(0xFFE0E0E0)),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
@@ -755,7 +759,7 @@ private fun ChatInputBar(
                     modifier = Modifier
                         .size(40.dp)
                         .background(
-                            color = Color(0xFF3a3a3a),
+                            color = Color(0xFFE0E0E0),
                             shape = CircleShape
                         )
                 ) {
@@ -775,7 +779,7 @@ private fun ChatInputBar(
                 placeholder = {
                     Text(
                         "Viết tin nhắn...",
-                        color = Color.Gray,
+                        color = Color(0xFF999999),
                         fontSize = 13.sp
                     )
                 },
@@ -784,15 +788,15 @@ private fun ChatInputBar(
                     .heightIn(min = 40.dp, max = 100.dp)
                     .clip(RoundedCornerShape(24.dp)),
                 colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color(0xFF3a3a3a),
-                    focusedContainerColor = Color(0xFF3a3a3a),
+                    unfocusedContainerColor = Color(0xFFFFFFFF),
+                    focusedContainerColor = Color(0xFFFFFFFF),
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
-                    unfocusedTextColor = Color.White,
-                    focusedTextColor = Color.White
+                    unfocusedTextColor = Color(0xFF1C1C1E),
+                    focusedTextColor = Color(0xFF1C1C1E)
                 ),
                 singleLine = false,
-                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, color = Color.White)
+                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, color = Color(0xFF1C1C1E))
             )
 
             // Send button
@@ -802,7 +806,7 @@ private fun ChatInputBar(
                 modifier = Modifier
                     .size(40.dp)
                     .background(
-                        color = if (!isLoading && messageText.isNotBlank()) Color(0xFFEC6B45) else Color(0xFF5a5a5a),
+                        color = if (!isLoading && messageText.isNotBlank()) Color(0xFFEC6B45) else Color(0xFFDCDCDC),
                         shape = CircleShape
                     )
             ) {
@@ -816,7 +820,7 @@ private fun ChatInputBar(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send",
-                        tint = Color.White,
+                        tint = if (!isLoading && messageText.isNotBlank()) Color.White else Color(0xFF999999),
                         modifier = Modifier.size(20.dp)
                     )
                 }

@@ -109,7 +109,7 @@ fun AdminChatScreen(
     if (showMediaPickerDialog) {
         AlertDialog(
             onDismissRequest = { showMediaPickerDialog = false },
-            title = { Text("Chọn loại media", color = Color.White) },
+            title = { Text("Chọn loại media", color = Color(0xFF1C1C1E)) },
             text = {
                 Column {
                     TextButton(
@@ -130,7 +130,7 @@ fun AdminChatScreen(
                                 tint = Color(0xFFEC6B45)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text("Chọn ảnh", color = Color.White)
+                            Text("Chọn ảnh", color = Color(0xFF1C1C1E))
                         }
                     }
                     TextButton(
@@ -151,7 +151,7 @@ fun AdminChatScreen(
                                 tint = Color(0xFFEC6B45)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text("Chọn video", color = Color.White)
+                            Text("Chọn video", color = Color(0xFF1C1C1E))
                         }
                     }
                 }
@@ -162,7 +162,7 @@ fun AdminChatScreen(
                     Text("Hủy", color = Color.Gray)
                 }
             },
-            containerColor = Color(0xFF2a2a2a)
+            containerColor = Color(0xFFFFFFFF)
         )
     }
     
@@ -197,7 +197,8 @@ fun AdminChatScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1a1a1a))
+            .imePadding()
+            .background(Color(0xFFF5F5F5))
     ) {
         // HEADER
         AdminChatHeaderBar(
@@ -208,7 +209,10 @@ fun AdminChatScreen(
         )
 
         // MESSAGES LIST
-        Box(modifier = Modifier.weight(1f)) {
+        Box(modifier = Modifier
+            .weight(1f)
+            .background(Color(0xFFFFFFFF))
+        ) {
             if (state.isLoading && state.messages.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -226,7 +230,7 @@ fun AdminChatScreen(
                             imageVector = Icons.Default.Image,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
-                            tint = Color.DarkGray
+                            tint = Color.LightGray
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -343,12 +347,12 @@ fun AdminChatScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFB3261E))
+                    .background(Color(0xFFFFEBEE))
                     .padding(12.dp)
             ) {
                 Text(
                     state.error!!,
-                    color = Color.White,
+                    color = Color(0xFFC62828),
                     fontSize = 12.sp
                 )
             }
@@ -368,8 +372,8 @@ private fun AdminChatHeaderBar(
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp),
-        color = Color(0xFF2a2a2a),
-        shadowElevation = 4.dp
+        color = Color(0xFFF0F0F0),
+        shadowElevation = 2.dp
     ) {
         Row(
             modifier = Modifier
@@ -381,7 +385,7 @@ private fun AdminChatHeaderBar(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.White
+                    tint = Color(0xFF1C1C1E)
                 )
             }
 
@@ -400,7 +404,7 @@ private fun AdminChatHeaderBar(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF6B5B5B)),
+                        .background(Color(0xFFEC6B45)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -415,7 +419,7 @@ private fun AdminChatHeaderBar(
             Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                 Text(
                     customerName,
-                    color = Color.White,
+                    color = Color(0xFF1C1C1E),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
@@ -458,7 +462,7 @@ private fun AdminChatMessageBubble(
                     modifier = Modifier
                         .size(28.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF6B5B5B)),
+                        .background(Color(0xFFEC6B45)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -475,7 +479,7 @@ private fun AdminChatMessageBubble(
             modifier = Modifier
                 .widthIn(max = 280.dp)
                 .background(
-                    color = if (isAdmin) Color(0xFFEC6B45) else Color(0xFF4a3a3a),
+                    color = if (isAdmin) Color(0xFFEC6B45) else Color(0xFFEEEEEE),
                     shape = RoundedCornerShape(
                         topStart = 16.dp,
                         topEnd = 16.dp,
@@ -497,7 +501,7 @@ private fun AdminChatMessageBubble(
                 if (message.message.isNotEmpty() && message.messageType != MessageType.IMAGE) {
                     Text(
                         message.message,
-                        color = if (isAdmin) Color.White else Color(0xFFD0D0D0),
+                        color = if (isAdmin) Color.White else Color(0xFF1C1C1E),
                         fontSize = 14.sp,
                         lineHeight = 18.sp
                     )
@@ -523,7 +527,7 @@ private fun AdminChatMessageBubble(
                             .fillMaxWidth()
                             .height(200.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF3a3a3a))
+                            .background(Color(0xFFE0E0E0))
                             .clickable { 
                                 if (isVideo) {
                                     // Open video with external player
@@ -622,10 +626,10 @@ private fun QuickReplyButton(
         onClick = onClick,
         modifier = modifier.height(36.dp),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(width = 1.dp, color = Color(0xFF5a5a5a)),
+        border = BorderStroke(width = 1.5.dp, color = Color(0xFFEC6B45)),
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color(0xFFD0D0D0),
-            containerColor = Color(0xFF2a2a2a)
+            contentColor = Color(0xFFEC6B45),
+            containerColor = Color.Transparent
         )
     ) {
         Text(
@@ -650,8 +654,8 @@ private fun AdminChatInputBar(
         modifier = Modifier
             .fillMaxWidth()
             .imePadding(),
-        color = Color(0xFF2a2a2a),
-        shadowElevation = 4.dp
+        color = Color(0xFFF0F0F0),
+        shadowElevation = 2.dp
     ) {
         Row(
             modifier = Modifier
@@ -666,7 +670,7 @@ private fun AdminChatInputBar(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF3a3a3a)),
+                        .background(Color(0xFFE0E0E0)),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
@@ -681,7 +685,7 @@ private fun AdminChatInputBar(
                     modifier = Modifier
                         .size(40.dp)
                         .background(
-                            color = Color(0xFF3a3a3a),
+                            color = Color(0xFFE0E0E0),
                             shape = CircleShape
                         )
                 ) {
@@ -701,7 +705,7 @@ private fun AdminChatInputBar(
                 placeholder = {
                     Text(
                         "Viết tin nhắn...",
-                        color = Color.Gray,
+                        color = Color(0xFF999999),
                         fontSize = 13.sp
                     )
                 },
@@ -710,15 +714,15 @@ private fun AdminChatInputBar(
                     .heightIn(min = 40.dp, max = 100.dp)
                     .clip(RoundedCornerShape(24.dp)),
                 colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color(0xFF3a3a3a),
-                    focusedContainerColor = Color(0xFF3a3a3a),
+                    unfocusedContainerColor = Color(0xFFFFFFFF),
+                    focusedContainerColor = Color(0xFFFFFFFF),
                     unfocusedIndicatorColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
-                    unfocusedTextColor = Color.White,
-                    focusedTextColor = Color.White
+                    unfocusedTextColor = Color(0xFF1C1C1E),
+                    focusedTextColor = Color(0xFF1C1C1E)
                 ),
                 singleLine = false,
-                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, color = Color.White)
+                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, color = Color(0xFF1C1C1E))
             )
 
             // Send button
@@ -728,7 +732,7 @@ private fun AdminChatInputBar(
                 modifier = Modifier
                     .size(40.dp)
                     .background(
-                        color = if (!isLoading && messageText.isNotBlank()) Color(0xFFEC6B45) else Color(0xFF5a5a5a),
+                        color = if (!isLoading && messageText.isNotBlank()) Color(0xFFEC6B45) else Color(0xFFDCDCDC),
                         shape = CircleShape
                     )
             ) {
@@ -742,7 +746,7 @@ private fun AdminChatInputBar(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send",
-                        tint = Color.White,
+                        tint = if (!isLoading && messageText.isNotBlank()) Color.White else Color(0xFF999999),
                         modifier = Modifier.size(20.dp)
                     )
                 }

@@ -80,7 +80,7 @@ fun InventoryScreen(
     viewModel: InventoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val isDarkTheme = true
+    val isDarkTheme = false
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     

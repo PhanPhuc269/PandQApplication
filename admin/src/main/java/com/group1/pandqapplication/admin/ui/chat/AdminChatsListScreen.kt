@@ -30,14 +30,14 @@ import com.group1.pandqapplication.shared.data.remote.dto.ProductChat
 import java.text.SimpleDateFormat
 import java.util.*
 
-// Dark theme colors matching the design
-private val DarkBackground = Color(0xFF1A0A0A)
-private val DarkSurface = Color(0xFF2D1515)
-private val DarkCard = Color(0xFF3D2020)
+// Light theme colors matching the design
+private val DarkBackground = Color(0xFFF5F5F5)
+private val DarkSurface = Color(0xFFFFFFFF)
+private val DarkCard = Color(0xFFFFFFFF)
 private val AccentOrange = Color(0xFFEC6B45)
 private val AccentGreen = Color(0xFF4CAF50)
-private val TextPrimary = Color.White
-private val TextSecondary = Color(0xFFB0A0A0)
+private val TextPrimary = Color(0xFF1C1C1E)
+private val TextSecondary = Color(0xFF64748B)
 
 /**
  * Screen showing list of all customer chats for admin - Support Center style.
@@ -303,7 +303,7 @@ private fun FilterChipItem(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         color = if (isSelected) AccentOrange else DarkSurface,
-        border = if (!isSelected) BorderStroke(1.dp, Color(0xFF4A3030)) else null
+        border = if (!isSelected) BorderStroke(1.dp, Color(0xFFE0E0E0)) else null
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -387,7 +387,7 @@ private fun ChatListItem(
                         .size(56.dp)
                         .border(
                             width = if (isSelected) 3.dp else 2.dp,
-                            color = if (isSelected) AccentOrange else Color(0xFF4A3030),
+                            color = if (isSelected) AccentOrange else Color(0xFFE0E0E0),
                             shape = CircleShape
                         )
                         .padding(3.dp)
