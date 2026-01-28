@@ -482,7 +482,8 @@ class AdminActivity : FragmentActivity() {
                             com.group1.pandqapplication.admin.ui.chat.AdminChatsListScreen(
                                 onChatSelected = { chatId ->
                                     navController.navigate("chat_details/$chatId")
-                                }
+                                },
+                                onBackClick = { navController.popBackStack() }
                             )
                         }
                         composable(
