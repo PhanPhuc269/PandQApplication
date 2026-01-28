@@ -46,6 +46,7 @@ private val TextSecondary = Color(0xFF64748B)
 @Composable
 fun AdminChatsListScreen(
     onChatSelected: (chatId: String) -> Unit,
+    onBackClick: () -> Unit = {},
     viewModel: AdminChatsListViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -73,7 +74,8 @@ fun AdminChatsListScreen(
         // Header
         SupportCenterHeader(
             isOnline = isOnline,
-            onToggleOnline = { isOnline = it }
+            onToggleOnline = { isOnline = it },
+            onBackClick = onBackClick
         )
 
         // Search Bar
@@ -156,17 +158,29 @@ fun AdminChatsListScreen(
 @Composable
 private fun SupportCenterHeader(
     isOnline: Boolean,
-    onToggleOnline: (Boolean) -> Unit
+    onToggleOnline: (Boolean) -> Unit,
+    onBackClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(DarkBackground)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 12.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = TextPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             Box(
                 modifier = Modifier
                     .size(32.dp)
