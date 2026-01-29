@@ -27,4 +27,17 @@ class OrderRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+    
+    override suspend fun confirmDelivery(orderId: String): Result<OrderDto> {
+        return try {
+            val response = apiService.confirmDelivery(orderId)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception(response.message() ?: "Failed to confirm delivery"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

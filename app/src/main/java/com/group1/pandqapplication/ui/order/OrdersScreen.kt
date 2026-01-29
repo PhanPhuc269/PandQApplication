@@ -256,7 +256,10 @@ fun OrdersScreen(
                             items(filteredOrders) { order ->
                                 OrderItem(
                                     order = order,
-                                    onClick = { onOrderClick(order.id) }
+                                    onClick = { onOrderClick(order.id) },
+                                    onConfirmDelivery = { orderId -> 
+                                        viewModel.confirmDelivery(orderId)
+                                    }
                                 )
                             }
                             item {
@@ -271,7 +274,11 @@ fun OrdersScreen(
 }
 
 @Composable
-fun OrderItem(order: OrderDto, onClick: () -> Unit) {
+fun OrderItem(
+    order: OrderDto, 
+    onClick: () -> Unit,
+    onConfirmDelivery: ((String) -> Unit)? = null
+) {
     // Get localized status text
     val statusText = when (order.status.uppercase()) {
         "PENDING" -> stringResource(R.string.status_pending)
@@ -350,6 +357,24 @@ fun OrderItem(order: OrderDto, onClick: () -> Unit) {
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
                     )
+                }
+                
+                // Confirm Delivery Button - only show for DELIVERED orders
+                if (order.status.uppercase() == "DELIVERED" && onConfirmDelivery != null) {
+                    Button(
+                        onClick = { onConfirmDelivery(order.id) },
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .height(32.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFec3713)),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            "Xác nhận đã nhận hàng",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
             Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = Color.Gray)
