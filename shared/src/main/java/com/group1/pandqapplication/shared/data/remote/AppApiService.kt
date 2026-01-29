@@ -96,6 +96,10 @@ interface AppApiService {
         @Query("size") size: Int? = 20
     ): PaginationResponseDto<ProductSearchDto>
 
+    @GET("api/v1/products/trending-searches")
+    suspend fun getTrendingSearches(): List<String>
+
+
     @retrofit2.http.Multipart
     @POST("api/v1/upload")
     suspend fun uploadImage(@retrofit2.http.Part file: okhttp3.MultipartBody.Part): okhttp3.ResponseBody
@@ -216,6 +220,25 @@ interface AppApiService {
 
     @GET("api/v1/auth/me")
     suspend fun getCurrentAuthUser(): AdminUserInfo
+    @GET("api/v1/notifications/user/{userId}")
+    suspend fun getNotificationsByUserId(
+        @Path("userId") userId: String,
+        @Query("type") type: String? = null
+    ): List<com.group1.pandqapplication.shared.data.remote.dto.NotificationDto>
+
+    @GET("api/v1/notifications/preferences/{userId}")
+    suspend fun getNotificationPreferences(
+        @Path("userId") userId: String
+    ): com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceResponse
+
+    @PUT("api/v1/notifications/preferences/{userId}")
+    suspend fun updateNotificationPreferences(
+        @Path("userId") userId: String,
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceRequest
+    ): retrofit2.Response<Void>
+
+    @PUT("api/v1/notifications/{id}/read")
+    suspend fun markNotificationAsRead(@Path("id") id: String)
 }
 
 /**

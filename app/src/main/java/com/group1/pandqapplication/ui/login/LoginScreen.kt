@@ -204,7 +204,7 @@ fun LoginScreen(
 
                 // Form
                 // Email
-                Text("Email / Tên đăng nhập", fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+                Text("Email", fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = email,

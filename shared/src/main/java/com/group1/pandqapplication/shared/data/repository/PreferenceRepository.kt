@@ -17,6 +17,9 @@ private val Context.settingsDataStore: DataStore<Preferences> by preferencesData
 interface PreferenceRepository {
     val isFirstLaunch: Flow<Boolean>
     suspend fun setFirstLaunchCompleted()
+
+    val notificationPreferences: Flow<com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceResponse>
+    suspend fun saveNotificationPreferences(prefs: com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceResponse)
 }
 
 @Singleton
@@ -26,6 +29,11 @@ class PreferenceRepositoryImpl @Inject constructor(
 
     private object PreferencesKeys {
         val IS_FIRST_LAUNCH = booleanPreferencesKey("is_first_launch")
+        
+        val ENABLE_PROMOTIONS = booleanPreferencesKey("enable_promotions")
+        val ENABLE_ORDERS = booleanPreferencesKey("enable_orders")
+        val ENABLE_SYSTEM = booleanPreferencesKey("enable_system")
+        val ENABLE_CHAT = booleanPreferencesKey("enable_chat")
     }
 
     override val isFirstLaunch: Flow<Boolean> = context.settingsDataStore.data
@@ -36,6 +44,25 @@ class PreferenceRepositoryImpl @Inject constructor(
     override suspend fun setFirstLaunchCompleted() {
         context.settingsDataStore.edit { preferences ->
             preferences[PreferencesKeys.IS_FIRST_LAUNCH] = false
+        }
+    }
+
+    override val notificationPreferences: Flow<com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceResponse> = context.settingsDataStore.data
+        .map { preferences ->
+            com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceResponse(
+                enablePromotions = preferences[PreferencesKeys.ENABLE_PROMOTIONS] ?: true,
+                enableOrders = preferences[PreferencesKeys.ENABLE_ORDERS] ?: true,
+                enableSystem = preferences[PreferencesKeys.ENABLE_SYSTEM] ?: true,
+                enableChat = preferences[PreferencesKeys.ENABLE_CHAT] ?: true
+            )
+        }
+
+    override suspend fun saveNotificationPreferences(prefs: com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceResponse) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.ENABLE_PROMOTIONS] = prefs.enablePromotions
+            preferences[PreferencesKeys.ENABLE_ORDERS] = prefs.enableOrders
+            preferences[PreferencesKeys.ENABLE_SYSTEM] = prefs.enableSystem
+            preferences[PreferencesKeys.ENABLE_CHAT] = prefs.enableChat
         }
     }
 }

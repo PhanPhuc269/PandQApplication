@@ -474,7 +474,24 @@ class AdminActivity : FragmentActivity() {
                             )
                         }
                         composable(AdminScreen.NotificationList.route) {
-                            com.group1.pandqapplication.admin.ui.notifications.AdminNotificationScreen()
+                            com.group1.pandqapplication.admin.ui.notifications.AdminNotificationScreen(
+                                onNavigate = { targetData ->
+                                    // Parse targetData and navigate to appropriate screen
+                                    // Format examples: "/orders/{orderId}", "/inventory"
+                                    when {
+                                        targetData.contains("/orders/") -> {
+                                            // Navigate to shipping management for order
+                                            navController.navigate(AdminScreen.ShippingManagement.route)
+                                        }
+                                        targetData.contains("/inventory") -> {
+                                            navController.navigate("inventory_stats")
+                                        }
+                                        else -> {
+                                            android.util.Log.d("AdminNotification", "Unknown targetData: $targetData")
+                                        }
+                                    }
+                                }
+                            )
                         }
                         
                         // Chat routes

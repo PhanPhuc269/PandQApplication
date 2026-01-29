@@ -24,4 +24,16 @@ data class FcmTokenByEmailRequest(
     val firebaseUid: String? = null
 )
 
+data class NotificationPreferenceResponse(
+    val enablePromotions: Boolean,
+    val enableOrders: Boolean,
+    val enableSystem: Boolean,
+    val enableChat: Boolean
+)
 
+data class NotificationPreferenceRequest(
+    val enablePromotions: Boolean? = null,
+    val enableOrders: Boolean? = null,
+    val enableSystem: Boolean? = null,
+    val enableChat: Boolean? = null
+)

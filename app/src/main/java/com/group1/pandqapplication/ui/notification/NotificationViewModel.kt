@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.shared.data.remote.dto.NotificationDto
 import com.group1.pandqapplication.shared.data.repository.AuthRepository
 import com.group1.pandqapplication.shared.data.repository.NotificationRepository
+import com.group1.pandqapplication.shared.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,49 +19,60 @@ data class NotificationUiState(
     val isLoadingMore: Boolean = false,
     val notifications: List<NotificationDto> = emptyList(),
     val errorMessage: String? = null,
-    val selectedFilter: String = "All", // All, Orders, Promos
+    val selectedFilter: String = "All", // All, Orders, Promos, System
     val hasMore: Boolean = true,
-    val currentPage: Int = 0
+    val currentPage: Int = 0,
+    val preferences: com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceResponse? = null
 )
 
 @HiltViewModel
 class NotificationViewModel @Inject constructor(
     private val notificationRepository: NotificationRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NotificationUiState())
     val uiState: StateFlow<NotificationUiState> = _uiState.asStateFlow()
 
     private var currentUserEmail: String? = null
+    private var currentUserId: String? = null
 
     init {
-        loadNotifications()
+        loadData()
     }
 
-    fun loadNotifications() {
+    fun loadData() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null, currentPage = 0, hasMore = true) }
-
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 val email = authRepository.getCurrentUserEmail()
                 if (email.isNullOrEmpty()) {
-                    _uiState.update { 
-                        it.copy(isLoading = false, errorMessage = "Chưa đăng nhập") 
-                    }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "Chưa đăng nhập") }
                     return@launch
                 }
-
                 currentUserEmail = email
-                val result = notificationRepository.getNotificationsByEmail(email)
 
-                result.fold(
+                // Fetch User ID
+                val userResult = userRepository.getUserByEmail(email)
+                userResult.onSuccess { user ->
+                    currentUserId = user.id
+                    loadPreferences(user.id)
+                }.onFailure {
+                    // Log or handle error getting user ID
+                }
+
+                // Fetch Notifications
+                // We use getNotificationsByEmail for convenience as it handles finding user by email on backend too
+                val notifResult = notificationRepository.getNotificationsByEmail(email)
+                
+                notifResult.fold(
                     onSuccess = { notifications ->
                         _uiState.update { 
                             it.copy(
                                 isLoading = false, 
                                 notifications = notifications,
-                                hasMore = false // Backend currently returns all, no pagination yet
+                                hasMore = false
                             ) 
                         }
                     },
@@ -70,24 +82,31 @@ class NotificationViewModel @Inject constructor(
                         }
                     }
                 )
+
             } catch (e: Exception) {
-                _uiState.update { 
-                    it.copy(isLoading = false, errorMessage = e.message) 
-                }
+                _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
             }
         }
     }
 
-    fun loadMore() {
-        val state = _uiState.value
-        if (state.isLoading || state.isLoadingMore || !state.hasMore) return
-        
+    fun loadPreferences(userId: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoadingMore = true) }
-            
-            // TODO: Implement actual pagination when backend supports it
-            // For now, just mark as no more items
-            _uiState.update { it.copy(isLoadingMore = false, hasMore = false) }
+            val result = notificationRepository.getPreferences(userId)
+            result.onSuccess { prefs ->
+                _uiState.update { it.copy(preferences = prefs) }
+            }
+        }
+    }
+
+    fun updatePreference(request: com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceRequest) {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            // Optimistic update locally? 
+            // Better to wait for server response or just fire and forget but reload.
+            val result = notificationRepository.updatePreferences(userId, request)
+            if (result.isSuccess) {
+                loadPreferences(userId)
+            }
         }
     }
 
@@ -128,33 +147,31 @@ class NotificationViewModel @Inject constructor(
 
     fun setFilter(filter: String) {
         _uiState.update { it.copy(selectedFilter = filter) }
+        // If we wanted to fetch from server based on filter, we would call loadNotifications(type) here.
+        // But for now client side filtering is sufficient and faster.
     }
 
     fun getFilteredNotifications(): List<NotificationDto> {
         val state = _uiState.value
         return when (state.selectedFilter) {
-            "Orders" -> state.notifications.filter { it.type == "ORDER_UPDATE" }
+            "Orders" -> state.notifications.filter { it.type == "ORDER_UPDATE" || it.type == "PAYMENT_SUCCESS" }
             "Promos" -> state.notifications.filter { it.type == "PROMOTION" }
             "Chats" -> state.notifications.filter { it.type == "CHAT_MESSAGE" }
             else -> state.notifications
         }
     }
-
+    
+    fun refresh() {
+        loadData()
+    }
+    
     fun deleteNotification(notificationId: String) {
-        viewModelScope.launch {
-            // Remove from local state immediately for instant UI feedback
+         viewModelScope.launch {
             _uiState.update { state ->
                 state.copy(
                     notifications = state.notifications.filter { it.id != notificationId }
                 )
             }
-            // TODO: Call backend delete API when available
-            // notificationRepository.deleteNotification(notificationId)
         }
     }
-
-    fun refresh() {
-        loadNotifications()
-    }
 }
-

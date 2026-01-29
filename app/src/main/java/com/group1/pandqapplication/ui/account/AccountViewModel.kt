@@ -12,6 +12,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.group1.pandqapplication.shared.data.repository.NotificationRepository
+import com.group1.pandqapplication.shared.data.repository.UserRepository
+import com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceResponse
+import com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceRequest
+
 data class AccountUiState(
     val isLoggedIn: Boolean = false,
     val isEmailVerified: Boolean = false,
@@ -19,16 +24,21 @@ data class AccountUiState(
     val email: String = "",
     val photoUrl: String? = null,
     val isLoading: Boolean = false,
-    val message: String? = null
+    val message: String? = null,
+    val preferences: NotificationPreferenceResponse? = null
 )
 
 @HiltViewModel
 class AccountViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
+    private val notificationRepository: NotificationRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountUiState())
     val uiState: StateFlow<AccountUiState> = _uiState.asStateFlow()
+    
+    private var currentUserId: String? = null
 
     init {
         loadUserInfo()
@@ -37,23 +47,79 @@ class AccountViewModel @Inject constructor(
     fun loadUserInfo() {
         val isLoggedIn = authRepository.isUserLoggedIn()
         if (isLoggedIn) {
-            _uiState.value = AccountUiState(
-                isLoggedIn = true,
-                isEmailVerified = authRepository.isEmailVerified(),
-                displayName = authRepository.getCurrentUserDisplayName() 
-                    ?: authRepository.getCurrentUserEmail()?.substringBefore("@") 
-                    ?: "Người dùng",
-                email = authRepository.getCurrentUserEmail() ?: "",
-                photoUrl = authRepository.getCurrentUserPhotoUrl()
-            )
+            _uiState.update { 
+                it.copy(
+                    isLoggedIn = true,
+                    isEmailVerified = authRepository.isEmailVerified(),
+                    displayName = authRepository.getCurrentUserDisplayName() 
+                        ?: authRepository.getCurrentUserEmail()?.substringBefore("@") 
+                        ?: "Người dùng",
+                    email = authRepository.getCurrentUserEmail() ?: "",
+                    photoUrl = authRepository.getCurrentUserPhotoUrl()
+                )
+            }
+            // Fetch User ID and Preferences
+            loadPreferences()
         } else {
-            _uiState.value = AccountUiState(
-                isLoggedIn = false,
-                isEmailVerified = false,
-                displayName = "Khách",
-                email = "Chưa đăng nhập",
-                photoUrl = null
-            )
+            _uiState.update { 
+                AccountUiState(
+                    isLoggedIn = false,
+                    isEmailVerified = false,
+                    displayName = "Khách",
+                    email = "Chưa đăng nhập",
+                    photoUrl = null
+                )
+            }
+        }
+    }
+    
+    fun loadPreferences() {
+        viewModelScope.launch {
+            try {
+                val email = authRepository.getCurrentUserEmail() ?: return@launch
+                
+                // 1. Get User ID if not cached
+                if (currentUserId == null) {
+                    val userResult = userRepository.getUserByEmail(email)
+                    userResult.onSuccess { user ->
+                        currentUserId = user.id
+                    }.onFailure {
+                        return@launch
+                    }
+                }
+                
+                // 2. Get Preferences
+                val userId = currentUserId ?: return@launch
+                val prefResult = notificationRepository.getPreferences(userId)
+                prefResult.onSuccess { prefs ->
+                    _uiState.update { it.copy(preferences = prefs) }
+                }
+            } catch (e: Exception) {
+               val defaultPrefs = NotificationPreferenceResponse(
+                   enablePromotions = true, 
+                   enableOrders = true, 
+                   enableSystem = true, 
+                   enableChat = true
+               )
+               _uiState.update { 
+                   it.copy(
+                       preferences = defaultPrefs,
+                       message = "Không thể tải cài đặt (Server Error). Đã dùng mặc định."
+                   ) 
+               }
+            }
+        }
+    }
+    
+    fun updatePreference(request: NotificationPreferenceRequest) {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            val result = notificationRepository.updatePreferences(userId, request)
+            if (result.isSuccess) {
+                loadPreferences() // Reload to confirm
+            } else {
+                _uiState.update { it.copy(message = "Không thể cập nhật cài đặt thông báo") }
+            }
         }
     }
 

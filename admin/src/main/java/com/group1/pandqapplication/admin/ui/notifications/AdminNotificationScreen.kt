@@ -1,6 +1,7 @@
 package com.group1.pandqapplication.admin.ui.notifications
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,9 +33,19 @@ import java.time.temporal.ChronoUnit
 
 @Composable
 fun AdminNotificationScreen(
-    viewModel: AdminNotificationViewModel = hiltViewModel()
+    viewModel: AdminNotificationViewModel = hiltViewModel(),
+    onNavigate: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    // Collect navigation events
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { targetData: String? ->
+            if (targetData != null) {
+                onNavigate(targetData)
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -107,7 +118,10 @@ fun AdminNotificationScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(state.notifications) { notification ->
-                            NotificationItem(notification)
+                            NotificationItem(
+                                notification = notification,
+                                onClick = { viewModel.onNotificationClick(notification) }
+                            )
                         }
                     }
                 }
@@ -117,14 +131,19 @@ fun AdminNotificationScreen(
 }
 
 @Composable
-fun NotificationItem(notification: AdminNotificationItem) {
+fun NotificationItem(
+    notification: AdminNotificationItem,
+    onClick: () -> Unit = {}
+) {
     val iconInfo = getNotificationIcon(notification.type)
     
     Surface(
         color = Color.White,
         shape = RoundedCornerShape(12.dp),
         shadowElevation = 1.dp,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

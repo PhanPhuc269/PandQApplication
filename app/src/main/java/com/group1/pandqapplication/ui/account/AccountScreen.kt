@@ -19,6 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +37,8 @@ import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
+import com.group1.pandqapplication.ui.notification.NotificationSettingsDialog
+import com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +54,8 @@ fun AccountScreen(
     val uiState by viewModel.uiState.collectAsState()
     val backgroundColor = Color(0xFFF8F6F6)
     val primaryColor = Color(0xFFec3713)
+    
+    var showNotificationSettings by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = backgroundColor,
@@ -226,7 +233,12 @@ fun AccountScreen(
             // Settings Section
             SectionHeader(title = "Cài đặt")
             SectionContainer {
-                SectionItem(icon = Icons.Outlined.Notifications, label = "Cài đặt thông báo", primaryColor = primaryColor)
+                SectionItem(
+                    icon = Icons.Outlined.Notifications, 
+                    label = "Cài đặt thông báo", 
+                    primaryColor = primaryColor,
+                    onClick = { showNotificationSettings = true }
+                )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 SectionItem(icon = Icons.Outlined.Settings, label = "Cài đặt ứng dụng", primaryColor = primaryColor)
             }
@@ -266,6 +278,14 @@ fun AccountScreen(
             
             Spacer(modifier = Modifier.height(40.dp))
         }
+    }
+
+    if (showNotificationSettings) {
+        NotificationSettingsDialog(
+            preferences = uiState.preferences,
+            onDismiss = { showNotificationSettings = false },
+            onUpdate = { request -> viewModel.updatePreference(request) }
+        )
     }
 }
 
