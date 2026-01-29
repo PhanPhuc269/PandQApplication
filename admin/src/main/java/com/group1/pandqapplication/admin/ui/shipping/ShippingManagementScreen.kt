@@ -74,6 +74,7 @@ import com.group1.pandqapplication.shared.ui.theme.ShippingTextLightSecondary
 @Composable
 fun ShippingManagementScreen(
     onBackClick: () -> Unit = {},
+    onOrderClick: (String) -> Unit = {},
     viewModel: ShippingViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -290,6 +291,7 @@ fun ShippingManagementScreen(
                                 textPrimary = textPrimary,
                                 textSecondary = textSecondary,
                                 borderColor = borderColor,
+                                onCardClick = { onOrderClick(order.id) },
                                 onAssignCarrier = { viewModel.showAssignCarrierDialog(order) },
                                 onUpdateStatus = { viewModel.showUpdateStatusDialog(order) }
                             )
@@ -344,6 +346,7 @@ fun ShippingOrderCard(
     textPrimary: Color,
     textSecondary: Color,
     borderColor: Color,
+    onCardClick: () -> Unit = {},
     onAssignCarrier: () -> Unit,
     onUpdateStatus: () -> Unit
 ) {
@@ -411,6 +414,7 @@ fun ShippingOrderCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(cardColor)
+            .clickable { onCardClick() }
             .padding(16.dp)
     ) {
         // Header

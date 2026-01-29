@@ -443,7 +443,12 @@ class AdminActivity : FragmentActivity() {
                             )
                         }
                         composable(AdminScreen.ShippingManagement.route) {
-                            ShippingManagementScreen(onBackClick = { navController.popBackStack() })
+                            ShippingManagementScreen(
+                                onBackClick = { navController.popBackStack() },
+                                onOrderClick = { orderId ->
+                                    navController.navigate(AdminScreen.OrderDetails.route)
+                                }
+                            )
                         }
                         composable(AdminScreen.OrderDetails.route) {
                             AdminOrderDetailsScreen(onBackClick = { navController.popBackStack() })
