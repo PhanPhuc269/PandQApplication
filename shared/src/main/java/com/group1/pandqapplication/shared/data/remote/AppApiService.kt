@@ -182,9 +182,6 @@ interface AppApiService {
     
     // Confirm delivery - user marks DELIVERED order as COMPLETED
     @POST("api/v1/orders/{orderId}/confirm-delivery")
-    suspend fun confirmDelivery(@Path("orderId") orderId: String): retrofit2.Response<OrderDto>
-
-    @POST("api/v1/orders/{orderId}/confirm-delivery")
     suspend fun confirmDelivery(@Path("orderId") orderId: String): OrderDto
 
     // Apply promotion to order before payment
