@@ -78,6 +78,7 @@
     <string name="user_guide">User Guide</string>
     <string name="policy_terms">Policy &amp; Terms</string>
     <string name="logout">Log Out</string>
+    <string name="close_account">Close Account</string>
     <string name="default_avatar">Default Avatar</string>
     <string name="avatar">Avatar</string>
     <string name="back">Back</string>

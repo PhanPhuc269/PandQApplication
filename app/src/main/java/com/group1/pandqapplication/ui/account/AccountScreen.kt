@@ -246,9 +246,18 @@ fun AccountScreen(
             // Settings Section
             SectionHeader(title = stringResource(R.string.section_settings))
             SectionContainer {
-                SectionItem(icon = Icons.Outlined.Notifications, label = stringResource(R.string.notification_settings), primaryColor = primaryColor)
+                SectionItem(
+                    icon = Icons.Outlined.Notifications, 
+                    label = stringResource(R.string.notification_settings), 
+                    primaryColor = primaryColor,
+                    onClick = { showNotificationSettings = true }
+                )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
-                SectionItem(icon = Icons.Outlined.Settings, label = stringResource(R.string.app_settings), primaryColor = primaryColor)
+                SectionItem(
+                    icon = Icons.Outlined.Settings, 
+                    label = stringResource(R.string.app_settings), 
+                    primaryColor = primaryColor
+                )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 // Language Settings
                 SectionItemWithSubtitle(
@@ -257,19 +266,11 @@ fun AccountScreen(
                     subtitle = LocaleManager.getLanguageDisplayName(currentLanguage),
                     primaryColor = primaryColor,
                     onClick = { showLanguageDialog = true }
-                )                    
-                SectionItem(
-                    icon = Icons.Outlined.Notifications, 
-                    label = "Cài đặt thông báo", 
-                    primaryColor = primaryColor,
-                    onClick = { showNotificationSettings = true }
                 )
-                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
-                SectionItem(icon = Icons.Outlined.Settings, label = "Cài đặt ứng dụng", primaryColor = primaryColor)
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 SectionItem(
                     icon = Icons.Outlined.DeleteForever, 
-                    label = "Đóng tài khoản", 
+                    label = stringResource(R.string.close_account), 
                     isDestructive = true,
                     primaryColor = primaryColor,
                     onClick = { showCloseAccountDialog = true }
