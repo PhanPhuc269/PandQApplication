@@ -7,4 +7,5 @@ interface UserRepository {
     suspend fun getUserById(id: String): Result<UserDto>
     suspend fun getUserByEmail(email: String): Result<UserDto>
     suspend fun updateUser(id: String, fullName: String?, phone: String?, avatarUrl: String?): Result<UserDto>
+    suspend fun closeAccount(email: String, reason: String?): Result<Unit>
 }

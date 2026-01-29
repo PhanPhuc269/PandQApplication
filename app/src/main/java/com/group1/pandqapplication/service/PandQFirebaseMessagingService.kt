@@ -15,10 +15,21 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
+import com.group1.pandqapplication.shared.data.repository.NotificationRepository
+import com.group1.pandqapplication.shared.data.repository.PreferenceRepository
 
 @AndroidEntryPoint
 class PandQFirebaseMessagingService : FirebaseMessagingService() {
+
+    @Inject
+    lateinit var notificationRepository: NotificationRepository
+
+    @Inject
+    lateinit var preferenceRepository: PreferenceRepository
 
     companion object {
         private const val TAG = "FCM"
@@ -57,8 +68,22 @@ class PandQFirebaseMessagingService : FirebaseMessagingService() {
     private fun sendTokenToServer(token: String) {
         serviceScope.launch {
             try {
-                // TODO: Send token to backend using repository
-                Log.d(TAG, "Token should be sent to server: $token")
+                // Determine userId? Use repository if it stores it, or update by email if logged in maybe? 
+                // Since this service might run when app is killed, getting current user ID might be tricky if not stored.
+                // Assuming Authentication manages session or we update fcm by email if we can get email.
+                // But for now, let's try the repository method which might need userID.
+                
+                // Let's assume we update by whatever means available in Repos.
+                // Actually, NotificationRepository has updateFcmToken(userId, token)
+                // We need userId.
+                // If we don't have it, we might skip. But usually we store it.
+                // For now, let's log.
+                Log.d(TAG, "Token needs to be sent: $token")
+                
+                // Real implementation ideally:
+                // val userId = authRepository.getCurrentUserId()
+                // if (userId != null) notificationRepository.updateFcmToken(userId, token)
+                
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to send token to server", e)
             }
@@ -72,7 +97,28 @@ class PandQFirebaseMessagingService : FirebaseMessagingService() {
         val targetUrl = data["targetUrl"]
         val chatId = data["chatId"]
 
+        // Check preferences before showing
+        if (!shouldShowNotification(type)) {
+            Log.d(TAG, "Notification blocked by user preference: type=$type")
+            return
+        }
+
         showNotification(title, body, type, targetUrl, chatId)
+    }
+
+    private fun shouldShowNotification(type: String?): Boolean {
+        if (type == null) return true // Default show if no type
+        
+        // Blocking here is okay as this runs on a background worker thread for FCM
+        val preferences = runBlocking { preferenceRepository.notificationPreferences.first() }
+        
+        return when (type) {
+            "ORDER_UPDATE", "PAYMENT_SUCCESS" -> preferences.enableOrders
+            "PROMOTION" -> preferences.enablePromotions
+            "SYSTEM" -> preferences.enableSystem
+            "CHAT_MESSAGE" -> preferences.enableChat
+            else -> true // Unknown types shown by default
+        }
     }
 
     private fun showNotification(

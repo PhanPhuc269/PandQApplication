@@ -88,8 +88,8 @@ fun MainScreen(
                                     onNavigateToProduct(productId)
                                 }
                                 targetUrl.contains("promotions") || targetUrl.contains("coupons") || targetUrl.contains("flash-sale") -> {
-                                    val promoId = targetUrl.substringAfterLast("/")
-                                    onNavigateToPromotion(promoId)
+                                    // Navigate to voucher center for promotion links
+                                    onVoucherClick()
                                 }
                                 targetUrl.contains("chat") -> {
                                     // Navigate to chat screen

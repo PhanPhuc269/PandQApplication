@@ -54,6 +54,11 @@ fun PandQNavGraph(
                     android.util.Log.d("DeepLink", "Navigating to chat")
                     navController.navigate(Screen.ChatScreen.createRoute("general"))
                 }
+                deepLink.contains("promotions") || deepLink.contains("coupons") || deepLink.contains("vouchers") -> {
+                    // Navigate to voucher center for promotion links
+                    android.util.Log.d("DeepLink", "Navigating to voucher center")
+                    navController.navigate(Screen.VoucherCenter.route)
+                }
                 deepLink.contains("home") -> {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(navController.graph.startDestinationId)

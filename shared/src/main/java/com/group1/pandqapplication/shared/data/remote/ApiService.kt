@@ -44,14 +44,27 @@ interface ApiService {
     suspend fun deleteCategory(@Path("id") id: UUID): Response<Unit>
 
     // Notification endpoints
+    // Notification endpoints
     @GET("api/v1/notifications/user/{userId}")
-    suspend fun getNotifications(@Path("userId") userId: String): Response<List<NotificationDto>>
+    suspend fun getNotifications(
+        @Path("userId") userId: String,
+        @Query("type") type: String? = null
+    ): Response<List<NotificationDto>>
 
     @GET("api/v1/notifications/by-email")
     suspend fun getNotificationsByEmail(@Query("email") email: String): Response<List<NotificationDto>>
 
     @PUT("api/v1/notifications/{id}/read")
     suspend fun markNotificationAsRead(@Path("id") id: String): Response<Unit>
+    
+    @GET("api/v1/notifications/preferences/{userId}")
+    suspend fun getNotificationPreferences(@Path("userId") userId: String): Response<com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceResponse>
+
+    @PUT("api/v1/notifications/preferences/{userId}")
+    suspend fun updateNotificationPreferences(
+        @Path("userId") userId: String,
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceRequest
+    ): Response<Unit>
 
     // FCM token endpoints
     @POST("api/v1/users/fcm-token")

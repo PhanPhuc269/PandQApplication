@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +46,8 @@ import com.group1.pandqapplication.R
 import com.group1.pandqapplication.ui.components.LanguagePickerDialog
 import com.group1.pandqapplication.util.LocaleManager
 import kotlinx.coroutines.launch
+import com.group1.pandqapplication.ui.notification.NotificationSettingsDialog
+import com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +68,8 @@ fun AccountScreen(
     val coroutineScope = rememberCoroutineScope()
     var showLanguageDialog by remember { mutableStateOf(false) }
     var currentLanguage by remember { mutableStateOf(LocaleManager.getCurrentLanguage(context)) }
+    var showNotificationSettings by remember { mutableStateOf(false) }
+    var showCloseAccountDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = backgroundColor,
@@ -93,7 +98,6 @@ fun AccountScreen(
                                  color = Color(0xFF111827)
                              ) 
                         }
-                        Spacer(modifier = Modifier.size(48.dp)) // Balance right side
                     }
                 }
             }
@@ -253,6 +257,22 @@ fun AccountScreen(
                     subtitle = LocaleManager.getLanguageDisplayName(currentLanguage),
                     primaryColor = primaryColor,
                     onClick = { showLanguageDialog = true }
+                )                    
+                SectionItem(
+                    icon = Icons.Outlined.Notifications, 
+                    label = "Cài đặt thông báo", 
+                    primaryColor = primaryColor,
+                    onClick = { showNotificationSettings = true }
+                )
+                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                SectionItem(icon = Icons.Outlined.Settings, label = "Cài đặt ứng dụng", primaryColor = primaryColor)
+                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                SectionItem(
+                    icon = Icons.Outlined.DeleteForever, 
+                    label = "Đóng tài khoản", 
+                    isDestructive = true,
+                    primaryColor = primaryColor,
+                    onClick = { showCloseAccountDialog = true }
                 )
             }
             
@@ -308,6 +328,30 @@ fun AccountScreen(
             },
             onDismiss = { showLanguageDialog = false }
         )
+    }
+
+    if (showNotificationSettings) {
+        NotificationSettingsDialog(
+            preferences = uiState.preferences,
+            onDismiss = { showNotificationSettings = false },
+            onUpdate = { request -> viewModel.updatePreference(request) }
+        )
+    }
+
+    if (showCloseAccountDialog) {
+        CloseAccountDialog(
+            isLoading = uiState.isClosingAccount,
+            onDismiss = { showCloseAccountDialog = false },
+            onConfirm = { reason -> viewModel.closeAccount(reason) }
+        )
+    }
+
+    // Handle close account success
+    LaunchedEffect(uiState.closeAccountSuccess) {
+        if (uiState.closeAccountSuccess) {
+            showCloseAccountDialog = false
+            onLogout() // Logout user after successful closure
+        }
     }
 }
 

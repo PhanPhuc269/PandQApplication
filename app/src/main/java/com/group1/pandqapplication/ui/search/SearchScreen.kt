@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -139,8 +140,15 @@ fun SearchScreen(
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF374151))
                     }
 
-                    // Search Bar
-                    Box(modifier = Modifier.weight(1f)) {
+                    // Search Bar using ExposedDropdownMenuBox
+                    @OptIn(ExperimentalMaterial3Api::class)
+                    ExposedDropdownMenuBox(
+                        expanded = uiState.showSuggestions,
+                        onExpandedChange = { expanded ->
+                             if (!expanded) viewModel.onHideSuggestions()
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
                         TextField(
                             value = uiState.searchQuery,
                             onValueChange = { viewModel.onSearchQueryChange(it) },
@@ -167,9 +175,129 @@ fun SearchScreen(
                                 unfocusedIndicatorColor = Color.Transparent
                             ),
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth().padding(0.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(0.dp)
+                                .menuAnchor() // Needed for ExposedDropdownMenu
+                                .onFocusChanged { focusState ->
+                                    viewModel.onSearchFocusChange(focusState.isFocused)
+                                },
                             textStyle = TextStyle(fontSize = 14.sp)
                         )
+                        
+                        ExposedDropdownMenu(
+                            expanded = uiState.showSuggestions,
+                            onDismissRequest = { viewModel.onHideSuggestions() },
+                            modifier = Modifier.background(Color.White)
+                        ) {
+                            val hasHistory = uiState.searchHistory.isNotEmpty()
+                            val hasTrending = uiState.trendingSearches.isNotEmpty()
+                            
+                            if (!hasHistory && !hasTrending) {
+                                // Loading state
+                                DropdownMenuItem(
+                                    text = { 
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                strokeWidth = 2.dp,
+                                                color = Color.Gray
+                                            )
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Text("Đang tải gợi ý...", fontSize = 14.sp, color = Color.Gray)
+                                        }
+                                    },
+                                    onClick = { },
+                                    enabled = false
+                                )
+                            }
+                            
+                            // Search History Section
+                            if (hasHistory) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    Icons.Filled.AccessTime,
+                                                    contentDescription = null,
+                                                    tint = Color(0xFF6B7280),
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text("Tìm kiếm gần đây", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151))
+                                            }
+                                            Text(
+                                                "Xóa tất cả",
+                                                fontSize = 12.sp,
+                                                color = primaryColor,
+                                                modifier = Modifier.clickable { viewModel.onClearSearchHistory() }
+                                            )
+                                        }
+                                    },
+                                    onClick = { },
+                                    enabled = false
+                                )
+                                
+                                uiState.searchHistory.take(5).forEach { query ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFF9CA3AF), modifier = Modifier.size(16.dp))
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Text(query, fontSize = 14.sp, color = Color(0xFF374151), modifier = Modifier.weight(1f))
+                                                IconButton(
+                                                    onClick = { viewModel.onRemoveHistoryItem(query) },
+                                                    modifier = Modifier.size(24.dp)
+                                                ) {
+                                                    Icon(Icons.Filled.Close, contentDescription = "Xóa", tint = Color(0xFF9CA3AF), modifier = Modifier.size(14.dp))
+                                                }
+                                            }
+                                        },
+                                        onClick = { viewModel.onSelectSuggestion(query) }
+                                    )
+                                }
+                                
+                                if (hasTrending) {
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color(0xFFE5E7EB))
+                                }
+                            }
+                            
+                            // Trending Section
+                            if (hasTrending) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Xu hướng tìm kiếm", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151))
+                                        }
+                                    },
+                                    onClick = { },
+                                    enabled = false
+                                )
+                                
+                                uiState.trendingSearches.forEach { trend ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = primaryColor, modifier = Modifier.size(14.dp))
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(trend, fontSize = 14.sp, color = Color(0xFF374151))
+                                            }
+                                        },
+                                        onClick = { viewModel.onSelectSuggestion(trend) }
+                                    )
+                                }
+                            }
+                        }
                     }
 
                 }

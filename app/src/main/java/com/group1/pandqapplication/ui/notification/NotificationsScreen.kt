@@ -4,12 +4,10 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +25,7 @@ import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.NotificationImportant
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -46,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.group1.pandqapplication.shared.data.remote.dto.NotificationDto
+import com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceRequest
+import com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceResponse
 import com.group1.pandqapplication.shared.ui.theme.BackgroundLight
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -77,7 +78,7 @@ enum class NotificationType {
 // Helper to convert API data to UI model
 private fun NotificationDto.toUiModel(): NotificationUiModel {
     val notifType = when (type) {
-        "ORDER_UPDATE" -> NotificationType.ORDER
+        "ORDER_UPDATE", "PAYMENT_SUCCESS" -> NotificationType.ORDER
         "PROMOTION" -> NotificationType.PROMO
         "SYSTEM" -> NotificationType.SYSTEM
         "CHAT_MESSAGE" -> NotificationType.CHAT
@@ -100,7 +101,9 @@ private fun NotificationDto.toUiModel(): NotificationUiModel {
 
 private fun formatDateTime(isoString: String): Pair<String, DateCategory> {
     return try {
-        val dateTime = LocalDateTime.parse(isoString.substringBefore("+"))
+        // Handle timezone if needed, simple parsing for now
+        // Assuming ISO format like "2023-10-27T10:00:00"
+        val dateTime = LocalDateTime.parse(isoString.substringBefore("+").substringBefore("Z"))
         val now = LocalDateTime.now()
         val daysBetween = ChronoUnit.DAYS.between(dateTime.toLocalDate(), now.toLocalDate())
         
@@ -126,17 +129,20 @@ fun NotificationsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val primaryColor = Color(0xFFec3713)
     val backgroundColor = BackgroundLight
+    
+    var showSettingsDialog by remember { mutableStateOf(false) }
 
     // Convert API notifications to UI models
     val allNotifications = remember(uiState.notifications) {
         uiState.notifications.map { it.toUiModel() }
     }
 
-    // Filter Logic
+    // Filter Logic matching ViewModel
     val filteredNotifications = when (uiState.selectedFilter) {
         "Orders" -> allNotifications.filter { it.type == NotificationType.ORDER }
         "Promos" -> allNotifications.filter { it.type == NotificationType.PROMO }
         "Chats" -> allNotifications.filter { it.type == NotificationType.CHAT }
+        "System" -> allNotifications.filter { it.type == NotificationType.SYSTEM }
         else -> allNotifications
     }
 
@@ -155,17 +161,24 @@ fun NotificationsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(backgroundColor)
-                        .statusBarsPadding() // Đẩy xuống khỏi Status Bar TRƯỚC
-                        .height(56.dp)       // Chiều cao chuẩn AppBar SAU
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.Center
+                        .statusBarsPadding()
+                        .height(56.dp)
+                        .padding(horizontal = 16.dp)
                 ) {
                     Text(
                         stringResource(R.string.notifications),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = Color(0xFF111827)
+                        color = Color(0xFF111827),
+                        modifier = Modifier.align(Alignment.Center)
                     )
+                    
+                    IconButton(
+                        onClick = { showSettingsDialog = true },
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        Icon(Icons.Filled.Settings, contentDescription = "Cài đặt", tint = Color(0xFF4B5563))
+                    }
                 }
             }
         }
@@ -221,18 +234,14 @@ fun NotificationsScreen(
                 }
             }
 
-            // Loading State - Shimmer Skeleton
+            // Loading State
             if (uiState.isLoading && uiState.notifications.isEmpty()) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    item {
-                        ShimmerDateHeader()
-                    }
-                    items(5) {
-                        ShimmerNotificationItem()
-                    }
+                    item { ShimmerDateHeader() }
+                    items(5) { ShimmerNotificationItem() }
                 }
             }
             // Error State
@@ -242,18 +251,8 @@ fun NotificationsScreen(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        uiState.errorMessage ?: "Đã có lỗi xảy ra",
-                        color = Color(0xFF6B7280),
-                        fontSize = 14.sp
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = { viewModel.refresh() },
-                        colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
-                    ) {
-                        Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
+                    Text(uiState.errorMessage ?: "Đã có lỗi xảy ra", color = Color(0xFF6B7280), fontSize = 14.sp)
+                    Button(onClick = { viewModel.refresh() }, colors = ButtonDefaults.buttonColors(containerColor = primaryColor)) {
                         Text("Thử lại")
                     }
                 }
@@ -290,25 +289,7 @@ fun NotificationsScreen(
             }
             // Notification List
             else {
-                val listState = rememberLazyListState()
-                
-                // Infinite scroll detection
-                val shouldLoadMore = remember {
-                    derivedStateOf {
-                        val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
-                            ?: return@derivedStateOf false
-                        lastVisibleItem.index >= listState.layoutInfo.totalItemsCount - 3
-                    }
-                }
-                
-                LaunchedEffect(shouldLoadMore.value) {
-                    if (shouldLoadMore.value && !uiState.isLoading) {
-                        viewModel.loadMore()
-                    }
-                }
-                
                 LazyColumn(
-                    state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
@@ -341,31 +322,24 @@ fun NotificationsScreen(
                             )
                         }
                     }
-                    
-                    // Loading indicator at bottom when loading more
-                    if (uiState.isLoadingMore) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = primaryColor
-                                )
-                            }
-                        }
-                    }
                 }
             }
             }
         }
     }
+    
+    if (showSettingsDialog) {
+        NotificationSettingsDialog(
+            preferences = uiState.preferences,
+            onDismiss = { showSettingsDialog = false },
+            onUpdate = { request -> viewModel.updatePreference(request) }
+        )
+    }
 }
 
+// ... Keep existing SwipToDismissNotificationItem, NotificationItem, Shimmer helpers ...
 
+// ... Keep existing SwipToDismissNotificationItem, NotificationItem, Shimmer helpers ...
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeToDismissNotificationItem(
@@ -446,7 +420,6 @@ fun NotificationItem(notification: NotificationUiModel, onClick: () -> Unit = {}
                 NotificationType.CHAT -> Triple(Icons.Filled.Chat, Color(0xFFE0F2FE), Color(0xFF0284C7))
             }
 
-            // Special case icons
             val actualIcon = if (notification.type == NotificationType.ORDER && notification.title.contains("vận chuyển")) Icons.Filled.Inventory2 
                              else if (notification.type == NotificationType.PROMO && notification.title.contains("Mã giảm giá")) Icons.Filled.ConfirmationNumber
                              else icon
@@ -511,7 +484,7 @@ fun NotificationItem(notification: NotificationUiModel, onClick: () -> Unit = {}
     }
 }
 
-// Shimmer Effect Composables
+// Shimmer Effect
 @Composable
 fun shimmerBrush(): Brush {
     val shimmerColors = listOf(
@@ -561,60 +534,26 @@ fun ShimmerNotificationItem() {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.Top
         ) {
-            // Shimmer dot placeholder
             Spacer(modifier = Modifier.width(14.dp))
-
-            // Shimmer icon circle
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(shimmerBrush())
             )
-
             Spacer(modifier = Modifier.width(16.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Shimmer title
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(16.dp)
-                            .padding(end = 8.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(shimmerBrush())
-                    )
-                    // Shimmer time
-                    Box(
-                        modifier = Modifier
-                            .width(40.dp)
-                            .height(14.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(shimmerBrush())
-                    )
+                    Box(modifier = Modifier.weight(1f).height(16.dp).padding(end = 8.dp).clip(RoundedCornerShape(4.dp)).background(shimmerBrush()))
+                    Box(modifier = Modifier.width(40.dp).height(14.dp).clip(RoundedCornerShape(4.dp)).background(shimmerBrush()))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                // Shimmer description line 1
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(14.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(shimmerBrush())
-                )
+                Box(modifier = Modifier.fillMaxWidth().height(14.dp).clip(RoundedCornerShape(4.dp)).background(shimmerBrush()))
                 Spacer(modifier = Modifier.height(4.dp))
-                // Shimmer description line 2
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.7f)
-                        .height(14.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(shimmerBrush())
-                )
+                Box(modifier = Modifier.fillMaxWidth(0.7f).height(14.dp).clip(RoundedCornerShape(4.dp)).background(shimmerBrush()))
             }
         }
     }

@@ -90,7 +90,7 @@ class NotificationTemplateViewModel @Inject constructor(
         }
     }
 
-    fun createTemplate(title: String, body: String, scheduledAt: String? = null, targetUrl: String? = null, type: String = "SYSTEM") {
+    fun createTemplate(title: String, body: String, scheduledAt: String? = null, targetUrl: String? = null, type: String = "PROMOTION") {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
