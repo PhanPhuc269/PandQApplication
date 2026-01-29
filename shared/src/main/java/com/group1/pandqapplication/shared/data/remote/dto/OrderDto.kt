@@ -31,3 +31,17 @@ data class AddToCartRequest(
     val productId: String,
     val quantity: Int
 )
+
+data class AssignCarrierRequest(
+    val shippingProvider: String,
+    val trackingNumber: String? = null
+)
+
+data class UpdateStatusRequest(
+    val status: String
+)
+
+data class ApplyPromotionRequest(
+    val userId: String,
+    val promotionId: String
+)

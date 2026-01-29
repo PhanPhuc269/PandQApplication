@@ -35,7 +35,3 @@ data class ClaimVoucherResponse(
     val voucher: VoucherResponseDto? = null
 )
 
-data class ApplyPromotionRequest(
-    val userId: String,
-    val promotionId: String
-)

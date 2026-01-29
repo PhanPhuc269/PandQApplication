@@ -64,6 +64,62 @@ class AdminOrderDetailsViewModel @Inject constructor(
         _uiState.update { it.copy(error = null) }
     }
 
+    fun assignCarrier(shippingProvider: String, trackingNumber: String? = null) {
+        val currentOrder = _uiState.value.order ?: return
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            
+            orderRepository.assignCarrier(currentOrder.id, shippingProvider, trackingNumber).fold(
+                onSuccess = { updatedOrder ->
+                    _uiState.update { 
+                        it.copy(
+                            order = updatedOrder,
+                            isLoading = false,
+                            error = null
+                        )
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Failed to assign carrier"
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    fun updateOrderStatus(newStatus: String) {
+        val currentOrder = _uiState.value.order ?: return
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            
+            orderRepository.updateOrderStatus(currentOrder.id, newStatus).fold(
+                onSuccess = { updatedOrder ->
+                    _uiState.update { 
+                        it.copy(
+                            order = updatedOrder,
+                            isLoading = false,
+                            error = null
+                        )
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Failed to update order status"
+                        )
+                    }
+                }
+            )
+        }
+    }
+
     companion object {
         fun formatPrice(amount: Double): String {
             val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
