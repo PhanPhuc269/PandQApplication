@@ -231,11 +231,13 @@ fun DashboardAppbar(
 ) {
     // COMPACT HEADER: Reduced padding, specific height, smaller elements
     Surface(
-        color = Color.White.copy(alpha = 0.8f),
+        color = Color.Transparent,
         shadowElevation = 4.dp,
         modifier = modifier.fillMaxWidth()
     ) {
-        Column {
+        Column(
+            modifier = Modifier.background(Color.White)
+        ) {
             // Status Bar Spacer
             Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
             
