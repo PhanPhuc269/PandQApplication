@@ -42,6 +42,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -72,15 +74,16 @@ import com.group1.pandqapplication.shared.ui.theme.RoleTextSecondaryLight
 @Composable
 fun RoleManagementScreen(
     onBackClick: () -> Unit = {},
+    onNavigateToAdminList: () -> Unit = {},
     viewModel: RoleViewModel = hiltViewModel()
 ) {
     val isDarkTheme = false
     
-    val backgroundColor = if (isDarkTheme) RoleBackgroundDark else RoleBackgroundLight
-    val surfaceColor = if (isDarkTheme) RoleSurfaceDark else RoleSurfaceLight
-    val textPrimary = if (isDarkTheme) RoleTextPrimaryDark else RoleTextPrimaryLight
-    val textSecondary = if (isDarkTheme) RoleTextSecondaryDark else RoleTextSecondaryLight
-    val borderColor = if (isDarkTheme) Color(0xFF374151) else Color(0xFFE5E7EB)
+    val backgroundColor = Color(0xFFF8FAFC)
+    val surfaceColor = Color(0xFFF8FAFC)
+    val textPrimary = Color(0xFF1E293B)
+    val textSecondary = Color(0xFF6B7280)
+    val borderColor = Color(0xFFE5E7EB)
     
     val uiState by viewModel.uiState.collectAsState()
     val isCreating by viewModel.isCreating.collectAsState()
@@ -104,43 +107,22 @@ fun RoleManagementScreen(
     Scaffold(
         containerColor = backgroundColor,
         topBar = {
-            Column {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(backgroundColor)
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                ) {
-                    IconButton(
-                        onClick = onBackClick,
-                        modifier = Modifier.align(Alignment.CenterStart)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBackIosNew,
-                            contentDescription = "Back",
-                            tint = textPrimary
-                        )
+            TopAppBar(
+                title = { Text("Quản lý quyền truy cập") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back")
                     }
-                    Text(
-                        text = "Quản lý quyền truy cập",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                    IconButton(
-                        onClick = { viewModel.loadUsers() },
-                        modifier = Modifier.align(Alignment.CenterEnd)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            tint = ProductPrimary
-                        )
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.loadUsers() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
-                }
-                HorizontalDivider(color = borderColor)
-            }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = surfaceColor
+                )
+            )
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -247,7 +229,7 @@ fun RoleManagementScreen(
                                 textPrimary = textPrimary,
                                 textSecondary = textSecondary,
                                 borderColor = borderColor,
-                                onClick = { /* TODO: Navigate to user list for this role */ }
+                                onClick = { onNavigateToAdminList() }
                             )
                         }
                     }
@@ -318,7 +300,7 @@ fun AddAdminDialog(
     var selectedRole by remember { mutableStateOf("ADMIN") }
     var expanded by remember { mutableStateOf(false) }
     
-    val roles = listOf("ADMIN" to "Quản trị viên", "STAFF" to "Nhân viên")
+    val roles = listOf("ADMIN" to "Quản trị viên")
     
     AlertDialog(
         onDismissRequest = onDismiss,

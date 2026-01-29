@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +57,7 @@ fun AccountScreen(
     val primaryColor = Color(0xFFec3713)
     
     var showNotificationSettings by remember { mutableStateOf(false) }
+    var showCloseAccountDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = backgroundColor,
@@ -73,9 +75,6 @@ fun AccountScreen(
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                         IconButton(onClick = {}) {
-                             Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = Color(0xFF1F2937))
-                        }
                         Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                              Text(
                                  "Hồ sơ cá nhân", 
@@ -84,7 +83,6 @@ fun AccountScreen(
                                  color = Color(0xFF111827)
                              ) 
                         }
-                        Spacer(modifier = Modifier.size(48.dp)) // Balance right side
                     }
                 }
             }
@@ -241,6 +239,14 @@ fun AccountScreen(
                 )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 SectionItem(icon = Icons.Outlined.Settings, label = "Cài đặt ứng dụng", primaryColor = primaryColor)
+                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                SectionItem(
+                    icon = Icons.Outlined.DeleteForever, 
+                    label = "Đóng tài khoản", 
+                    isDestructive = true,
+                    primaryColor = primaryColor,
+                    onClick = { showCloseAccountDialog = true }
+                )
             }
             
             // Support Section
@@ -286,6 +292,22 @@ fun AccountScreen(
             onDismiss = { showNotificationSettings = false },
             onUpdate = { request -> viewModel.updatePreference(request) }
         )
+    }
+
+    if (showCloseAccountDialog) {
+        CloseAccountDialog(
+            isLoading = uiState.isClosingAccount,
+            onDismiss = { showCloseAccountDialog = false },
+            onConfirm = { reason -> viewModel.closeAccount(reason) }
+        )
+    }
+
+    // Handle close account success
+    LaunchedEffect(uiState.closeAccountSuccess) {
+        if (uiState.closeAccountSuccess) {
+            showCloseAccountDialog = false
+            onLogout() // Logout user after successful closure
+        }
     }
 }
 

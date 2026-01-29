@@ -239,6 +239,11 @@ interface AppApiService {
 
     @PUT("api/v1/notifications/{id}/read")
     suspend fun markNotificationAsRead(@Path("id") id: String)
+
+    @POST("api/v1/users/close-account")
+    suspend fun closeAccount(
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.CloseAccountRequest
+    ): retrofit2.Response<Void>
 }
 
 /**

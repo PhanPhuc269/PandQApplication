@@ -25,7 +25,9 @@ data class AccountUiState(
     val photoUrl: String? = null,
     val isLoading: Boolean = false,
     val message: String? = null,
-    val preferences: NotificationPreferenceResponse? = null
+    val preferences: NotificationPreferenceResponse? = null,
+    val isClosingAccount: Boolean = false,
+    val closeAccountSuccess: Boolean = false
 )
 
 @HiltViewModel
@@ -177,7 +179,40 @@ class AccountViewModel @Inject constructor(
         }
     }
 
+    fun closeAccount(reason: String?) {
+        val email = authRepository.getCurrentUserEmail() ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isClosingAccount = true) }
+            try {
+                val result = userRepository.closeAccount(email, reason)
+                if (result.isSuccess) {
+                    _uiState.update { 
+                        it.copy(
+                            isClosingAccount = false,
+                            closeAccountSuccess = true
+                        ) 
+                    }
+                } else {
+                    _uiState.update { 
+                        it.copy(
+                            isClosingAccount = false, 
+                            message = "Không thể đóng tài khoản. Vui lòng thử lại."
+                        ) 
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { 
+                    it.copy(
+                        isClosingAccount = false, 
+                        message = "Lỗi: ${e.message}"
+                    ) 
+                }
+            }
+        }
+    }
+
     fun clearMessage() {
         _uiState.update { it.copy(message = null) }
     }
 }
+

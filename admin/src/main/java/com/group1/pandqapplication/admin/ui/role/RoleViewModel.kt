@@ -51,13 +51,11 @@ class RoleViewModel @Inject constructor(
             try {
                 val users = apiService.getAllUsers()
                 
-                // Group users by role and filter to ADMIN and STAFF only
+                // Group users by role - only ADMIN
                 val adminUsers = users.filter { it.role == "ADMIN" }
-                val staffUsers = users.filter { it.role == "STAFF" }
                 
                 val roles = listOf(
-                    RoleWithUsers("ADMIN", "Quản trị viên", adminUsers),
-                    RoleWithUsers("STAFF", "Nhân viên", staffUsers)
+                    RoleWithUsers("ADMIN", "Quản trị viên", adminUsers)
                 )
                 
                 _uiState.value = RoleUiState.Success(roles)

@@ -338,7 +338,15 @@ class AdminActivity : FragmentActivity() {
                             SupplierManagementScreen(onBackClick = { navController.popBackStack() })
                         }
                         composable(AdminScreen.RoleManagement.route) {
-                            RoleManagementScreen(onBackClick = { navController.popBackStack() })
+                            RoleManagementScreen(
+                                onBackClick = { navController.popBackStack() },
+                                onNavigateToAdminList = { navController.navigate(AdminScreen.AdminList.route) }
+                            )
+                        }
+                        composable(AdminScreen.AdminList.route) {
+                            com.group1.pandqapplication.admin.ui.role.AdminListScreen(
+                                onBack = { navController.popBackStack() }
+                            )
                         }
                         composable(AdminScreen.BranchManagement.route) {
                             BranchManagementScreen(onBackClick = { navController.popBackStack() })
