@@ -60,6 +60,7 @@ import com.group1.pandqapplication.admin.ui.profile.AdminProfileScreen
 import com.group1.pandqapplication.admin.ui.setting.AdminSettingsScreen
 import com.group1.pandqapplication.admin.ui.customer.CustomerListScreen
 import com.group1.pandqapplication.admin.ui.customer.CustomerDetailScreen
+import com.group1.pandqapplication.admin.ui.customer.TierConfigScreen
 import com.group1.pandqapplication.admin.ui.shipping.ShippingManagementScreen
 import androidx.activity.enableEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
@@ -445,6 +446,9 @@ class AdminActivity : FragmentActivity() {
                                 onBackClick = { navController.popBackStack() },
                                 onCustomerClick = { customerId ->
                                     navController.navigate("customer_detail/$customerId")
+                                },
+                                onTierConfigClick = {
+                                    navController.navigate(AdminScreen.TierConfig.route)
                                 }
                             )
                         }
@@ -453,6 +457,11 @@ class AdminActivity : FragmentActivity() {
                             arguments = listOf(androidx.navigation.navArgument("customerId") { type = androidx.navigation.NavType.StringType })
                         ) {
                             CustomerDetailScreen(
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+                        composable(AdminScreen.TierConfig.route) {
+                            TierConfigScreen(
                                 onBackClick = { navController.popBackStack() }
                             )
                         }

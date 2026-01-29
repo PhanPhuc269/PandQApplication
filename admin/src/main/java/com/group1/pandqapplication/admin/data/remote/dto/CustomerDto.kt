@@ -79,3 +79,37 @@ data class CustomerListResponse(
 data class UpdateStatusRequest(
     @SerializedName("status") val status: AccountStatus
 )
+
+// ==================== Customer Tier Config DTOs ====================
+
+// Tier configuration response
+data class TierConfigDto(
+    @SerializedName("id") val id: String,
+    @SerializedName("tier") val tier: CustomerTier,
+    @SerializedName("minSpent") val minSpent: Double,
+    @SerializedName("maxSpent") val maxSpent: Double?,
+    @SerializedName("displayName") val displayName: String?,
+    @SerializedName("description") val description: String?,
+    @SerializedName("isActive") val isActive: Boolean?,
+    @SerializedName("updatedAt") val updatedAt: String?,
+    @SerializedName("updatedBy") val updatedBy: String?
+)
+
+// Tier config list response
+data class TierConfigListResponse(
+    @SerializedName("configs") val configs: List<TierConfigDto>
+)
+
+// Update tier config request
+data class UpdateTierConfigRequest(
+    @SerializedName("tier") val tier: CustomerTier,
+    @SerializedName("minSpent") val minSpent: Double,
+    @SerializedName("maxSpent") val maxSpent: Double?,
+    @SerializedName("displayName") val displayName: String? = null,
+    @SerializedName("description") val description: String? = null
+)
+
+// Update all tier configs request
+data class UpdateAllTierConfigsRequest(
+    @SerializedName("configs") val configs: List<UpdateTierConfigRequest>
+)

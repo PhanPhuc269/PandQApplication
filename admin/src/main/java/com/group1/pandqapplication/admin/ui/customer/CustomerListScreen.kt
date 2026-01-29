@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -77,10 +78,25 @@ import com.group1.pandqapplication.admin.data.remote.dto.AccountStatus
 fun CustomerListScreen(
     onBackClick: () -> Unit = {},
     onCustomerClick: (String) -> Unit = {},
+    onTierConfigClick: () -> Unit = {},
     viewModel: CustomerListViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     val isDarkTheme = false
     val uiState by viewModel.uiState.collectAsState()
+    
+    // Auto-refresh when screen becomes visible (returning from TierConfig)
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                viewModel.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
     
     val backgroundColor = if (isDarkTheme) CheckoutBackgroundDark else CheckoutBackgroundLight
     val textPrimary = if (isDarkTheme) CustomerTextPrimaryDark else CustomerTextPrimaryLight
@@ -115,6 +131,16 @@ fun CustomerListScreen(
                         color = textPrimary,
                         modifier = Modifier.align(Alignment.Center)
                     )
+                    IconButton(
+                        onClick = onTierConfigClick,
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Cấu hình hạng khách hàng",
+                            tint = textSecondary
+                        )
+                    }
                 }
                 HorizontalDivider(color = borderColor)
             }
