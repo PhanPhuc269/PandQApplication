@@ -301,7 +301,7 @@ fun AdminOrderDetailsScreen(
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Column {
                              Text("Khách hàng", fontSize = 14.sp, color = textSecondary)
-                             Text(order.customerName ?: "N/A", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
+                             Text("Khách hàng", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -314,7 +314,7 @@ fun AdminOrderDetailsScreen(
                     ) {
                         Column {
                              Text("Số điện thoại", fontSize = 14.sp, color = textSecondary)
-                             Text(order.customerPhone ?: "N/A", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
+                             Text("N/A", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
                         }
                         IconButton(
                             onClick = {},
