@@ -123,14 +123,7 @@ fun AdminDrawerContent(
                 onClick = { onNavigate(AdminScreen.Inventory.route) },
                 primaryColor = primaryColor
             )
-            DrawerItem(
-                label = "Order Management",
-                icon = Icons.Default.ShoppingCart, // shopping_bag
-                isSelected = currentRoute == AdminScreen.Orders.route,
-                onClick = { onNavigate(AdminScreen.Orders.route) },
-                primaryColor = primaryColor,
-                badgeCount = 3
-            )
+
 
             // Operations Modules
             Spacer(modifier = Modifier.height(16.dp))
@@ -142,20 +135,7 @@ fun AdminDrawerContent(
                 onClick = { onNavigate(AdminScreen.CategoryManagement.route) },
                 primaryColor = primaryColor
             )
-            DrawerItem(
-                label = "Branch Management",
-                icon = Icons.Default.Storefront,
-                isSelected = currentRoute == AdminScreen.BranchManagement.route,
-                onClick = { onNavigate(AdminScreen.BranchManagement.route) },
-                primaryColor = primaryColor
-            )
-            DrawerItem(
-                label = "Supplier Management",
-                icon = Icons.Default.Inventory,
-                isSelected = currentRoute == AdminScreen.SupplierManagement.route,
-                onClick = { onNavigate(AdminScreen.SupplierManagement.route) },
-                 primaryColor = primaryColor
-            )
+
             DrawerItem(
                 label = "Auditor/Roles",
                 icon = Icons.Default.ManageAccounts,

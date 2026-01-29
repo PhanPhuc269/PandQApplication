@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class AdminScreen(val route: String, val title: String, val icon: ImageVector) {
@@ -51,4 +52,5 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object DailyAnalyticsDetail : AdminScreen("daily_analytics_detail/{date}", "Daily Analytics", Icons.Default.BarChart)
     object CustomerDetail : AdminScreen("customer_detail/{customerId}", "Customer Detail", Icons.Default.ManageAccounts)
     object AdminList : AdminScreen("admin_list", "Admin List", Icons.Default.ManageAccounts)
+    object TierConfig : AdminScreen("tier_config", "Tier Config", Icons.Default.Tune)
 }

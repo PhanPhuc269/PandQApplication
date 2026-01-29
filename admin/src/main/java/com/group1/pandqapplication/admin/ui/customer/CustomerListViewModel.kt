@@ -133,4 +133,9 @@ class CustomerListViewModel @Inject constructor(
         }
         loadCustomers(page = 0)
     }
+
+    fun refresh() {
+        loadCustomers(page = 0)
+        loadStats()
+    }
 }

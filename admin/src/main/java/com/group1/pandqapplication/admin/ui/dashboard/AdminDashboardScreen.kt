@@ -124,13 +124,10 @@ fun AdminDashboardScreen(
     
     val quickActions = listOf(
         QuickAction("Add Product", Icons.Default.AddBox, Color(0xFFA855F7)), // Purple
-        QuickAction("Manage Orders", Icons.Default.LocalShipping, Color(0xFF3B82F6)), // Blue
         QuickAction("Analytics", Icons.Default.BarChart, Color(0xFF10B981)), // Emerald
         QuickAction("Promotions", Icons.Default.Campaign, Color(0xFFF97316)), // Orange
         QuickAction("Inventory", Icons.Default.Inventory, Color(0xFFEAB308)), // Yellow
         QuickAction("Category", Icons.Default.Widgets, Color(0xFFEC4899)), // Pink
-        QuickAction("Branch", Icons.Default.Storefront, Color(0xFF6366F1)), // Indigo
-        QuickAction("Supplier", Icons.Default.Inventory, Color(0xFF14B8A6)), // Teal
         QuickAction("Roles", Icons.Default.ManageAccounts, Color(0xFF64748B)), // Slate
         QuickAction("Settings", Icons.Default.Settings, Color(0xFF607D8B)), // Blue Grey
         QuickAction("Customer", Icons.Default.ManageAccounts, Color(0xFFE91E63)), // Pink

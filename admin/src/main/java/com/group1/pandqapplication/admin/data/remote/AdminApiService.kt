@@ -168,4 +168,14 @@ interface AdminApiService {
     ): com.group1.pandqapplication.admin.data.remote.dto.AdminUserDto
     @POST("api/v1/auth/demote")
     suspend fun demoteUser(@Body request: com.group1.pandqapplication.admin.data.remote.dto.DemoteRequest)
+
+    // ==================== Customer Tier Config ====================
+
+    @GET("api/v1/customer-tier-config")
+    suspend fun getTierConfigs(): com.group1.pandqapplication.admin.data.remote.dto.TierConfigListResponse
+
+    @PUT("api/v1/customer-tier-config")
+    suspend fun updateTierConfigs(
+        @Body request: com.group1.pandqapplication.admin.data.remote.dto.UpdateAllTierConfigsRequest
+    )
 }
