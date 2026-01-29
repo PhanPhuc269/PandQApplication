@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.group1.pandqapplication.shared.data.remote.dto.AddressDto
+import com.group1.pandqapplication.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +83,7 @@ fun AddressListScreen(
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        "Sổ địa chỉ",
+                        stringResource(R.string.address_book),
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         color = Color(0xFF111827)
@@ -95,7 +97,7 @@ fun AddressListScreen(
                 containerColor = primaryColor,
                 contentColor = Color.White
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Thêm địa chỉ")
+                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_address))
             }
         }
     ) { paddingValues ->
@@ -130,14 +132,14 @@ fun AddressListScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            "Chưa có địa chỉ nào",
+                            stringResource(R.string.no_addresses),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF6B7280)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Thêm địa chỉ để tiện cho việc mua hàng",
+                            stringResource(R.string.add_first_address),
                             fontSize = 14.sp,
                             color = Color(0xFF9CA3AF)
                         )
@@ -174,19 +176,19 @@ fun AddressListScreen(
         if (uiState.showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { viewModel.hideDeleteDialog() },
-                title = { Text("Xóa địa chỉ") },
-                text = { Text("Bạn có chắc chắn muốn xóa địa chỉ này?") },
+                title = { Text(stringResource(R.string.delete)) },
+                text = { Text(stringResource(R.string.delete_address_confirm)) },
                 confirmButton = {
                     TextButton(
                         onClick = { viewModel.deleteAddress() },
                         colors = ButtonDefaults.textButtonColors(contentColor = primaryColor)
                     ) {
-                        Text("Xóa")
+                        Text(stringResource(R.string.delete))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { viewModel.hideDeleteDialog() }) {
-                        Text("Hủy")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             )
@@ -242,7 +244,7 @@ fun AddressCard(
                             color = primaryColor.copy(alpha = 0.1f)
                         ) {
                             Text(
-                                "Mặc định",
+                                stringResource(R.string.default_address),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,

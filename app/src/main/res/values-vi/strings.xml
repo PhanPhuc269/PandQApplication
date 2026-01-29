@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ứng dụng PandQ</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_orders">Đơn hàng</string>
+    <string name="nav_notifications">Thông báo</string>
+    <string name="nav_account">Tài khoản</string>
+
+    <!-- HomeScreen -->
+    <string name="search_placeholder">Tìm kiếm sản phẩm…</string>
+    <string name="category_title">Danh mục</string>
+    <string name="featured_products">Sản phẩm nổi bật</string>
+    <string name="view_all">Xem tất cả</string>
+    <string name="today_offers">Ưu đãi hôm nay</string>
+    <string name="error_occurred">Đã xảy ra lỗi</string>
+    <string name="please_try_again">Vui lòng thử lại</string>
+    <string name="try_again">Thử lại</string>
+    <string name="clear_filter">Xóa bộ lọc</string>
+    <string name="cart">Giỏ hàng</string>
+    <string name="logo">Logo</string>
+    <string name="contact">Liên hệ</string>
+
+    <!-- OrdersScreen -->
+    <string name="order_history">Lịch sử đơn hàng</string>
+    <string name="search_order_placeholder">Tìm theo mã đơn hàng, tên sản phẩm…</string>
+    <string name="filter_all">Tất cả</string>
+    <string name="filter_processing">Đang xử lý</string>
+    <string name="filter_shipping">Đang giao</string>
+    <string name="filter_delivered">Đã giao</string>
+    <string name="filter_completed">Hoàn thành</string>
+    <string name="filter_cancelled">Đã huỷ</string>
+    <string name="order_label">Đơn hàng #%1$s</string>
+    <string name="order_date">Ngày đặt: %1$s</string>
+    <string name="total_amount">Tổng cộng: %1$sđ</string>
+    <string name="no_orders">Không có đơn hàng nào</string>
+    <string name="product_and_more">%1$s và %2$d sản phẩm khác</string>
+    <string name="product_default">Sản phẩm</string>
+
+    <!-- Order Status -->
+    <string name="status_pending">Chờ xác nhận</string>
+    <string name="status_confirmed">Đã xác nhận</string>
+    <string name="status_shipping">Đang giao</string>
+    <string name="status_delivered">Đã giao</string>
+    <string name="status_completed">Hoàn thành</string>
+    <string name="status_cancelled">Đã huỷ</string>
+    <string name="status_returned">Đã trả hàng</string>
+    <string name="status_failed">Thất bại</string>
+
+    <!-- NotificationsScreen -->
+    <string name="notifications">Thông báo</string>
+    <string name="filter_orders">Đơn hàng</string>
+    <string name="filter_promos">Khuyến mãi</string>
+    <string name="filter_messages">Tin nhắn</string>
+    <string name="no_notifications">Bạn đã xem hết thông báo</string>
+    <string name="date_today">Hôm nay</string>
+    <string name="date_yesterday">Hôm qua</string>
+    <string name="date_last_week">Tuần trước</string>
+    <string name="date_other">Khác</string>
+    <string name="an_error_occurred">Đã có lỗi xảy ra</string>
+
+    <!-- AccountScreen -->
+    <string name="personal_profile">Hồ sơ cá nhân</string>
+    <string name="email_not_verified">Email chưa được xác thực</string>
+    <string name="email_verify_prompt">Vui lòng xác thực email để sử dụng đầy đủ tính năng.</string>
+    <string name="resend_email">Gửi lại email</string>
+    <string name="already_verified">Đã xác thực</string>
+    <string name="section_account">Tài khoản</string>
+    <string name="personal_info">Thông tin cá nhân</string>
+    <string name="address_book">Sổ địa chỉ</string>
+    <string name="section_settings">Cài đặt</string>
+    <string name="notification_settings">Cài đặt thông báo</string>
+    <string name="app_settings">Cài đặt ứng dụng</string>
+    <string name="language_settings">Ngôn ngữ</string>
+    <string name="support">Hỗ trợ</string>
+    <string name="user_guide">Hướng dẫn sử dụng</string>
+    <string name="policy_terms">Chính sách &amp; Điều khoản</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="default_avatar">Avatar mặc định</string>
+    <string name="avatar">Avatar</string>
+    <string name="back">Quay lại</string>
+
+    <!-- Language Picker -->
+    <string name="language_english">English</string>
+    <string name="language_vietnamese">Tiếng Việt</string>
+    <string name="select_language">Chọn ngôn ngữ</string>
+
+    <!-- PersonalInfoScreen -->
+    <string name="personal_info_title">Thông tin cá nhân</string>
+    <string name="full_name">Họ và tên</string>
+    <string name="email">Email</string>
+    <string name="phone_number">Số điện thoại</string>
+    <string name="save_changes">Lưu thay đổi</string>
+    <string name="change_photo">Đổi ảnh</string>
+    <string name="avatar_update_success">Cập nhật ảnh thành công!</string>
+    <string name="upload_error">Lỗi upload: %1$s</string>
+    <string name="file_read_error">Không thể đọc file ảnh</string>
+    <string name="error_generic">Lỗi: %1$s</string>
+    <string name="success">Thành công</string>
+
+    <!-- Common Form Labels -->
+    <string name="loading">Đang tải…</string>
+    <string name="saving">Đang lưu…</string>
+    <string name="confirm">Xác nhận</string>
+    <string name="cancel">Huỷ</string>
+    <string name="close">Đóng</string>
+    <string name="edit">Sửa</string>
+    <string name="delete">Xoá</string>
+    <string name="save">Lưu</string>
+    <string name="search">Tìm kiếm</string>
+    <string name="refresh">Làm mới</string>
+    <string name="apply">Áp dụng</string>
+    <string name="reset">Đặt lại</string>
+    
+    <!-- Address Screen -->
+    <string name="address_list">Địa chỉ của tôi</string>
+    <string name="add_address">Thêm địa chỉ</string>
+    <string name="edit_address">Sửa địa chỉ</string>
+    <string name="address_name">Tên địa chỉ</string>
+    <string name="receiver_name">Tên người nhận</string>
+    <string name="receiver_phone">Số điện thoại người nhận</string>
+    <string name="province_city">Tỉnh/Thành phố</string>
+    <string name="district">Quận/Huyện</string>
+    <string name="ward">Phường/Xã</string>
+    <string name="street_address">Địa chỉ cụ thể</string>
+    <string name="set_default">Đặt làm mặc định</string>
+    <string name="default_address">Mặc định</string>
+    <string name="no_addresses">Chưa có địa chỉ</string>
+    <string name="add_first_address">Thêm địa chỉ giao hàng đầu tiên</string>
+    <string name="delete_address_confirm">Bạn có chắc chắn muốn xóa địa chỉ này?</string>
+
+    <!-- Cart Screen -->
+    <string name="shopping_cart">Giỏ hàng</string>
+    <string name="empty_cart">Giỏ hàng trống</string>
+    <string name="start_shopping">Bắt đầu mua sắm</string>
+    <string name="subtotal">Tạm tính</string>
+    <string name="total">Tổng cộng</string>
+    <string name="checkout">Thanh toán</string>
+    <string name="remove_item">Xoá sản phẩm</string>
+    <string name="quantity">Số lượng</string>
+    <string name="items">%1$d sản phẩm</string>
+
+    <!-- Checkout Screen -->
+    <string name="checkout_title">Thanh toán</string>
+    <string name="shipping_address">Địa chỉ giao hàng</string>
+    <string name="change_address">Thay đổi</string>
+    <string name="order_summary">Tóm tắt đơn hàng</string>
+    <string name="payment_method">Phương thức thanh toán</string>
+    <string name="cash_on_delivery">Thanh toán khi nhận hàng</string>
+    <string name="bank_transfer">Chuyển khoản ngân hàng</string>
+    <string name="zalopay">ZaloPay</string>
+    <string name="apply_voucher">Áp dụng mã giảm giá</string>
+    <string name="discount">Giảm giá</string>
+    <string name="shipping_fee">Phí vận chuyển</string>
+    <string name="free_shipping">Miễn phí vận chuyển</string>
+    <string name="place_order">Đặt hàng</string>
+    <string name="order_notes">Ghi chú đơn hàng (Tuỳ chọn)</string>
+    <string name="enter_notes">Nhập ghi chú của bạn…</string>
+
+    <!-- Order Tracking -->
+    <string name="order_tracking">Theo dõi đơn hàng</string>
+    <string name="order_details">Chi tiết đơn hàng</string>
+    <string name="order_id">Mã đơn hàng</string>
+    <string name="order_placed">Đã đặt hàng</string>
+    <string name="order_confirmed">Đã xác nhận</string>
+    <string name="out_for_delivery">Đang giao hàng</string>
+    <string name="delivered">Đã giao</string>
+    <string name="order_cancelled">Đã huỷ đơn</string>
+    <string name="cancel_order">Huỷ đơn hàng</string>
+    <string name="reorder">Đặt lại</string>
+    <string name="write_review">Viết đánh giá</string>
+
+    <!-- Product Detail -->
+    <string name="product_details">Chi tiết sản phẩm</string>
+    <string name="description">Mô tả</string>
+    <string name="specifications">Thông số kỹ thuật</string>
+    <string name="reviews">Đánh giá</string>
+    <string name="add_to_cart">Thêm vào giỏ</string>
+    <string name="buy_now">Mua ngay</string>
+    <string name="in_stock">Còn hàng</string>
+    <string name="out_of_stock">Hết hàng</string>
+    <string name="see_all_reviews">Xem tất cả đánh giá</string>
+    <string name="no_reviews">Chưa có đánh giá</string>
+    <string name="be_first_review">Hãy là người đầu tiên đánh giá sản phẩm này</string>
+    <string name="share_product">Chia sẻ sản phẩm</string>
+    <string name="compare">So sánh</string>
+    <string name="added_to_cart">Đã thêm vào giỏ</string>
+    <string name="added_to_cart_success">Đã thêm vào giỏ hàng thành công!</string>
+    <string name="related_products">Sản phẩm liên quan</string>
+    <string name="no_description">Chưa có mô tả cho sản phẩm này.</string>
+    <string name="no_specifications">Chưa có thông số kỹ thuật.</string>
+    <string name="see_all">Xem tất cả</string>
+    <string name="n_reviews">(%1$d đánh giá)</string>
+    <string name="ratings_reviews">Đánh giá \u0026 Xếp hạng</string>
+    <string name="stars">%1$d sao</string>
+    <string name="filter">Lọc</string>
+    <string name="sort_newest">Mới nhất</string>
+    <string name="sort_highest">Cao nhất</string>
+    <string name="sort_lowest">Thấp nhất</string>
+    <string name="review_submitted">Đánh giá của bạn đã được gửi thành công!</string>
+    <string name="user">Người dùng</string>
+    <string name="view_product">Xem sản phẩm %1$s tại %2$s: %3$s</string>
+    <string name="share_via">Chia sẻ sản phẩm qua</string>
+
+    <!-- Review Screen -->
+    <string name="your_rating">Đánh giá của bạn</string>
+    <string name="write_your_review">Viết đánh giá của bạn</string>
+    <string name="review_placeholder">Chia sẻ trải nghiệm của bạn với sản phẩm này…</string>
+    <string name="submit_review">Gửi đánh giá</string>
+    <string name="add_photos">Thêm ảnh</string>
+
+    <!-- Login Screen -->
+    <string name="welcome_back">Chào mừng trở lại</string>
+    <string name="login">Đăng nhập</string>
+    <string name="register">Đăng ký</string>
+    <string name="password">Mật khẩu</string>
+    <string name="forgot_password">Quên mật khẩu?</string>
+    <string name="or_continue_with">Hoặc tiếp tục với</string>
+    <string name="sign_in_google">Tiếp tục với Google</string>
+    <string name="no_account">Chưa có tài khoản?</string>
+    <string name="sign_up">Đăng ký</string>
+    <string name="already_have_account">Đã có tài khoản?</string>
+
+    <!-- Voucher Center -->
+    <string name="voucher_center">Trung tâm mã giảm giá</string>
+    <string name="my_vouchers">Mã giảm giá của tôi</string>
+    <string name="available_vouchers">Mã giảm giá khả dụng</string>
+    <string name="expired">Đã hết hạn</string>
+    <string name="valid_until">Có hiệu lực đến %1$s</string>
+    <string name="minimum_order">Đơn tối thiểu %1$s</string>
+    <string name="use_voucher">Sử dụng</string>
+    <string name="voucher_applied">Đã áp dụng mã giảm giá</string>
+    <string name="no_vouchers">Không có mã giảm giá</string>
+
+    <!-- Chat -->
+    <string name="chat">Chat</string>
+    <string name="messages">Tin nhắn</string>
+    <string name="type_message">Nhập tin nhắn…</string>
+    <string name="send">Gửi</string>
+    <string name="no_conversations">Chưa có cuộc trò chuyện</string>
+    <string name="online">Trực tuyến</string>
+    <string name="offline">Ngoại tuyến</string>
+
+    <!-- Support & Feedback -->
+    <string name="faq">Câu hỏi thường gặp</string>
+    <string name="contact_us">Liên hệ với chúng tôi</string>
+    <string name="email_support">Hỗ trợ qua Email</string>
+    <string name="phone_support">Hỗ trợ qua Điện thoại</string>
+    <string name="feedback">Phản hồi</string>
+    <string name="rate_app">Đánh giá ứng dụng</string>
+    <string name="submit">Gửi</string>
+
+    <!-- Order Success -->
+    <string name="order_success">Đặt hàng thành công!</string>
+    <string name="order_success_message">Cảm ơn bạn đã đặt hàng. Bạn sẽ nhận được xác nhận trong thời gian sớm nhất.</string>
+    <string name="continue_shopping">Tiếp tục mua sắm</string>
+    <string name="view_order">Xem đơn hàng</string>
+    <!-- Checkout Screen Additional -->
+    <string name="title_checkout">Thanh toán</string>
+    <string name="msg_login_checkout">Vui lòng đăng nhập để thanh toán</string>
+    <string name="payment_method_cod">Thanh toán khi nhận hàng (COD)</string>
+    <string name="payment_method_zalopay">Thanh toán bằng ZaloPay</string>
+    <string name="payment_method_sepay">Thanh toán bằng SePay</string>
+    <string name="promo_code">Mã giảm giá</string>
+    <string name="view_all_vouchers">Xem tất cả ></string>
+    <string name="enter_promo_code">Nhập mã giảm giá</string>
+    <string name="apply_code">Áp dụng</string>
+    <string name="remove_code">Xóa</string>
+    <string name="you_save">Bạn được giảm: %1$s</string>
+    <string name="summary_title">Tóm tắt Đơn hàng</string>
+    <string name="total_label">Tổng cộng</string>
+    <string name="confirm_payment">Xác nhận - %1$s</string>
+    <string name="error_no_address">Vui lòng thêm địa chỉ giao hàng trước khi thanh toán</string>
+    <string name="payment_success">Thanh toán thành công</string>
+    <string name="payment_cancelled">Đã hủy thanh toán</string>
+    <string name="zalopay_not_installed">Chưa cài đặt ZaloPay, vui lòng cài đặt để thanh toán</string>
+    
+    <!-- Order Tracking Additional -->
+    <string name="track_order_title">Theo dõi đơn hàng</string>
+    <string name="rate_order_btn">Đánh giá đơn hàng</string>
+    <string name="contact_support_btn">Liên hệ hỗ trợ</string>
+    <string name="order_number_fmt">Đơn hàng #%1$s</string>
+    <string name="estimated_delivery_label">Dự kiến giao hàng: </string>
+    <string name="status_update_title">Cập nhật trạng thái</string>
+    <string name="view_order_detail_btn">Xem chi tiết đơn hàng</string>
+    <string name="order_id_lbl">Mã đơn hàng</string>
+    <string name="order_date_lbl">Ngày đặt hàng</string>
+    <string name="product_section_title">Sản phẩm</string>
+    <string name="no_product_info_msg">Không có thông tin sản phẩm</string>
+    <string name="shipping_address_title">Địa chỉ giao hàng</string>
+    <string name="payment_lbl">Thanh toán: </string>
+    <string name="payment_cod_lbl">Thanh toán khi nhận hàng</string>
+    <string name="summary_subtotal">Tạm tính</string>
+    <string name="summary_shipping">Phí vận chuyển</string>
+    <string name="summary_discount">Giảm giá</string>
+    <string name="summary_total">Tổng cộng</string>
+    <string name="status_cancelled_lbl">Đã hủy</string>
+    <string name="status_failed_lbl">Thất bại</string>
+    <string name="status_returned_lbl">Đã trả hàng</string>
+
+    <!-- Policy Screen -->
+    <string name="policy_screen_title">Chính sách &amp; Điều khoản</string>
+    <string name="tab_privacy_policy">Chính sách Bảo mật</string>
+    <string name="tab_terms_service">Điều khoản Dịch vụ</string>
+    <string name="last_updated_fmt">Cập nhật lần cuối: %1$s</string>
+    <string name="policy_section_1">1. Giới thiệu &amp; Phạm vi chính sách</string>
+    <string name="policy_section_2">2. Thông tin chúng tôi thu thập</string>
+    <string name="policy_section_3">3. Cách chúng tôi sử dụng thông tin</string>
+    <string name="policy_section_4">4. Chia sẻ &amp; Tiết lộ thông tin</string>
+    <string name="policy_section_5">5. Biện pháp bảo mật dữ liệu</string>
+    <string name="policy_section_6">6. Quyền &amp; Lựa chọn của người dùng</string>
+    <string name="policy_section_7">7. Thông tin liên hệ</string>
+    <string name="policy_content_1">Chúng tôi thu thập nhiều loại thông tin khác nhau liên quan đến các dịch vụ chúng tôi cung cấp...</string>
+    <string name="policy_content_2">Thông tin chúng tôi thu thập có thể bao gồm, nhưng không giới hạn ở: dữ liệu cá nhân như tên, địa chỉ email...</string>
+    <string name="policy_content_3">Thông tin của bạn được sử dụng để xử lý đơn hàng, cá nhân hóa trải nghiệm của bạn...</string>
+    <string name="policy_content_4">Chúng tôi có thể chia sẻ thông tin của bạn với các đối tác dịch vụ, chẳng hạn như các công ty vận chuyển...</string>
+    <string name="policy_content_5">Chúng tôi thực hiện các biện pháp kỹ thuật và tổ chức để bảo vệ dữ liệu của bạn...</string>
+    <string name="policy_content_6">Bạn có quyền truy cập, sửa đổi hoặc xóa thông tin cá nhân của mình...</string>
+    <string name="policy_content_7">Nếu bạn có bất kỳ câu hỏi nào về chính sách bảo mật này, vui lòng liên hệ với chúng tôi...</string>
+    
+    <!-- Cart Additional -->
+    <string name="cart_title">Giỏ hàng</string>
+    <string name="cart_subtotal">Tạm tính</string>
+    <string name="cart_shipping_note">Phí vận chuyển sẽ được tính ở bước tiếp theo.</string>
+    <string name="cart_total">Thành tiền</string>
+    <string name="cart_checkout_btn">Tiến hành Thanh toán</string>
+    <string name="cart_empty_msg">Giỏ hàng trống</string>
+    <string name="login_req_title">Yêu cầu đăng nhập</string>
+    <string name="login_req_msg">Vui lòng đăng nhập để tiếp tục thanh toán và bảo vệ đơn hàng của bạn</string>
+    <string name="login_btn">Đăng nhập</string>
+
+    <!-- Support Screen -->
+    <string name="support_title">Hỗ trợ</string>
+    <string name="search_faq_placeholder">Tìm kiếm câu hỏi…</string>
+    <string name="faq_title">Câu hỏi thường gặp</string>
+    <string name="faq_account_title">Tài khoản &amp; Bảo mật</string>
+    <string name="faq_account_content">Phần này chứa câu hỏi về đăng nhập, đặt lại mật khẩu...</string>
+    <string name="faq_payment_title">Thanh toán &amp; Khuyến mãi</string>
+    <string name="faq_payment_content">Phần này chứa câu hỏi về phương thức thanh toán...</string>
+    <string name="faq_shipping_title">Giao hàng &amp; Vận chuyển</string>
+    <string name="faq_shipping_content">Phần này chứa câu hỏi về thời gian giao hàng...</string>
+    <string name="faq_return_title">Bảo hành &amp; Đổi trả</string>
+    <string name="faq_return_content">Phần này chứa câu hỏi về quy trình đổi trả...</string>
+    <string name="need_help_title">Bạn cần thêm trợ giúp?</string>
+    <string name="chat_live_title">Trò chuyện trực tiếp</string>
+    <string name="chat_live_desc">Nhận trợ giúp ngay</string>
+    <string name="send_email_title">Gửi Email</string>
+    <string name="send_email_desc">Chúng tôi sẽ phản hồi sớm</string>
+    <string name="call_hotline_title">Gọi tổng đài</string>
+    <string name="call_hotline_desc">Hoạt động 8h - 22h</string>
+
+    <!-- User Guide (Onboarding) -->
+    <string name="guide_skip">Bỏ qua</string>
+    <string name="guide_close">Đóng</string>
+    <string name="guide_next">Tiếp tục</string>
+    <string name="guide_start">Bắt đầu ngay</string>
+    <string name="slide_1_title">Chào mừng đến với TechShop!</string>
+    <string name="slide_1_desc">Ứng dụng mua sắm đồ điện tử hàng đầu.</string>
+    <string name="slide_1_step_1">Đồng ý với Điều khoản dịch vụ &amp; Chính sách quyền riêng tư.</string>
+    <string name="slide_1_step_2">Khám phá hàng ngàn sản phẩm công nghệ.</string>
+    <string name="slide_1_step_3">Trải nghiệm mua sắm an toàn và tiện lợi.</string>
+    <string name="slide_2_title">Tìm kiếm &amp; Xem sản phẩm</string>
+    <string name="slide_2_desc">Dễ dàng tìm kiếm sản phẩm yêu thích.</string>
+    <string name="slide_2_step_1">1. Nhấn vào biểu tượng tìm kiếm ở trang chủ.</string>
+    <string name="slide_2_step_2">2. Nhập tên sản phẩm hoặc chọn danh mục.</string>
+    <string name="slide_2_step_3">3. Sử dụng bộ lọc để tìm sản phẩm ưng ý.</string>
+    <string name="slide_2_step_4">4. Nhấn vào sản phẩm để xem chi tiết.</string>
+    <string name="slide_3_title">Giỏ hàng &amp; Thanh toán</string>
+    <string name="slide_3_desc">Thanh toán nhanh chóng và an toàn.</string>
+    <string name="slide_3_step_1">1. Chọn \'Thêm vào giỏ\' tại trang chi tiết.</string>
+    <string name="slide_3_step_2">2. Vào giỏ hàng để kiểm tra sản phẩm.</string>
+    <string name="slide_3_step_3">3. Chọn phương thức thanh toán và địa chỉ.</string>
+    <string name="slide_3_step_4">4. Xác nhận đặt hàng.</string>
+    <string name="slide_4_title">Theo dõi đơn hàng</string>
+    <string name="slide_4_desc">Cập nhật trạng thái đơn hàng liên tục.</string>
+    <string name="slide_4_step_1">1. Vào mục \'Đơn mua\' trong tài khoản.</string>
+    <string name="slide_4_step_2">2. Chọn đơn hàng cần theo dõi.</string>
+    <string name="slide_4_step_3">3. Xem chi tiết hành trình vận chuyển.</string>
+    <string name="slide_4_step_4">4. Đánh giá sản phẩm khi nhận hàng.</string>
+    <!-- Tracking Steps -->
+    <string name="track_step_placed_title">Đã đặt hàng</string>
+    <string name="track_step_placed_desc">Đơn hàng của bạn đã được tiếp nhận</string>
+    <string name="track_step_confirmed_title">Đã xác nhận</string>
+    <string name="track_step_confirmed_desc">Chúng tôi đang chuẩn bị đơn hàng</string>
+    <string name="track_step_shipping_title">Đang vận chuyển</string>
+    <string name="track_step_shipping_desc">Đã giao cho đơn vị vận chuyển</string>
+    <string name="track_step_delivered_title">Đã giao hàng</string>
+    <string name="track_step_delivered_success">Đã giao thành công</string>
+    <string name="track_step_delivered_expected">Dự kiến giao trong vài ngày tới</string>
+
+    <!-- Status Updates -->
+    <string name="status_update_shipping_title">Đang giao hàng</string>
+    <string name="status_update_shipping_desc">Đơn hàng của bạn sẽ sớm được giao</string>
+    <string name="status_update_confirmed_title">Đơn hàng đã xác nhận</string>
+    <string name="status_update_confirmed_desc">Chúng tôi đang chuẩn bị hàng</string>
+    <string name="status_update_placed_title">Đã tiếp nhận đơn hàng</string>
+    <string name="status_update_placed_desc_default">Đang cập nhật địa chỉ...</string>
+
+    <!-- Home Banners -->
+    <string name="banner_1_title">iPhone 15 Pro Max</string>
+    <string name="banner_1_desc">Khám phá sức mạnh titan.</string>
+    <string name="banner_2_title">Macbook Air M3</string>
+    <string name="banner_2_desc">Giảm giá tới 20% cho các dòng máy.</string>
+    <string name="banner_3_title">Phụ kiện mới</string>
+    <string name="banner_3_desc">Nâng tầm trải nghiệm âm thanh.</string>
+    <!-- MORE Login Screen -->
+    <string name="welcome_title">Chào mừng bạn</string>
+    <string name="welcome_subtitle">Đăng nhập hoặc tạo tài khoản để bắt đầu.</string>
+    <string name="username_email_label">Email / Tên đăng nhập</string>
+    <string name="email_hint">Nhập email của bạn</string>
+    <string name="enter_password_hint">Nhập mật khẩu của bạn</string>
+    <string name="confirm_password_label">Nhập lại mật khẩu</string>
+    <string name="confirm_password_hint">Nhập lại mật khẩu của bạn</string>
+    <string name="password_mismatch">Mật khẩu không khớp</string>
+    <string name="password_mismatch_msg">Mật khẩu không khớp. Vui lòng kiểm tra lại.</string>
+    <string name="or_divider">Hoặc</string>
+    <string name="continue_as_guest">Tiếp tục với tư cách khách</string>
+    <string name="toggle_password_visibility">Hiện/Ẩn mật khẩu</string>
+    <string name="google_signin_failed_fmt">Đăng nhập Google thất bại: %1$s</string>
+</resources>

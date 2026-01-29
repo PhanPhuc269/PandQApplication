@@ -191,6 +191,12 @@ class AdminActivity : FragmentActivity() {
                     Scaffold(
                         // Bottom Bar removed
                     ) { innerPadding ->
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .statusBarsPadding()
+                            .navigationBarsPadding()
+                    ) {
                     NavHost(
                         navController = navController,
                         startDestination = AdminScreen.Login.route
@@ -509,6 +515,7 @@ class AdminActivity : FragmentActivity() {
                             )
                         }
 
+                    }
                     }
                 }
             }

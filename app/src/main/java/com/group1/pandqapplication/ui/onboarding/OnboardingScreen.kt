@@ -56,45 +56,45 @@ fun GuidePager(
     val primaryColor = Color(0xFFec3713)
     val pages = listOf(
         OnboardingPage(
-            title = "Chào mừng đến với TechShop!",
-            description = "Ứng dụng mua sắm đồ điện tử hàng đầu.",
+            title = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_1_title),
+            description = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_1_desc),
             steps = listOf(
-                "Đồng ý với Điều khoản dịch vụ & Chính sách quyền riêng tư.",
-                "Khám phá hàng ngàn sản phẩm công nghệ.",
-                "Trải nghiệm mua sắm an toàn và tiện lợi."
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_1_step_1),
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_1_step_2),
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_1_step_3)
             ),
             imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuBMCGdV_NsqxlXWNhWjWxYffYNuLUl4GHiB6W2p1xDI9Pr9bxgxOSdvUYKSa4Y7s3_dPqOtcvnScYiy9njJpZOQhE_PebmoMG8gUNzmjhWl6uEHqLOMoaBA8qwrw3IXmaYPjJ2SMyiwhwPnRDmXLFuGetVIxTwfmVjDBcu84hps2c9_j0T9JsdOhDQTz4GQq0bmBXhfyqncWdZ7-Q_a0F6Q1qAhAnsCRwz7LidGPGayCSdTBnJ4kXZTgkGbUJPmyxBVtlDf_YBW-IE"
         ),
         OnboardingPage(
-            title = "Tìm kiếm & Xem sản phẩm",
-            description = "Dễ dàng tìm kiếm sản phẩm yêu thích.",
+            title = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_2_title),
+            description = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_2_desc),
             steps = listOf(
-                "1. Nhấn vào biểu tượng tìm kiếm ở trang chủ.",
-                "2. Nhập tên sản phẩm hoặc chọn danh mục.",
-                "3. Sử dụng bộ lọc để tìm sản phẩm ưng ý.",
-                "4. Nhấn vào sản phẩm để xem chi tiết."
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_2_step_1),
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_2_step_2),
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_2_step_3),
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_2_step_4)
             ),
             imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuAOGmT6XSrSXQi-5x0NluBBrZBvph3oaww0EpTDVYR2ybFzokcIuW-iL_8oFMtoLEk1rksmdQbXRZljJQqlj3hAQ5FWUu_Q6IRDfMgo19CDOnGc8GatoDavcm_8_i1O46JWOl_CyFzrwu76JB9NP-aFbyfHg4883Wr4ocDK9KzDSad5qJRPQ2sSkKFKD38qIgyGPs-L2Mjj1Y1TU7TOtyEe-64cpGRPwkIxv-Rx4MKUgl0fWUCf5RzWWUpvMYfKKDAyEU2sf5ZSrMY"
         ),
         OnboardingPage(
-            title = "Giỏ hàng & Thanh toán",
-            description = "Thanh toán nhanh chóng và an toàn.",
+            title = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_3_title),
+            description = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_3_desc),
             steps = listOf(
-                "1. Chọn 'Thêm vào giỏ' tại trang chi tiết.",
-                "2. Vào giỏ hàng để kiểm tra sản phẩm.",
-                "3. Chọn phương thức thanh toán và địa chỉ.",
-                "4. Xác nhận đặt hàng."
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_3_step_1),
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_3_step_2),
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_3_step_3),
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_3_step_4)
             ),
             imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDUoXuiDDcy7hwiRsdmKgvX2_GUk_FoY9JsT0i6FuWC99WVFbReei0xHZGyk2q-9eKR8R8rbWUiGLlS37z02whcsqdrrgWeQpeIfvXucdp0x3d3f0QtH0fZ7ql3TVfm41qN9wyzddSmk7QXFLHY5SYaaFf6LNCB80YxTOG27aETXHm4lNW-CPBADlo_G1bjKg1HicD7EAZzVjtAaHU1gYi-IYT6tPzRKidd58uE-B5dgOpit76lHpB4uT46FX5oWMiZEm42Y4Z1KKU"
         ),
          OnboardingPage(
-            title = "Theo dõi đơn hàng",
-            description = "Cập nhật trạng thái đơn hàng liên tục.",
+            title = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_4_title),
+            description = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_4_desc),
             steps = listOf(
-                "1. Vào mục 'Đơn mua' trong tài khoản.",
-                "2. Chọn đơn hàng cần theo dõi.",
-                "3. Xem chi tiết hành trình vận chuyển.",
-                "4. Đánh giá sản phẩm khi nhận hàng."
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_4_step_1),
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_4_step_2),
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_4_step_3),
+                androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.slide_4_step_4)
             ),
             imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCzAw-DAkrH7q0Hc833qfYAdjt6Mo5Ak4uhhqWIz-24wjdhFiluPKilyig1WEV0WSqAtF_i0u82_3WfQjbCSLrxyEIWyJrrTCvWyutpMA1l9Nc4E4ABSy6Tl7TtWsKRlRXkVv2hO8jqp4nMERrBEZASDntKkTO7PRA-Gsi-uRv0wRm4nCge7w0YnSu77w6bM74thVAXInp4it7LyohfoJj4Kqfg3aM0IlR_FInavgPnStyOS9t7E5oWNwQNVOZaHpRSY58_4RmhIQQ"
         )
@@ -121,7 +121,7 @@ fun GuidePager(
                 if (!isReviewMode) {
                     TextButton(onClick = onFinish) {
                         Text(
-                            text = "Bỏ qua",
+                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.guide_skip),
                             color = primaryColor,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
@@ -131,7 +131,7 @@ fun GuidePager(
                     // Placeholder for spacing or a Close button if desired at top
                      TextButton(onClick = onFinish) {
                         Text(
-                            text = "Đóng",
+                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.guide_close),
                             color = Color.Gray,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
@@ -272,9 +272,10 @@ fun GuidePager(
                     colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
                 ) {
                     val buttonText = if (pagerState.currentPage == pages.size - 1) {
-                        if (isReviewMode) "Đóng" else "Bắt đầu ngay"
+                        if (isReviewMode) androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.guide_close) 
+                        else androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.guide_start)
                     } else {
-                        "Tiếp tục"
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.guide_next)
                     }
                     Text(
                         text = buttonText,

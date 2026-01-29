@@ -50,6 +50,13 @@ import com.group1.pandqapplication.shared.ui.theme.BackgroundLight
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import com.group1.pandqapplication.R
+import androidx.compose.ui.res.stringResource
+
+// Date category keys for i18n
+enum class DateCategory {
+    TODAY, YESTERDAY, LAST_WEEK, OTHER
+}
 
 // UI Data Models for display
 data class NotificationUiModel(
@@ -59,7 +66,7 @@ data class NotificationUiModel(
     val time: String,
     val description: String,
     val isRead: Boolean,
-    val date: String, // "Hôm nay", "Hôm qua", "Tuần trước"
+    val dateCategory: DateCategory, // Use enum for i18n
     val targetUrl: String? = null
 )
 
@@ -77,7 +84,7 @@ private fun NotificationDto.toUiModel(): NotificationUiModel {
         else -> NotificationType.FEEDBACK
     }
     
-    val (timeStr, dateStr) = formatDateTime(createdAt)
+    val (timeStr, dateCategory) = formatDateTime(createdAt)
     
     return NotificationUiModel(
         id = id,
@@ -86,27 +93,27 @@ private fun NotificationDto.toUiModel(): NotificationUiModel {
         time = timeStr,
         description = body,
         isRead = isRead,
-        date = dateStr,
+        dateCategory = dateCategory,
         targetUrl = targetUrl
     )
 }
 
-private fun formatDateTime(isoString: String): Pair<String, String> {
+private fun formatDateTime(isoString: String): Pair<String, DateCategory> {
     return try {
         val dateTime = LocalDateTime.parse(isoString.substringBefore("+"))
         val now = LocalDateTime.now()
         val daysBetween = ChronoUnit.DAYS.between(dateTime.toLocalDate(), now.toLocalDate())
         
         val timeStr = dateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-        val dateStr = when {
-            daysBetween == 0L -> "Hôm nay"
-            daysBetween == 1L -> "Hôm qua"
-            daysBetween <= 7L -> "Tuần trước"
-            else -> dateTime.format(DateTimeFormatter.ofPattern("dd/MM"))
+        val dateCategory = when {
+            daysBetween == 0L -> DateCategory.TODAY
+            daysBetween == 1L -> DateCategory.YESTERDAY
+            daysBetween <= 7L -> DateCategory.LAST_WEEK
+            else -> DateCategory.OTHER
         }
-        Pair(timeStr, dateStr)
+        Pair(timeStr, dateCategory)
     } catch (e: Exception) {
-        Pair("--:--", "Khác")
+        Pair("--:--", DateCategory.OTHER)
     }
 }
 
@@ -133,8 +140,8 @@ fun NotificationsScreen(
         else -> allNotifications
     }
 
-    // Grouping Logic
-    val groupedNotifications = filteredNotifications.groupBy { it.date }
+    // Grouping Logic - we use dateCategory enum for grouping
+    val groupedNotifications = filteredNotifications.groupBy { it.dateCategory }
 
     Scaffold(
         containerColor = backgroundColor,
@@ -154,7 +161,7 @@ fun NotificationsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "Thông báo",
+                        stringResource(R.string.notifications),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = Color(0xFF111827)
@@ -187,8 +194,13 @@ fun NotificationsScreen(
                     .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val filters = listOf("All" to "Tất cả", "Orders" to "Đơn hàng", "Promos" to "Khuyến mãi", "Chats" to "Tin nhắn")
-                filters.forEach { (key, label) ->
+                val filters = listOf(
+                    "All" to R.string.filter_all, 
+                    "Orders" to R.string.filter_orders, 
+                    "Promos" to R.string.filter_promos, 
+                    "Chats" to R.string.filter_messages
+                )
+                filters.forEach { (key, labelRes) ->
                     val isSelected = uiState.selectedFilter == key
                     Box(
                         modifier = Modifier
@@ -200,7 +212,7 @@ fun NotificationsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = label,
+                            text = stringResource(labelRes),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = if (isSelected) primaryColor else Color(0xFF6B7280)
@@ -269,7 +281,7 @@ fun NotificationsScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "Bạn đã xem hết thông báo",
+                        stringResource(R.string.no_notifications),
                         color = Color(0xFF6B7280),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
@@ -300,10 +312,16 @@ fun NotificationsScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    groupedNotifications.forEach { (date, items) ->
+                    groupedNotifications.forEach { (dateCategory, items) ->
                         item {
+                            val dateLabel = when (dateCategory) {
+                                DateCategory.TODAY -> stringResource(R.string.date_today)
+                                DateCategory.YESTERDAY -> stringResource(R.string.date_yesterday)
+                                DateCategory.LAST_WEEK -> stringResource(R.string.date_last_week)
+                                DateCategory.OTHER -> stringResource(R.string.date_other)
+                            }
                             Text(
-                                text = date,
+                                text = dateLabel,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,

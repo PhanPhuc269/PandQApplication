@@ -15,6 +15,8 @@ import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
 
+import com.group1.pandqapplication.R
+
 data class OrderTrackingUiState(
     val order: OrderDto? = null,
     val isLoading: Boolean = false,
@@ -24,8 +26,8 @@ data class OrderTrackingUiState(
 )
 
 data class TrackingStepData(
-    val title: String,
-    val subtitle: String,
+    val titleRes: Int,
+    val subtitleRes: Int,
     val isActive: Boolean,
     val iconType: TrackingIconType
 )
@@ -39,8 +41,9 @@ enum class TrackingIconType {
 
 data class StatusUpdateData(
     val time: String,
-    val title: String,
-    val subtitle: String,
+    val titleRes: Int,
+    val subtitleRes: Int? = null,
+    val subtitleStr: String? = null,
     val isActive: Boolean
 )
 
@@ -74,7 +77,7 @@ class OrderTrackingViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = exception.message ?: "Không thể tải thông tin đơn hàng"
+                            error = exception.message ?: "Error loading order"
                         )
                     }
                 }
@@ -108,26 +111,26 @@ class OrderTrackingViewModel @Inject constructor(
         
         return listOf(
             TrackingStepData(
-                title = "Đã đặt hàng",
-                subtitle = "Đơn hàng của bạn đã được tiếp nhận",
+                titleRes = R.string.track_step_placed_title,
+                subtitleRes = R.string.track_step_placed_desc,
                 isActive = isOrderPlaced,
                 iconType = TrackingIconType.ORDER_PLACED
             ),
             TrackingStepData(
-                title = "Đã xác nhận",
-                subtitle = "Chúng tôi đang chuẩn bị đơn hàng",
+                titleRes = R.string.track_step_confirmed_title,
+                subtitleRes = R.string.track_step_confirmed_desc,
                 isActive = isConfirmed,
                 iconType = TrackingIconType.CONFIRMED
             ),
             TrackingStepData(
-                title = "Đang vận chuyển",
-                subtitle = "Đã giao cho đơn vị vận chuyển",
+                titleRes = R.string.track_step_shipping_title,
+                subtitleRes = R.string.track_step_shipping_desc,
                 isActive = isShipping,
                 iconType = TrackingIconType.SHIPPING
             ),
             TrackingStepData(
-                title = "Đã giao hàng",
-                subtitle = if (isDelivered) "Đã giao thành công" else "Dự kiến giao trong vài ngày tới",
+                titleRes = R.string.track_step_delivered_title,
+                subtitleRes = if (isDelivered) R.string.track_step_delivered_success else R.string.track_step_delivered_expected,
                 isActive = isDelivered,
                 iconType = TrackingIconType.DELIVERED
             )
@@ -146,8 +149,8 @@ class OrderTrackingViewModel @Inject constructor(
             updates.add(
                 StatusUpdateData(
                     time = dateFormat.format(calendar.time),
-                    title = "Đang giao hàng",
-                    subtitle = "Đơn hàng của bạn sẽ sớm được giao",
+                    titleRes = R.string.status_update_shipping_title,
+                    subtitleRes = R.string.status_update_shipping_desc,
                     isActive = statusUpper == "SHIPPING"
                 )
             )
@@ -158,8 +161,8 @@ class OrderTrackingViewModel @Inject constructor(
             updates.add(
                 StatusUpdateData(
                     time = dateFormat.format(calendar.time),
-                    title = "Đơn hàng đã xác nhận",
-                    subtitle = "Chúng tôi đang chuẩn bị hàng",
+                    titleRes = R.string.status_update_confirmed_title,
+                    subtitleRes = R.string.status_update_confirmed_desc,
                     isActive = statusUpper == "CONFIRMED"
                 )
             )
@@ -170,8 +173,9 @@ class OrderTrackingViewModel @Inject constructor(
         updates.add(
             StatusUpdateData(
                 time = dateFormat.format(calendar.time),
-                title = "Đã tiếp nhận đơn hàng",
-                subtitle = order.shippingAddress ?: "Đang cập nhật địa chỉ",
+                titleRes = R.string.status_update_placed_title,
+                subtitleRes = if (order.shippingAddress == null) R.string.status_update_placed_desc_default else null,
+                subtitleStr = order.shippingAddress,
                 isActive = statusUpper == "PENDING"
             )
         )

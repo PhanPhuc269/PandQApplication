@@ -121,7 +121,7 @@ fun OrderTrackingScreen(
                     )
                 }
                 Text(
-                    text = "Theo dõi đơn hàng",
+                    text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.track_order_title),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = textPrimary,
@@ -155,7 +155,7 @@ fun OrderTrackingScreen(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "Đánh giá đơn hàng",
+                                text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.rate_order_btn),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -172,7 +172,7 @@ fun OrderTrackingScreen(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = "Liên hệ hỗ trợ",
+                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.contact_support_btn),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -202,7 +202,7 @@ fun OrderTrackingScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = uiState.error ?: "Đã xảy ra lỗi",
+                            text = uiState.error ?: androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.error_generic, ""),
                             color = Color.Gray,
                             fontSize = 14.sp
                         )
@@ -211,7 +211,7 @@ fun OrderTrackingScreen(
                             onClick = { orderId?.let { viewModel.loadOrder(it) } },
                             colors = ButtonDefaults.buttonColors(containerColor = Primary)
                         ) {
-                            Text("Thử lại")
+                            Text(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.refresh))
                         }
                     }
                 }
@@ -240,7 +240,7 @@ fun OrderTrackingScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Đơn hàng #${currentOrder.id.take(8)}",
+                                    text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.order_number_fmt, currentOrder.id.take(8)),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = textPrimary
@@ -254,7 +254,7 @@ fun OrderTrackingScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Row {
                                 Text(
-                                    text = "Dự kiến giao hàng: ",
+                                    text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.estimated_delivery_label),
                                     fontSize = 14.sp,
                                     color = textSecondary
                                 )
@@ -279,9 +279,9 @@ fun OrderTrackingScreen(
                                 ) {
                                     Text(
                                         text = when (currentOrder.status.uppercase()) {
-                                            "CANCELLED" -> "Đã hủy"
-                                            "FAILED" -> "Thất bại"
-                                            "RETURNED" -> "Đã trả hàng"
+                                            "CANCELLED" -> androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.status_cancelled_lbl)
+                                            "FAILED" -> androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.status_failed_lbl)
+                                            "RETURNED" -> androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.status_returned_lbl)
                                             else -> currentOrder.status
                                         },
                                         color = Color(0xFFD32F2F),
@@ -313,8 +313,8 @@ fun OrderTrackingScreen(
                                         TrackingIconType.SHIPPING -> Icons.Default.LocalShipping
                                         TrackingIconType.DELIVERED -> Icons.Default.Inventory2
                                     },
-                                    title = step.title,
-                                    subtitle = step.subtitle,
+                                    title = androidx.compose.ui.res.stringResource(step.titleRes),
+                                    subtitle = androidx.compose.ui.res.stringResource(step.subtitleRes),
                                     isActive = step.isActive,
                                     isLast = index == uiState.trackingSteps.lastIndex,
                                     textPrimary = textPrimary,
@@ -334,7 +334,7 @@ fun OrderTrackingScreen(
                         ) {
                             Column(modifier = Modifier.padding(20.dp)) {
                                 Text(
-                                    text = "Cập nhật trạng thái",
+                                    text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.status_update_title),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = textPrimary,
@@ -342,10 +342,16 @@ fun OrderTrackingScreen(
                                 )
                                 
                                 uiState.statusUpdates.forEach { update ->
+                                    val subtitle = if (update.subtitleRes != null) {
+                                        androidx.compose.ui.res.stringResource(update.subtitleRes)
+                                    } else {
+                                        update.subtitleStr ?: ""
+                                    }
+                                    
                                     StatusUpdateItem(
                                         time = update.time,
-                                        title = update.title,
-                                        subtitle = update.subtitle,
+                                        title = androidx.compose.ui.res.stringResource(update.titleRes),
+                                        subtitle = subtitle,
                                         isActive = update.isActive,
                                         textPrimary = textPrimary,
                                         textSecondary = textSecondary,
@@ -379,7 +385,7 @@ fun OrderTrackingScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Xem chi tiết đơn hàng",
+                                    text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.view_order_detail_btn),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = textPrimary
@@ -409,7 +415,7 @@ fun OrderTrackingScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "Mã đơn hàng",
+                                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.order_id_lbl),
                                             fontSize = 14.sp,
                                             color = textSecondary
                                         )
@@ -428,7 +434,7 @@ fun OrderTrackingScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Text(
-                                                text = "Ngày đặt hàng",
+                                                text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.order_date_lbl),
                                                 fontSize = 14.sp,
                                                 color = textSecondary
                                             )
@@ -448,7 +454,7 @@ fun OrderTrackingScreen(
                                     
                                     // Section title: Products
                                     Text(
-                                        text = "Sản phẩm",
+                                        text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.product_section_title),
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = textPrimary,
@@ -458,7 +464,7 @@ fun OrderTrackingScreen(
                                     // Display actual order items
                                     if (currentOrder.items.isEmpty()) {
                                         Text(
-                                            text = "Không có thông tin sản phẩm",
+                                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.no_product_info_msg),
                                             fontSize = 14.sp,
                                             color = textSecondary,
                                             modifier = Modifier.padding(vertical = 8.dp)
@@ -484,7 +490,7 @@ fun OrderTrackingScreen(
                                     // Shipping Address
                                     if (!currentOrder.shippingAddress.isNullOrBlank()) {
                                         Text(
-                                            text = "Địa chỉ giao hàng",
+                                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.shipping_address_title),
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = textPrimary
@@ -504,13 +510,13 @@ fun OrderTrackingScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(
-                                                text = "Thanh toán: ",
+                                                text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.payment_lbl),
                                                 fontSize = 14.sp,
                                                 color = textSecondary
                                             )
                                             Text(
                                                 text = when (currentOrder.paymentMethod?.uppercase()) {
-                                                    "COD" -> "Thanh toán khi nhận hàng"
+                                                    "COD" -> androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.payment_cod_lbl)
                                                     "ZALOPAY" -> "ZaloPay"
                                                     "SEPAY" -> "SePay"
                                                     "MOMO" -> "MoMo"
@@ -529,10 +535,10 @@ fun OrderTrackingScreen(
                                     )
                                     
                                     // Summary
-                                    SummaryRow("Tạm tính", OrderTrackingViewModel.formatPrice(currentOrder.totalAmount), textSecondary, textPrimary)
-                                    SummaryRow("Phí vận chuyển", OrderTrackingViewModel.formatPrice(currentOrder.shippingFee), textSecondary, textPrimary)
+                                    SummaryRow(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.summary_subtotal), OrderTrackingViewModel.formatPrice(currentOrder.totalAmount), textSecondary, textPrimary)
+                                    SummaryRow(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.summary_shipping), OrderTrackingViewModel.formatPrice(currentOrder.shippingFee), textSecondary, textPrimary)
                                     if (currentOrder.discountAmount > 0) {
-                                        SummaryRow("Giảm giá", "-${OrderTrackingViewModel.formatPrice(currentOrder.discountAmount)}", textSecondary, Primary)
+                                        SummaryRow(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.summary_discount), "-${OrderTrackingViewModel.formatPrice(currentOrder.discountAmount)}", textSecondary, Primary)
                                     }
                                     
                                     Spacer(modifier = Modifier.height(8.dp))
@@ -542,7 +548,7 @@ fun OrderTrackingScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "Tổng cộng",
+                                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.summary_total),
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = textPrimary

@@ -13,15 +13,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.group1.pandqapplication.R
 import com.group1.pandqapplication.ui.navigation.Screen
 
-sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
-    object Home : BottomNavItem(Screen.Home.route, Icons.Filled.Home, "Home")
-    object Orders : BottomNavItem("orders", Icons.Filled.ReceiptLong, "Đơn hàng")
-    object Notifications : BottomNavItem("notifications", Icons.Filled.Notifications, "Thông báo")
-    object Account : BottomNavItem("account", Icons.Filled.Person, "Tài khoản")
+sealed class BottomNavItem(val route: String, val icon: ImageVector, val labelResId: Int) {
+    object Home : BottomNavItem(Screen.Home.route, Icons.Filled.Home, R.string.nav_home)
+    object Orders : BottomNavItem("orders", Icons.Filled.ReceiptLong, R.string.nav_orders)
+    object Notifications : BottomNavItem("notifications", Icons.Filled.Notifications, R.string.nav_notifications)
+    object Account : BottomNavItem("account", Icons.Filled.Person, R.string.nav_account)
 }
 
 @Composable
@@ -35,19 +37,16 @@ fun BottomNavigationBar(navController: NavController) {
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination?.route
 
-    // Hide bottom bar if not in main tabs or product detail (optional, logic depends on requirement)
-    // User wants bottom bar in code "above", which shows it always visible at bottom.
-    // We will show it for these routes.
-
     NavigationBar(
         containerColor = Color.White,
         contentColor = Color(0xFFec3713)
     ) {
         items.forEach { item ->
             val isSelected = currentRoute == item.route
+            val label = stringResource(item.labelResId)
             NavigationBarItem(
-                icon = { Icon(item.icon, contentDescription = item.label) },
-                label = { Text(item.label) },
+                icon = { Icon(item.icon, contentDescription = label) },
+                label = { Text(label) },
                 selected = isSelected,
                 onClick = {
                     if (currentRoute != item.route) {
@@ -63,7 +62,7 @@ fun BottomNavigationBar(navController: NavController) {
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Color(0xFFec3713),
                     selectedTextColor = Color(0xFFec3713),
-                    indicatorColor = Color.Transparent, // Transparent indicator for cleaner look or customize
+                    indicatorColor = Color.Transparent,
                     unselectedIconColor = Color.Gray,
                     unselectedTextColor = Color.Gray
                 )
