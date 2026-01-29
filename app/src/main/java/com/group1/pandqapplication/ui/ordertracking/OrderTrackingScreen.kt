@@ -67,6 +67,7 @@ import com.group1.pandqapplication.shared.ui.theme.BackgroundDark
 import com.group1.pandqapplication.shared.ui.theme.BackgroundLight
 import com.group1.pandqapplication.shared.ui.theme.CardDark
 import com.group1.pandqapplication.shared.ui.theme.CardLight
+import com.group1.pandqapplication.shared.ui.theme.CheckoutPrimary
 import com.group1.pandqapplication.shared.ui.theme.Primary
 import com.group1.pandqapplication.shared.ui.theme.TextDarkPrimary
 import com.group1.pandqapplication.shared.ui.theme.TextDarkSecondary
@@ -116,7 +117,7 @@ fun OrderTrackingScreen(
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Back",
-                        tint = Primary
+                        tint = CheckoutPrimary
                     )
                 }
                 Text(
@@ -150,7 +151,7 @@ fun OrderTrackingScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                            colors = ButtonDefaults.buttonColors(containerColor = CheckoutPrimary),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
@@ -167,7 +168,7 @@ fun OrderTrackingScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                        colors = ButtonDefaults.buttonColors(containerColor = CheckoutPrimary),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
