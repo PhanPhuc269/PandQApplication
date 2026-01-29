@@ -2,6 +2,7 @@ package com.group1.pandqapplication.admin.ui.role
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -20,19 +22,29 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.ManageAccounts
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.SupportAgent
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,9 +55,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
 import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundDark
 import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundLight
@@ -56,9 +68,11 @@ import com.group1.pandqapplication.shared.ui.theme.RoleTextPrimaryLight
 import com.group1.pandqapplication.shared.ui.theme.RoleTextSecondaryDark
 import com.group1.pandqapplication.shared.ui.theme.RoleTextSecondaryLight
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoleManagementScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    viewModel: RoleViewModel = hiltViewModel()
 ) {
     val isDarkTheme = false
     
@@ -67,6 +81,25 @@ fun RoleManagementScreen(
     val textPrimary = if (isDarkTheme) RoleTextPrimaryDark else RoleTextPrimaryLight
     val textSecondary = if (isDarkTheme) RoleTextSecondaryDark else RoleTextSecondaryLight
     val borderColor = if (isDarkTheme) Color(0xFF374151) else Color(0xFFE5E7EB)
+    
+    val uiState by viewModel.uiState.collectAsState()
+    val isCreating by viewModel.isCreating.collectAsState()
+    val createSuccess by viewModel.createSuccess.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    
+    var showAddDialog by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var createdEmail by remember { mutableStateOf("") }
+    var searchText by remember { mutableStateOf("") }
+    
+    // Handle create success
+    LaunchedEffect(createSuccess) {
+        if (createSuccess) {
+            showAddDialog = false
+            showSuccessDialog = true
+            viewModel.clearCreateSuccess()
+        }
+    }
 
     Scaffold(
         containerColor = backgroundColor,
@@ -95,15 +128,14 @@ fun RoleManagementScreen(
                         color = textPrimary,
                         modifier = Modifier.align(Alignment.Center)
                     )
-                    TextButton(
-                        onClick = { /* Edit */ },
+                    IconButton(
+                        onClick = { viewModel.loadUsers() },
                         modifier = Modifier.align(Alignment.CenterEnd)
                     ) {
-                        Text(
-                            text = "Edit",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = ProductPrimary
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = ProductPrimary
                         )
                     }
                 }
@@ -112,118 +144,272 @@ fun RoleManagementScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* Add Role */ },
+                onClick = { showAddDialog = true },
                 containerColor = ProductPrimary,
                 contentColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier.size(56.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Role", modifier = Modifier.size(32.dp))
+                Icon(Icons.Default.Add, contentDescription = "Add Admin", modifier = Modifier.size(32.dp))
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Search Bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                Row(
+        when (val state = uiState) {
+            is RoleUiState.Loading -> {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(surfaceColor),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .width(48.dp)
-                            .height(48.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = textSecondary
-                        )
-                    }
-                    var searchText by remember { mutableStateOf("") }
-                    BasicTextField(
-                        value = searchText,
-                        onValueChange = { searchText = it },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        decorationBox = { innerTextField ->
-                            if (searchText.isEmpty()) {
-                                Text(
-                                    text = "Search for a role",
-                                    color = textSecondary,
-                                    fontSize = 16.sp
-                                )
-                            }
-                            innerTextField()
-                        }
-                    )
+                    CircularProgressIndicator(color = ProductPrimary)
                 }
             }
-
-            // Role List
-            LazyColumn {
-
-
-                item {
-                    RoleItem(
-                        icon = Icons.Default.Security,
-                        title = "Quản trị viên",
-                        count = "2 người dùng",
-                        surfaceColor = surfaceColor,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        borderColor = borderColor
-                    )
+            is RoleUiState.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(state.message, color = Color.Red)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { viewModel.loadUsers() }) {
+                            Text("Thử lại")
+                        }
+                    }
                 }
-                item {
-                    RoleItem(
-                        icon = Icons.Default.ManageAccounts,
-                        title = "Quản lý bán hàng",
-                        count = "5 người dùng",
-                        surfaceColor = surfaceColor,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        borderColor = borderColor
-                    )
-                }
-                item {
-                    RoleItem(
-                        icon = Icons.Default.Inventory2,
-                        title = "Nhân viên kho",
-                        count = "8 người dùng",
-                        surfaceColor = surfaceColor,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        borderColor = borderColor
-                    )
-                }
-                item {
-                    RoleItem(
-                        icon = Icons.Default.SupportAgent,
-                        title = "Hỗ trợ khách hàng",
-                        count = "3 người dùng",
-                        surfaceColor = surfaceColor,
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary,
-                        borderColor = Color.Transparent // Last item no border
-                    )
+            }
+            is RoleUiState.Success -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    // Search Bar
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(surfaceColor),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(48.dp)
+                                    .height(48.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = null,
+                                    tint = textSecondary
+                                )
+                            }
+                            BasicTextField(
+                                value = searchText,
+                                onValueChange = { searchText = it },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                decorationBox = { innerTextField ->
+                                    if (searchText.isEmpty()) {
+                                        Text(
+                                            text = "Tìm kiếm theo vai trò",
+                                            color = textSecondary,
+                                            fontSize = 16.sp
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            )
+                        }
+                    }
+
+                    // Role List
+                    LazyColumn {
+                        items(state.roles) { roleWithUsers ->
+                            val icon = when (roleWithUsers.role) {
+                                "ADMIN" -> Icons.Default.Security
+                                else -> Icons.Default.ManageAccounts
+                            }
+                            RoleItem(
+                                icon = icon,
+                                title = roleWithUsers.displayName,
+                                count = "${roleWithUsers.users.size} người dùng",
+                                surfaceColor = surfaceColor,
+                                textPrimary = textPrimary,
+                                textSecondary = textSecondary,
+                                borderColor = borderColor,
+                                onClick = { /* TODO: Navigate to user list for this role */ }
+                            )
+                        }
+                    }
                 }
             }
         }
     }
+    
+    // Add Admin Dialog
+    if (showAddDialog) {
+        AddAdminDialog(
+            isLoading = isCreating,
+            errorMessage = errorMessage,
+            onDismiss = {
+                showAddDialog = false
+                viewModel.clearError()
+            },
+            onConfirm = { email, fullName, role ->
+                createdEmail = email
+                viewModel.createAdminUser(email, fullName, role)
+            }
+        )
+    }
+    
+    // Success Dialog showing credentials
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showSuccessDialog = false },
+            title = { Text("Tạo tài khoản thành công") },
+            text = {
+                Column {
+                    Text("📧 Email: $createdEmail", fontWeight = FontWeight.Medium)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "📬 Link đặt lại mật khẩu đã được gửi đến email trên.",
+                        fontSize = 14.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Admin mới cần kiểm tra email và click vào link để đặt mật khẩu. Nếu không tìm thất vui lòng kiểm tra hòm thư rác",
+                        color = Color(0xFF6B7280),
+                        fontSize = 13.sp
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showSuccessDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = ProductPrimary)
+                ) {
+                    Text("Đã hiểu")
+                }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddAdminDialog(
+    isLoading: Boolean,
+    errorMessage: String?,
+    onDismiss: () -> Unit,
+    onConfirm: (email: String, fullName: String, role: String) -> Unit
+) {
+    var email by remember { mutableStateOf("") }
+    var fullName by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf("ADMIN") }
+    var expanded by remember { mutableStateOf(false) }
+    
+    val roles = listOf("ADMIN" to "Quản trị viên", "STAFF" to "Nhân viên")
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Thêm người dùng mới") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                
+                OutlinedTextField(
+                    value = fullName,
+                    onValueChange = { fullName = it },
+                    label = { Text("Họ và tên") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = roles.find { it.first == selectedRole }?.second ?: "",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Vai trò") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        roles.forEach { (roleValue, roleLabel) ->
+                            DropdownMenuItem(
+                                text = { Text(roleLabel) },
+                                onClick = {
+                                    selectedRole = roleValue
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        color = Color.Red,
+                        fontSize = 12.sp
+                    )
+                }
+                
+                if (isLoading) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = ProductPrimary
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(email, fullName, selectedRole) },
+                enabled = email.isNotBlank() && fullName.isNotBlank() && !isLoading,
+                colors = ButtonDefaults.buttonColors(containerColor = ProductPrimary)
+            ) {
+                Text("Thêm")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Hủy")
+            }
+        }
+    )
 }
 
 @Composable
@@ -234,14 +420,15 @@ fun RoleItem(
     surfaceColor: Color,
     textPrimary: Color,
     textSecondary: Color,
-    borderColor: Color
+    borderColor: Color,
+    onClick: () -> Unit = {}
 ) {
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { }
-                .padding(horizontal = 16.dp, vertical = 12.dp), // min-h-[72px] ~ 12dp vertical padding
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -275,16 +462,10 @@ fun RoleItem(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = textSecondary.copy(alpha = 0.5f), // text-zinc-400
+                tint = textSecondary.copy(alpha = 0.5f),
                 modifier = Modifier.size(28.dp)
             )
         }
         HorizontalDivider(color = borderColor, modifier = Modifier.padding(horizontal = 16.dp))
     }
-}
-
-@Preview
-@Composable
-fun PreviewRoleManagementScreen() {
-    RoleManagementScreen()
 }

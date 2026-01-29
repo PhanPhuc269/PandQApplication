@@ -156,4 +156,14 @@ interface AdminApiService {
     suspend fun validatePromotion(
         @Body request: com.group1.pandqapplication.admin.data.remote.dto.ValidatePromotionRequest
     ): com.group1.pandqapplication.admin.data.remote.dto.ValidatePromotionResponse
+    
+    // ==================== Admin User Management ====================
+    
+    @GET("api/v1/users")
+    suspend fun getAllUsers(): List<com.group1.pandqapplication.admin.data.remote.dto.AdminUserDto>
+    
+    @POST("api/v1/users")
+    suspend fun createUser(
+        @Body request: com.group1.pandqapplication.admin.data.remote.dto.CreateAdminUserRequest
+    ): com.group1.pandqapplication.admin.data.remote.dto.AdminUserDto
 }
