@@ -356,7 +356,12 @@ fun AdminOrderDetailsScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                          Text("Shipper", fontSize = 14.sp, color = textSecondary)
-                         Text("Chưa gán", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textSecondary)
+                         Text(
+                             text = order.shippingProvider ?: "Chưa gán",
+                             fontSize = 14.sp,
+                             fontWeight = FontWeight.Medium,
+                             color = if (order.shippingProvider.isNullOrBlank()) textSecondary else textPrimary
+                         )
                     }
                  }
             }

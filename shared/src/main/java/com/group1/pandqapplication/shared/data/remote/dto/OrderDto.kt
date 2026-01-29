@@ -12,6 +12,7 @@ data class OrderDto(
     val paymentMethod: String?,
     val status: String,
     val shippingAddress: String?,
+    val shippingProvider: String?,
     val createdAt: String?,
     val items: List<OrderItemDto> = emptyList()
 )
