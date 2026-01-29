@@ -24,7 +24,7 @@ import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.VideoCall
+
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
@@ -74,7 +74,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.foundation.lazy.itemsIndexed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,17 +130,21 @@ fun AddProductScreen(
     // Bind data when product loads
     LaunchedEffect(uiState.currentProduct) {
         uiState.currentProduct?.let { product ->
-            name = product.name
-            description = product.description ?: ""
-            price = product.price.toString()
-            // costPrice = product.costPrice?.toString() ?: "" 
-            categoryId = product.categoryId ?: ""
-            stock = product.stockQuantity?.toString() ?: ""
-            if (images.isEmpty()) {
-                images = product.images?.map { it.imageUrl } ?: emptyList()
-            }
-            if (specifications.isEmpty()) {
-                specifications = product.specifications ?: emptyList()
+            // Fix: Check if the loaded product ID matches the current productId (if editing)
+            // If adding (productId is null), we shouldn't bind potentially stale data
+            if (productId != null && product.id == productId) {
+                name = product.name
+                description = product.description ?: ""
+                price = product.price.toString()
+                // costPrice = product.costPrice?.toString() ?: "" 
+                categoryId = product.categoryId ?: ""
+                stock = product.stockQuantity?.toString() ?: ""
+                if (images.isEmpty()) {
+                    images = product.images?.map { it.imageUrl } ?: emptyList()
+                }
+                if (specifications.isEmpty()) {
+                    specifications = product.specifications ?: emptyList()
+                }
             }
         }
     }
@@ -437,61 +443,70 @@ fun AddProductScreen(
                 ) {
                     Column {
                         Text("Hình ảnh sản phẩm", color = textSecondary, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = 8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            // Add Image Placeholder
-                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .border(1.dp, AddProductPrimary.copy(alpha=0.5f), RoundedCornerShape(8.dp)) // Dashed border simulated or just solid alpha
-                                    .background(inputBgColor)
-                                    .clickable {
-                                        imagePickerLauncher.launch("image/*")
-                                    },
-                                contentAlignment = Alignment.Center
-                             ) {
-                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                     Icon(Icons.Default.AddPhotoAlternate, null, tint = AddProductPrimary, modifier = Modifier.size(32.dp))
-                                     Text("Thêm ảnh", fontSize = 12.sp, color = AddProductPrimary, fontWeight = FontWeight.Medium)
-                                 }
-                             }
-                            
-                             // Dynamic Images List (Display last 2 or scrollable)
-                             // For simplicity showing up to 2 previews
-                             images.takeLast(2).forEach { imageUrl ->
-                                 Box(modifier = Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(8.dp)).background(Color.Gray)) {
-                                      AsyncImage(model = imageUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                                 }
-                             }
-                             // Fill remaining space if less than 2 images
-                             repeat(2 - images.takeLast(2).size) {
-                                 Spacer(modifier = Modifier.weight(1f))
-                             }
-                        }
-                        if (images.size > 2) {
-                            Text("+ ${images.size - 2} ảnh khác", fontSize = 12.sp, color = textSecondary, modifier = Modifier.padding(top = 4.dp))
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .border(1.dp, AddProductPrimary.copy(alpha=0.5f), RoundedCornerShape(8.dp))
+                                        .background(inputBgColor)
+                                        .clickable {
+                                            imagePickerLauncher.launch("image/*")
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(Icons.Default.AddPhotoAlternate, null, tint = AddProductPrimary, modifier = Modifier.size(32.dp))
+                                        Text("Thêm ảnh", fontSize = 12.sp, color = AddProductPrimary, fontWeight = FontWeight.Medium)
+                                    }
+                                }
+                            }
+
+                            itemsIndexed(images) { index, imageUrl ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color.Gray)
+                                ) {
+                                    AsyncImage(
+                                        model = imageUrl, 
+                                        contentDescription = null, 
+                                        contentScale = ContentScale.Crop, 
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    
+                                    // Delete Button
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(4.dp)
+                                            .size(24.dp)
+                                            .clip(androidx.compose.foundation.shape.CircleShape)
+                                            .background(Color.Black.copy(alpha = 0.6f))
+                                            .clickable {
+                                                val newImages = images.toMutableList()
+                                                newImages.removeAt(index)
+                                                images = newImages
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Remove Image",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                     
-                    Column {
-                        Text("Video sản phẩm", color = textSecondary, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(bottom = 8.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(16f/9f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .border(1.dp, AddProductPrimary.copy(alpha=0.5f), RoundedCornerShape(8.dp))
-                                .background(inputBgColor)
-                                .clickable {},
-                            contentAlignment = Alignment.Center
-                        ) {
-                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                 Icon(Icons.Default.VideoCall, null, tint = AddProductPrimary, modifier = Modifier.size(48.dp))
-                                 Text("Thêm video", fontSize = 14.sp, color = AddProductPrimary, fontWeight = FontWeight.Medium)
-                             }
-                        }
-                    }
+
                 }
             }
             
