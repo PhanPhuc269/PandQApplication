@@ -179,12 +179,32 @@ interface AppApiService {
 
     @GET("api/v1/orders/{id}")
     suspend fun getOrderById(@Path("id") orderId: String): OrderDto
+    
+    // Confirm delivery - user marks DELIVERED order as COMPLETED
+    @POST("api/v1/orders/{orderId}/confirm-delivery")
+    suspend fun confirmDelivery(@Path("orderId") orderId: String): retrofit2.Response<OrderDto>
+
+    @POST("api/v1/orders/{orderId}/confirm-delivery")
+    suspend fun confirmDelivery(@Path("orderId") orderId: String): OrderDto
 
     // Apply promotion to order before payment
     @PUT("api/v1/orders/{id}/apply-promotion")
     suspend fun applyPromotion(
         @Path("id") orderId: String,
         @Body request: com.group1.pandqapplication.shared.data.remote.dto.ApplyPromotionRequest
+    ): OrderDto
+
+    // Admin Order Management
+    @PUT("api/v1/orders/{id}/assign-carrier")
+    suspend fun assignCarrier(
+        @Path("id") id: String,
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.AssignCarrierRequest
+    ): OrderDto
+
+    @PUT("api/v1/orders/{id}/status")
+    suspend fun updateOrderStatus(
+        @Path("id") id: String,
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.UpdateStatusRequest
     ): OrderDto
 
     // Promotion validation

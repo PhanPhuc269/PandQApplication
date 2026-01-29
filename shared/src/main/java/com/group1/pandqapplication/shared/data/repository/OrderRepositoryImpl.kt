@@ -27,4 +27,54 @@ class OrderRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+<<<<<<< Updated upstream
+    
+    override suspend fun confirmDelivery(orderId: String): Result<OrderDto> {
+        return try {
+            val response = apiService.confirmDelivery(orderId)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception(response.message() ?: "Failed to confirm delivery"))
+            }
+=======
+
+    override suspend fun confirmDelivery(orderId: String): Result<OrderDto> {
+        return try {
+            val order = apiService.confirmDelivery(orderId)
+            Result.success(order)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun assignCarrier(
+        orderId: String,
+        shippingProvider: String,
+        trackingNumber: String?
+    ): Result<OrderDto> {
+        return try {
+            val request = com.group1.pandqapplication.shared.data.remote.dto.AssignCarrierRequest(
+                shippingProvider = shippingProvider,
+                trackingNumber = trackingNumber
+            )
+            val order = apiService.assignCarrier(orderId, request)
+            Result.success(order)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateOrderStatus(orderId: String, status: String): Result<OrderDto> {
+        return try {
+            val request = com.group1.pandqapplication.shared.data.remote.dto.UpdateStatusRequest(
+                status = status
+            )
+            val order = apiService.updateOrderStatus(orderId, request)
+            Result.success(order)
+>>>>>>> Stashed changes
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

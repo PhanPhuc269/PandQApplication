@@ -1,11 +1,13 @@
 package com.group1.pandqapplication.admin.ui.orders
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
@@ -27,11 +30,15 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.group1.pandqapplication.shared.ui.theme.AdminBackgroundDarkVariant
@@ -63,6 +71,9 @@ fun AdminOrderDetailsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDarkTheme = false
+    
+    var showShipperDialog by remember { mutableStateOf(false) }
+    var showStatusDialog by remember { mutableStateOf(false) }
     
     // Load order when screen opens
     LaunchedEffect(orderId) {
@@ -119,38 +130,40 @@ fun AdminOrderDetailsScreen(
             }
         },
         bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(cardColor.copy(alpha = 0.9f))
-                    .padding(16.dp)
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(
-                        onClick = { /* Assign Shipper */ },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AdminPrimary.copy(alpha = 0.2f),
-                            contentColor = AdminPrimary
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Giao cho Shipper", fontWeight = FontWeight.SemiBold)
-                    }
-                    Button(
-                        onClick = { /* Update Status */ },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AdminPrimary,
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text("Cập nhật trạng thái", fontWeight = FontWeight.SemiBold)
+            if (uiState.order != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(cardColor.copy(alpha = 0.9f))
+                        .padding(16.dp)
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Button(
+                            onClick = { showShipperDialog = true },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AdminPrimary.copy(alpha = 0.2f),
+                                contentColor = AdminPrimary
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Giao cho Shipper", fontWeight = FontWeight.SemiBold)
+                        }
+                        Button(
+                            onClick = { showStatusDialog = true },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AdminPrimary,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("Cập nhật trạng thái", fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 }
             }
@@ -372,6 +385,31 @@ fun AdminOrderDetailsScreen(
         }
             } // Close else block
         } // Close when block
+
+        // Shipper Selection Dialog
+        if (showShipperDialog) {
+            ShipperSelectionDialog(
+                onDismiss = { showShipperDialog = false },
+                onShipperSelected = { shipper ->
+                    viewModel.assignCarrier(shipper)
+                    showShipperDialog = false
+                },
+                isDarkTheme = isDarkTheme
+            )
+        }
+
+        // Status Update Dialog
+        if (showStatusDialog) {
+            StatusUpdateDialog(
+                currentStatus = uiState.order?.status ?: "",
+                onDismiss = { showStatusDialog = false },
+                onStatusSelected = { status ->
+                    viewModel.updateOrderStatus(status)
+                    showStatusDialog = false
+                },
+                isDarkTheme = isDarkTheme
+            )
+        }
     }
 }
 
@@ -435,6 +473,140 @@ fun SummaryRow(
     ) {
         Text(label, fontSize = 14.sp, color = textSecondary)
         Text(value, fontSize = 14.sp, color = textPrimary)
+    }
+}
+
+@Composable
+fun ShipperSelectionDialog(
+    onDismiss: () -> Unit,
+    onShipperSelected: (String) -> Unit,
+    isDarkTheme: Boolean
+) {
+    val shippers = listOf("Giao Hàng Nhanh", "Viettel Post", "SPX Express", "GrabExpress", "AhaMove")
+    val cardColor = if (isDarkTheme) AdminCardDarkVariant else AdminCardLight
+    val textPrimary = if (isDarkTheme) AdminTextPrimaryDark else AdminTextPrimaryLight
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = cardColor
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    "Chọn đơn vị vận chuyển",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textPrimary,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                shippers.forEach { shipper ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onShipperSelected(shipper) }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Map,
+                            contentDescription = null,
+                            tint = AdminPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(shipper, fontSize = 16.sp, color = textPrimary)
+                    }
+                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = AdminPrimary)
+                ) {
+                    Text("Hủy")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StatusUpdateDialog(
+    currentStatus: String,
+    onDismiss: () -> Unit,
+    onStatusSelected: (String) -> Unit,
+    isDarkTheme: Boolean
+) {
+    val statuses = listOf(
+        "PENDING" to "Chờ xử lý",
+        "CONFIRMED" to "Đã xác nhận",
+        "SHIPPING" to "Đang giao",
+        "DELIVERED" to "Đã giao",
+        "COMPLETED" to "Hoàn thành",
+        "CANCELLED" to "Đã hủy"
+    )
+    val cardColor = if (isDarkTheme) AdminCardDarkVariant else AdminCardLight
+    val textPrimary = if (isDarkTheme) AdminTextPrimaryDark else AdminTextPrimaryLight
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = cardColor
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    "Cập nhật trạng thái",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textPrimary,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                statuses.forEach { (status, label) ->
+                    val isCurrent = status.uppercase() == currentStatus.uppercase()
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onStatusSelected(status) }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .clip(CircleShape)
+                                .background(if (isCurrent) AdminPrimary else Color.Gray.copy(alpha = 0.3f))
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            label, 
+                            fontSize = 16.sp, 
+                            color = textPrimary,
+                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = AdminPrimary)
+                ) {
+                    Text("Hủy")
+                }
+            }
+        }
     }
 }
 

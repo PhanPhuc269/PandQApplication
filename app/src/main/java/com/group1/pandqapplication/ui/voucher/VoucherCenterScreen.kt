@@ -223,18 +223,18 @@ fun VoucherCardItem(
     val isFreeShip = voucher.type == "FREE_SHIPPING"
     val mainColor = if (isFreeShip) VoucherFreeShip else VoucherPrimary
     
-    // Card Container - Increased height for safety
+    // Card Container - Dynamic height with minimum
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(130.dp)
+            .heightIn(min = 140.dp)
             .background(Color.White, RoundedCornerShape(4.dp))
     ) {
         // LEFT PART
         Column(
             modifier = Modifier
-                .width(110.dp) // Increased width slightly
-                .fillMaxHeight()
+                .width(100.dp)
+                .defaultMinSize(minHeight = 140.dp)
                 .background(mainColor)
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -290,7 +290,7 @@ fun VoucherCardItem(
         Box(
             modifier = Modifier
                 .width(2.dp)
-                .fillMaxHeight()
+                .defaultMinSize(minHeight = 140.dp)
                 .background(Color.White)
         ) {
             // Draw dashed line
@@ -325,7 +325,7 @@ fun VoucherCardItem(
         Box(
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight()
+                .defaultMinSize(minHeight = 140.dp)
                 .padding(12.dp)
         ) {
             // Content Top
