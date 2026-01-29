@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
@@ -21,12 +22,16 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.group1.pandqapplication.shared.ui.theme.AdminBackgroundDarkVariant
 import com.group1.pandqapplication.shared.ui.theme.AdminBackgroundLight
@@ -51,9 +57,19 @@ import com.group1.pandqapplication.shared.ui.theme.AdminTextSecondaryLight
 
 @Composable
 fun AdminOrderDetailsScreen(
-    onBackClick: () -> Unit = {}
+    orderId: String? = null,
+    onBackClick: () -> Unit = {},
+    viewModel: AdminOrderDetailsViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val isDarkTheme = false
+    
+    // Load order when screen opens
+    LaunchedEffect(orderId) {
+        if (orderId != null) {
+            viewModel.loadOrder(orderId)
+        }
+    }
     
     val backgroundColor = if (isDarkTheme) AdminBackgroundDarkVariant else AdminBackgroundLight
     val cardColor = if (isDarkTheme) AdminCardDarkVariant else AdminCardLight
@@ -140,6 +156,49 @@ fun AdminOrderDetailsScreen(
             }
         }
     ) { paddingValues ->
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = AdminPrimary)
+                }
+            }
+            uiState.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.error ?: "Error loading order",
+                            color = Color.Red,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = { orderId?.let { viewModel.loadOrder(it) } }) {
+                            Text("Retry")
+                        }
+                    }
+                }
+            }
+            uiState.order == null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No order data", color = textSecondary)
+                }
+            }
+            else -> {
+                val order = uiState.order!!
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -156,7 +215,7 @@ fun AdminOrderDetailsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "#DH00123",
+                            text = "#${order.id.take(8).uppercase()}",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = textPrimary
@@ -167,7 +226,7 @@ fun AdminOrderDetailsScreen(
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                text = "Chờ xử lý",
+                                text = AdminOrderDetailsViewModel.getStatusText(order.status),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = AdminStatusPending
@@ -176,7 +235,7 @@ fun AdminOrderDetailsScreen(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "15/08/2023, 10:30 AM",
+                        text = AdminOrderDetailsViewModel.formatDate(order.createdAt),
                         fontSize = 14.sp,
                         color = textSecondary
                     )
@@ -194,29 +253,20 @@ fun AdminOrderDetailsScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // Product 1
-                    ProductRow(
-                        name = "Laptop Pro Model X",
-                        quantity = 2,
-                        price = "15.000.000₫",
-                        total = "30.000.000₫",
-                        imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuANe5pq2gG3dqMgB6y6KtybJLL6ndR4LQltHxzczWbDBkVa3NkN1ADisq7OK_cSQNHyWiK2KcslPGakupHIdekGOz8NTKrQOq6KTec06nptVBhiOuJ-0OLUpahrIjaiCxeNcBf_4wyFuLsmXMaIesWgvfSzY1-CfAc4oncWPxd3-DlGLkcplcOvIBcogS5F7ufSht2ul_e-I0wt8gnHIPgVaVuZAxiGkGjZ1aKjSKhK88WEIcT9QQrSvkau6hDHZB68RokCVgxqHpg",
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary
-                    )
-                    
-                    HorizontalDivider(color = borderColor, modifier = Modifier.padding(vertical = 16.dp))
-                    
-                    // Product 2
-                    ProductRow(
-                        name = "Chuột không dây Z-Series",
-                        quantity = 1,
-                        price = "850.000₫",
-                        total = "850.000₫",
-                        imageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCr8AFKx4ftW33DnHQR66yfpQ0BNtaiALF4ITkoXM20Gvp4CaTm0KL8sf_uHsn5l8UD0_ezQSWAz0x_I7qHz6j00jnXiI1q1ACbreifn0wN1Te7dX1uXUR1WK-Fyxh9ALhvlF9apbQoqgQhadcooXDPrgXgl5UCB3rfJ8md6Kv4AGjEXrc57wj106z4uadMekusY_8kmTqqeLdM0Nz0nM9mN5wcu4UZF9DQcOeb2_MLOhmTatRgRb-cWyRXYye0OBunl6aeSBokakE",
-                        textPrimary = textPrimary,
-                        textSecondary = textSecondary
-                    )
+                    order.items.forEachIndexed { index, item ->
+                        if (index > 0) {
+                            HorizontalDivider(color = borderColor, modifier = Modifier.padding(vertical = 16.dp))
+                        }
+                        ProductRow(
+                            name = item.productName ?: "Unknown Product",
+                            quantity = item.quantity,
+                            price = AdminOrderDetailsViewModel.formatPrice(item.price),
+                            total = AdminOrderDetailsViewModel.formatPrice(item.totalPrice),
+                            imageUrl = item.imageUrl ?: "",
+                            textPrimary = textPrimary,
+                            textSecondary = textSecondary
+                        )
+                    }
                 }
             }
             
@@ -225,16 +275,18 @@ fun AdminOrderDetailsScreen(
                 DetailCard(cardColor = cardColor) {
                     Text("Tóm tắt đơn hàng", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = textPrimary)
                     Spacer(modifier = Modifier.height(16.dp))
-                    SummaryRow("Tạm tính", "30.850.000₫", textPrimary, textSecondary)
-                    SummaryRow("Phí vận chuyển", "50.000₫", textPrimary, textSecondary)
-                    SummaryRow("Giảm giá", "- 100.000₫", textPrimary, textSecondary)
+                    SummaryRow("Tạm tính", AdminOrderDetailsViewModel.formatPrice(order.totalAmount), textPrimary, textSecondary)
+                    SummaryRow("Phí vận chuyển", AdminOrderDetailsViewModel.formatPrice(order.shippingFee), textPrimary, textSecondary)
+                    if (order.discountAmount > 0) {
+                        SummaryRow("Giảm giá", "- ${AdminOrderDetailsViewModel.formatPrice(order.discountAmount)}", textPrimary, textSecondary)
+                    }
                     HorizontalDivider(color = borderColor, modifier = Modifier.padding(vertical = 16.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Tổng cộng", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-                        Text("30.800.000₫", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
+                        Text(AdminOrderDetailsViewModel.formatPrice(order.finalAmount), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textPrimary)
                     }
                 }
             }
@@ -249,7 +301,7 @@ fun AdminOrderDetailsScreen(
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Column {
                              Text("Khách hàng", fontSize = 14.sp, color = textSecondary)
-                             Text("Nguyễn Văn A", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
+                             Text(order.customerName ?: "N/A", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
                         }
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -262,13 +314,13 @@ fun AdminOrderDetailsScreen(
                     ) {
                         Column {
                              Text("Số điện thoại", fontSize = 14.sp, color = textSecondary)
-                             Text("0987 654 321", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
+                             Text(order.customerPhone ?: "N/A", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
                         }
                         IconButton(
                             onClick = {},
                             modifier = Modifier
                                 .size(36.dp)
-                                .background(Color.Transparent) // HTML has transparent bg but primary icon
+                                .background(Color.Transparent)
                         ) {
                            Icon(Icons.Default.Call, contentDescription = null, tint = AdminPrimary) 
                         }
@@ -283,18 +335,11 @@ fun AdminOrderDetailsScreen(
                     ) {
                         Column(modifier = Modifier.fillMaxWidth(0.85f)) {
                              Text("Địa chỉ giao hàng", fontSize = 14.sp, color = textSecondary)
-                             Text("123 Đường ABC, Phường XYZ, Quận 1, TP. Hồ Chí Minh", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
+                             Text(order.shippingAddress ?: "N/A", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
                         }
                         IconButton(onClick = {}) {
                            Icon(Icons.Default.Map, contentDescription = null, tint = AdminPrimary) 
                         }
-                    }
-                     Spacer(modifier = Modifier.height(12.dp))
-                     
-                     // Note
-                    Column {
-                         Text("Ghi chú", fontSize = 14.sp, color = textSecondary)
-                         Text("Giao hàng trong giờ hành chính.", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
                     }
                 }
             }
@@ -306,12 +351,12 @@ fun AdminOrderDetailsScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                          Text("Phương thức thanh toán", fontSize = 14.sp, color = textSecondary)
-                         Text("Thanh toán khi nhận hàng (COD)", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
+                         Text(AdminOrderDetailsViewModel.getPaymentMethodText(order.paymentMethod), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textPrimary)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                          Text("Shipper", fontSize = 14.sp, color = textSecondary)
-                         Text("Chưa gán", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textSecondary)
+                         Text(order.shippingProvider ?: "Chưa gán", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = if (order.shippingProvider.isNullOrBlank()) textSecondary else textPrimary)
                     }
                  }
             }
@@ -320,6 +365,8 @@ fun AdminOrderDetailsScreen(
                 Spacer(modifier = Modifier.height(60.dp))
             }
         }
+            } // Close else block
+        } // Close when block
     }
 }
 
