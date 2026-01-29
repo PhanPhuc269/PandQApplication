@@ -395,7 +395,7 @@ fun CheckoutScreen(
                     
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         PaymentOption(
-                            text = "Thanh toán khi nhận hàng (COD)",
+                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.payment_method_cod),
                             isSelected = uiState.selectedPaymentMethod == PaymentMethod.COD,
                             surfaceColor = surfaceColor,
                             borderColor = if (uiState.selectedPaymentMethod == PaymentMethod.COD) CheckoutPrimary else borderColor,
@@ -403,7 +403,7 @@ fun CheckoutScreen(
                             onClick = { viewModel.selectPaymentMethod(PaymentMethod.COD) }
                         )
                         PaymentOption(
-                            text = "Thanh toán bằng ZaloPay",
+                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.payment_method_zalopay),
                             isSelected = uiState.selectedPaymentMethod == PaymentMethod.ZALOPAY,
                             surfaceColor = surfaceColor,
                             borderColor = if (uiState.selectedPaymentMethod == PaymentMethod.ZALOPAY) CheckoutPrimary else borderColor,
@@ -411,7 +411,7 @@ fun CheckoutScreen(
                             onClick = { viewModel.selectPaymentMethod(PaymentMethod.ZALOPAY) }
                         )
                         PaymentOption(
-                            text = "Thanh toán bằng SePay",
+                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.payment_method_sepay),
                             isSelected = uiState.selectedPaymentMethod == PaymentMethod.SEPAY,
                             surfaceColor = surfaceColor,
                             borderColor = if (uiState.selectedPaymentMethod == PaymentMethod.SEPAY) CheckoutPrimary else borderColor,
@@ -431,13 +431,13 @@ fun CheckoutScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Mã giảm giá",
+                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.promo_code),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = textPrimary
                         )
                         Text(
-                            text = "Xem tất cả >",
+                            text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.view_all_vouchers),
                             fontSize = 14.sp,
                             color = CheckoutPrimary,
                             fontWeight = FontWeight.Medium,
@@ -453,7 +453,7 @@ fun CheckoutScreen(
                        TextField(
                            value = uiState.promoCode,
                            onValueChange = { viewModel.updatePromoCode(it) },
-                           placeholder = { Text("Nhập mã giảm giá", color = Color.Gray) },
+                           placeholder = { Text(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.enter_promo_code), color = Color.Gray) },
                            modifier = Modifier
                                .weight(1f)
                                .border(
@@ -500,7 +500,7 @@ fun CheckoutScreen(
                                )
                            } else {
                                Text(
-                                   text = "Áp dụng",
+                                   text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.apply_code),
                                    fontSize = 14.sp,
                                    fontWeight = FontWeight.SemiBold,
                                    color = if (uiState.promoCode.isNotBlank()) CheckoutPrimary else Color.Gray
@@ -526,7 +526,7 @@ fun CheckoutScreen(
                             if (uiState.promotionValid == true) {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Xóa",
+                                    text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.remove_code),
                                     fontSize = 13.sp,
                                     color = Color.Gray,
                                     fontWeight = FontWeight.Medium,
@@ -538,7 +538,7 @@ fun CheckoutScreen(
                         // Show discount amount if valid
                         if (uiState.promotionValid == true && uiState.discountAmount > java.math.BigDecimal.ZERO) {
                             Text(
-                                text = "Bạn được giảm: ${String.format("%,.0f₫", uiState.discountAmount)}",
+                                text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.you_save, String.format("%,.0f₫", uiState.discountAmount)),
                                 fontSize = 14.sp,
                                 color = CheckoutPrimary,
                                 fontWeight = FontWeight.SemiBold,
@@ -551,7 +551,7 @@ fun CheckoutScreen(
                 // Order Summary Section
                 Column(modifier = Modifier.padding(bottom = 100.dp)) {
                     Text(
-                        text = "Tóm tắt Đơn hàng",
+                        text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.summary_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = textPrimary,
@@ -574,12 +574,12 @@ fun CheckoutScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        SummaryRow("Tạm tính", formatPrice(uiState.paymentDetails?.subtotal ?: 0), textSecondary, textPrimary)
-                        SummaryRow("Phí vận chuyển", formatPrice(uiState.paymentDetails?.shippingFee ?: 0), textSecondary, textPrimary)
+                        SummaryRow(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.summary_subtotal), formatPrice(uiState.paymentDetails?.subtotal ?: 0), textSecondary, textPrimary)
+                        SummaryRow(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.summary_shipping), formatPrice(uiState.paymentDetails?.shippingFee ?: 0), textSecondary, textPrimary)
                         
                         // Show discount if any (backend discount + promo discount)
                         if (totalDiscount > 0) {
-                            SummaryRow("Giảm giá", "-${formatPrice(totalDiscount)}", textSecondary, CheckoutPrimary)
+                            SummaryRow(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.summary_discount), "-${formatPrice(totalDiscount)}", textSecondary, CheckoutPrimary)
                         }
                         
                         HorizontalDivider(
@@ -593,7 +593,7 @@ fun CheckoutScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Tổng cộng",
+                                text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.summary_total),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = textPrimary

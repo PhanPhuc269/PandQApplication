@@ -22,9 +22,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.group1.pandqapplication.R
 import com.group1.pandqapplication.shared.data.remote.dto.OrderDto
+
+// Filter enum for proper i18n support
+enum class OrderFilter(val key: String) {
+    ALL("ALL"),
+    PROCESSING("PROCESSING"),
+    SHIPPING("SHIPPING"),
+    DELIVERED("DELIVERED"),
+    COMPLETED("COMPLETED"),
+    CANCELLED("CANCELLED")
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +50,7 @@ fun OrdersScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("Tất cả") }
+    var selectedFilter by remember { mutableStateOf(OrderFilter.ALL) }
     var isRefreshing by remember { mutableStateOf(false) }
 
     // Handle refresh state based on viewModel loading
@@ -48,16 +60,14 @@ fun OrdersScreen(
         }
     }
 
-    val filters = listOf("Tất cả", "Đang xử lý", "Đang giao", "Đã giao", "Hoàn thành", "Đã huỷ")
-
     // Map filter to backend status
     val filterToStatus = mapOf(
-        "Tất cả" to null,
-        "Đang xử lý" to listOf("CONFIRMED"),
-        "Đang giao" to listOf("SHIPPING"),
-        "Đã giao" to listOf("DELIVERED"),
-        "Hoàn thành" to listOf("COMPLETED"),
-        "Đã huỷ" to listOf("CANCELLED", "RETURNED", "FAILED")
+        OrderFilter.ALL to null,
+        OrderFilter.PROCESSING to listOf("CONFIRMED"),
+        OrderFilter.SHIPPING to listOf("SHIPPING"),
+        OrderFilter.DELIVERED to listOf("DELIVERED"),
+        OrderFilter.COMPLETED to listOf("COMPLETED"),
+        OrderFilter.CANCELLED to listOf("CANCELLED", "RETURNED", "FAILED")
     )
 
     val filteredOrders = uiState.orders.filter { order ->
@@ -87,7 +97,7 @@ fun OrdersScreen(
                         .padding(horizontal = 16.dp)
                 ) {
                     Text(
-                        "Lịch sử đơn hàng",
+                        stringResource(R.string.order_history),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = Color(0xFF111827),
@@ -126,7 +136,7 @@ fun OrdersScreen(
                     ) {
                         if (searchQuery.isEmpty()) {
                             Text(
-                                "Tìm theo mã đơn hàng, tên sản phẩm...",
+                                stringResource(R.string.search_order_placeholder),
                                 color = Color.Gray,
                                 fontSize = 14.sp,
                                 maxLines = 1,
@@ -153,10 +163,19 @@ fun OrdersScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(filters) { filter ->
+                items(OrderFilter.entries.toTypedArray()) { filter ->
                     val isSelected = filter == selectedFilter
                     val bgColor = if (isSelected) primaryColor else Color(0xFFE5E7EB)
                     val textColor = if (isSelected) Color.White else Color(0xFF374151)
+
+                    val filterLabel = when (filter) {
+                        OrderFilter.ALL -> stringResource(R.string.filter_all)
+                        OrderFilter.PROCESSING -> stringResource(R.string.filter_processing)
+                        OrderFilter.SHIPPING -> stringResource(R.string.filter_shipping)
+                        OrderFilter.DELIVERED -> stringResource(R.string.filter_delivered)
+                        OrderFilter.COMPLETED -> stringResource(R.string.filter_completed)
+                        OrderFilter.CANCELLED -> stringResource(R.string.filter_cancelled)
+                    }
 
                     Surface(
                         color = bgColor,
@@ -166,7 +185,7 @@ fun OrdersScreen(
                             .clickable { selectedFilter = filter }
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 12.dp)) {
-                            Text(filter, color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                            Text(filterLabel, color = textColor, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
@@ -218,12 +237,14 @@ fun OrdersScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                "Không có đơn hàng nào",
+                                stringResource(R.string.no_orders),
                                 color = Color.Gray,
                                 fontSize = 14.sp
                             )
                         }
+                    }
                     }
                     else -> {
                         LazyColumn(
@@ -251,13 +272,26 @@ fun OrdersScreen(
 
 @Composable
 fun OrderItem(order: OrderDto, onClick: () -> Unit) {
-    val status = OrderHistoryViewModel.mapStatusToVietnamese(order.status)
+    // Get localized status text
+    val statusText = when (order.status.uppercase()) {
+        "PENDING" -> stringResource(R.string.status_pending)
+        "CONFIRMED" -> stringResource(R.string.status_confirmed)
+        "SHIPPING" -> stringResource(R.string.status_shipping)
+        "DELIVERED" -> stringResource(R.string.status_delivered)
+        "COMPLETED" -> stringResource(R.string.status_completed)
+        "CANCELLED" -> stringResource(R.string.status_cancelled)
+        "RETURNED" -> stringResource(R.string.status_returned)
+        "FAILED" -> stringResource(R.string.status_failed)
+        else -> order.status
+    }
+    
     val date = OrderHistoryViewModel.formatDate(order.createdAt)
     val firstItem = order.items.firstOrNull()
+    val defaultProductName = stringResource(R.string.product_default)
     val productName = if (order.items.size > 1) {
-        "${firstItem?.productName ?: "Sản phẩm"} và ${order.items.size - 1} sản phẩm khác"
+        stringResource(R.string.product_and_more, firstItem?.productName ?: defaultProductName, order.items.size - 1)
     } else {
-        firstItem?.productName ?: "Sản phẩm"
+        firstItem?.productName ?: defaultProductName
     }
     val imageUrl = firstItem?.imageUrl ?: ""
 
@@ -283,14 +317,14 @@ fun OrderItem(order: OrderDto, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Đơn hàng #${order.id.take(8)}",
+                    stringResource(R.string.order_label, order.id.take(8)),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp
                 )
-                Text("Ngày đặt: $date", fontSize = 14.sp, color = Color.Gray)
+                Text(stringResource(R.string.order_date, date), fontSize = 14.sp, color = Color.Gray)
                 Text(productName, fontSize = 14.sp, color = Color.Gray, maxLines = 1)
                 Text(
-                    "Tổng cộng: ${formatCurrency(order.finalAmount.toLong())}đ",
+                    stringResource(R.string.total_amount, formatCurrency(order.finalAmount.toLong())),
                     fontWeight = FontWeight.Medium,
                     fontSize = 14.sp
                 )
@@ -310,7 +344,7 @@ fun OrderItem(order: OrderDto, onClick: () -> Unit) {
                     modifier = Modifier.padding(top = 4.dp)
                 ) {
                     Text(
-                        status,
+                        statusText,
                         color = textColor,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,

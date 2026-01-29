@@ -57,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -77,8 +78,8 @@ import com.group1.pandqapplication.ui.components.FloatingContactButton
 
 // Data Model for Banner (keep mock for now)
 data class Banner(
-    val title: String,
-    val subtitle: String,
+    val titleRes: Int,
+    val subtitleRes: Int,
     val imageUrl: String
 )
 
@@ -112,9 +113,9 @@ fun HomeScreen(
 
     // Mock Banners (keep for promotional content)
     val banners = listOf(
-        Banner("iPhone 15 Pro Max", "Khám phá sức mạnh titan.", "https://lh3.googleusercontent.com/aida-public/AB6AXuAY8N6iyZ08u0SWafLXu9qKNEsbrwHuGcz3Hja6KeV4O4hutLoqq7UteVA4YOxkLe_mYFe-_E00HU4DJPrFiE_JQ_BMJDDxawi_7x7vdjVxdy4XduOnHDFtlOgJG2seHE0cIm8FCjLBfSWYlvTmBtKsCu4T7l8CbuLwyjBtkYaVYSng6FgEiZzeXuIGE96fkmh1Ph5oeO2Q8rFhO-lUFnREG9qTvBliG1WV8QTVD2kDSE-C9_eKqZEIvIkg8P94lMmWVZczwITcPkU"),
-        Banner("Macbook Air M3", "Giảm giá tới 20% cho các dòng máy.", "https://lh3.googleusercontent.com/aida-public/AB6AXuBUBzal0oPpdf4ZTJwUzLahKqyyLsCnbwTNgeDQ0BK8F0W4J8WRYRBoMwxavtIOdE3NTJrJH0ZyXtu5xQJcQl_DYIsj_6JyEiinHwIDd99oFRFXT2l3xLKO-AnEqnSanLm4OCkZTRlOrwAw9-tW28zz9sRdTYLuuzu9ip-kSu7MgR234PwCK5N0NbWJOP88t0xq6V8hXbHmyeVPtyi_L0395naHqu65MkTuduPsoh6ZQDII0rurFvr93phaS-Qp_YFIz-jvJB8-ZBc"),
-        Banner("Phụ kiện mới", "Nâng tầm trải nghiệm âm thanh.", "https://lh3.googleusercontent.com/aida-public/AB6AXuAMMPsPxp4PKLsvL6GNj5PL2mRZa2kRI5BbvBKZDOHUERj1NIO8jdNN56RQapffvJ2IIQThtuO7sbaOAD9x3WM0sDM-ktRS4Gcc5DZM9x1AizCwikcyd8jugubd_Hser1-ju7N44LV5Q65MEKMPE9uPIaPvdbaVg0PH6rLmW4A2O7NZiJzQQiSxAKWdlCHC6VuO2kIzgA1KE46ZZ5nWF8LgjwQ79Jy3H22846toBdD655JWRP50eRc0GCyWna-BOFxr60Ghg8fHNBU")
+        Banner(R.string.banner_1_title, R.string.banner_1_desc, "https://lh3.googleusercontent.com/aida-public/AB6AXuAY8N6iyZ08u0SWafLXu9qKNEsbrwHuGcz3Hja6KeV4O4hutLoqq7UteVA4YOxkLe_mYFe-_E00HU4DJPrFiE_JQ_BMJDDxawi_7x7vdjVxdy4XduOnHDFtlOgJG2seHE0cIm8FCjLBfSWYlvTmBtKsCu4T7l8CbuLwyjBtkYaVYSng6FgEiZzeXuIGE96fkmh1Ph5oeO2Q8rFhO-lUFnREG9qTvBliG1WV8QTVD2kDSE-C9_eKqZEIvIkg8P94lMmWVZczwITcPkU"),
+        Banner(R.string.banner_2_title, R.string.banner_2_desc, "https://lh3.googleusercontent.com/aida-public/AB6AXuBUBzal0oPpdf4ZTJwUzLahKqyyLsCnbwTNgeDQ0BK8F0W4J8WRYRBoMwxavtIOdE3NTJrJH0ZyXtu5xQJcQl_DYIsj_6JyEiinHwIDd99oFRFXT2l3xLKO-AnEqnSanLm4OCkZTRlOrwAw9-tW28zz9sRdTYLuuzu9ip-kSu7MgR234PwCK5N0NbWJOP88t0xq6V8hXbHmyeVPtyi_L0395naHqu65MkTuduPsoh6ZQDII0rurFvr93phaS-Qp_YFIz-jvJB8-ZBc"),
+        Banner(R.string.banner_3_title, R.string.banner_3_desc, "https://lh3.googleusercontent.com/aida-public/AB6AXuAMMPsPxp4PKLsvL6GNj5PL2mRZa2kRI5BbvBKZDOHUERj1NIO8jdNN56RQapffvJ2IIQThtuO7sbaOAD9x3WM0sDM-ktRS4Gcc5DZM9x1AizCwikcyd8jugubd_Hser1-ju7N44LV5Q65MEKMPE9uPIaPvdbaVg0PH6rLmW4A2O7NZiJzQQiSxAKWdlCHC6VuO2kIzgA1KE46ZZ5nWF8LgjwQ79Jy3H22846toBdD655JWRP50eRc0GCyWna-BOFxr60Ghg8fHNBU")
     )
 
     Scaffold(
@@ -132,7 +133,7 @@ fun HomeScreen(
                 //dùng icon app
                 Image(
                     painter = painterResource(id = R.mipmap.ic_launcher),
-                    contentDescription = "Logo",
+                    contentDescription = stringResource(R.string.logo),
                     modifier = Modifier.size(28.dp)
                 )
                 Text(
@@ -147,7 +148,7 @@ fun HomeScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.ShoppingCart,
-                        contentDescription = "Cart",
+                        contentDescription = stringResource(R.string.cart),
                         tint = Color(0xFF1F2937)
                     )
                 }
@@ -161,7 +162,7 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(paddingValues),
-                        contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(color = primaryColor)
                     }
@@ -175,21 +176,21 @@ fun HomeScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Đã xảy ra lỗi",
+                            text = stringResource(R.string.error_occurred),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF111827)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = uiState.error ?: "Vui lòng thử lại",
+                            text = uiState.error ?: stringResource(R.string.please_try_again),
                             fontSize = 14.sp,
                             color = Color(0xFF6B7280),
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Thử lại",
+                            text = stringResource(R.string.try_again),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = primaryColor,
@@ -242,10 +243,15 @@ fun HomeScreen(
                                     .padding(horizontal = 16.dp),
                                 contentAlignment = Alignment.CenterStart
                             ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFF6B7280))
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(stringResource(R.string.search_placeholder), color = Color(0xFF6B7280))
+                                    }
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFF6B7280))
                                     Spacer(modifier = Modifier.width(12.dp))
-                                    Text("Tìm kiếm sản phẩm...", color = Color(0xFF6B7280))
+                                    Text(stringResource(R.string.search_placeholder), color = Color(0xFF6B7280))
                                 }
                             }
                             Spacer(modifier = Modifier.height(16.dp))
@@ -278,13 +284,13 @@ fun HomeScreen(
                                             .padding(16.dp)
                                     ) {
                                         Text(
-                                            text = banner.title,
+                                            text = stringResource(banner.titleRes),
                                             color = Color.White,
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = banner.subtitle,
+                                            text = stringResource(banner.subtitleRes),
                                             color = Color(0xFFE5E7EB),
                                             fontSize = 14.sp
                                         )
@@ -315,7 +321,7 @@ fun HomeScreen(
                             // Categories from API
                             if (uiState.categories.isNotEmpty()) {
                                 Text(
-                                    text = "Danh mục",
+                                    text = stringResource(R.string.category_title),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF111827)
@@ -349,13 +355,13 @@ fun HomeScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Ưu đãi hôm nay",
+                                        text = stringResource(R.string.today_offers),
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFF111827)
                                     )
                                     Text(
-                                        text = "Xem tất cả",
+                                        text = stringResource(R.string.view_all),
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = primaryColor,
@@ -449,7 +455,7 @@ fun HomeScreen(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Filled.Close,
-                                                contentDescription = "Xóa bộ lọc",
+                                                contentDescription = stringResource(R.string.clear_filter),
                                                 modifier = Modifier.size(16.dp),
                                                 tint = Color(0xFF6B7280)
                                             )
@@ -457,14 +463,14 @@ fun HomeScreen(
                                     }
                                 } else {
                                     Text(
-                                        text = "Sản phẩm nổi bật",
+                                        text = stringResource(R.string.featured_products),
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFF111827)
                                     )
                                 }
                                 Text(
-                                    text = "Xem tất cả",
+                                    text = stringResource(R.string.view_all),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = primaryColor

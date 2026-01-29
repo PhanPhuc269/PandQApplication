@@ -58,6 +58,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -105,7 +106,7 @@ fun LoginScreen(
                 }
             } catch (e: ApiException) {
                 scope.launch {
-                    snackbarHostState.showSnackbar("Google Sign-In thất bại: ${e.message}")
+                    snackbarHostState.showSnackbar(context.getString(R.string.google_signin_failed_fmt, e.message))
                 }
             }
         }
@@ -142,13 +143,13 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(32.dp))
                 // Welcome Text
                 Text(
-                    text = "Chào mừng bạn",
+                    text = stringResource(R.string.welcome_title),
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF0F172A) // slate-900
                 )
                 Text(
-                    text = "Đăng nhập hoặc tạo tài khoản để bắt đầu.",
+                    text = stringResource(R.string.welcome_subtitle),
                     fontSize = 16.sp,
                     color = Color(0xFF475569) // slate-600
                 )
@@ -165,7 +166,7 @@ fun LoginScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Đăng nhập",
+                            text = stringResource(R.string.login),
                             fontWeight = FontWeight.Bold,
                             color = if (isLoginTab) Color(0xFF0F172A) else Color(0xFF64748B)
                         )
@@ -186,7 +187,7 @@ fun LoginScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Đăng ký",
+                            text = stringResource(R.string.register),
                             fontWeight = FontWeight.Bold,
                             color = if (!isLoginTab) Color(0xFF0F172A) else Color(0xFF64748B)
                         )
@@ -204,12 +205,12 @@ fun LoginScreen(
 
                 // Form
                 // Email
-                Text("Email / Tên đăng nhập", fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+                Text(stringResource(R.string.username_email_label), fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = { Text("Nhập email của bạn") },
+                    placeholder = { Text(stringResource(R.string.email_hint)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -223,12 +224,12 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Password
-                Text("Mật khẩu", fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+                Text(stringResource(R.string.password), fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    placeholder = { Text("Nhập mật khẩu của bạn") },
+                    placeholder = { Text(stringResource(R.string.enter_password_hint)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -236,7 +237,7 @@ fun LoginScreen(
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
                                 imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                contentDescription = "Toggle password visibility"
+                                contentDescription = stringResource(R.string.toggle_password_visibility)
                             )
                         }
                     },
@@ -253,18 +254,18 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                         TextButton(onClick = { /* TODO: Forgot Password */ }) {
-                            Text("Quên mật khẩu?", color = primaryColor, fontSize = 14.sp)
+                            Text(stringResource(R.string.forgot_password), color = primaryColor, fontSize = 14.sp)
                         }
                     }
                 } else {
                     // Confirm Password field for Register
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Nhập lại mật khẩu", fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
+                    Text(stringResource(R.string.confirm_password_label), fontWeight = FontWeight.Medium, color = Color(0xFF0F172A))
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
-                        placeholder = { Text("Nhập lại mật khẩu của bạn") },
+                        placeholder = { Text(stringResource(R.string.confirm_password_hint)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -272,7 +273,7 @@ fun LoginScreen(
                             IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                                 Icon(
                                     imageVector = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                    contentDescription = "Toggle password visibility"
+                                    contentDescription = stringResource(R.string.toggle_password_visibility)
                                 )
                             }
                         },
@@ -285,7 +286,7 @@ fun LoginScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         isError = confirmPassword.isNotEmpty() && password != confirmPassword,
                         supportingText = if (confirmPassword.isNotEmpty() && password != confirmPassword) {
-                            { Text("Mật khẩu không khớp", color = MaterialTheme.colorScheme.error) }
+                            { Text(stringResource(R.string.password_mismatch), color = MaterialTheme.colorScheme.error) }
                         } else null
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -299,7 +300,7 @@ fun LoginScreen(
                         } else {
                             if (password != confirmPassword) {
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("Mật khẩu không khớp. Vui lòng kiểm tra lại.")
+                                    snackbarHostState.showSnackbar(context.getString(R.string.password_mismatch_msg))
                                 }
                             } else {
                                 viewModel.register(email, password)
@@ -315,7 +316,7 @@ fun LoginScreen(
                     if (uiState.isLoading) {
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                     } else {
-                        Text(if (isLoginTab) "Đăng nhập" else "Đăng ký", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(if (isLoginTab) stringResource(R.string.login) else stringResource(R.string.register), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
@@ -323,7 +324,7 @@ fun LoginScreen(
                 // Or Divider
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE2E8F0))
-                    Text("Hoặc", modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFF64748B), fontSize = 14.sp)
+                    Text(stringResource(R.string.or_divider), modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFF64748B), fontSize = 14.sp)
                     HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFFE2E8F0))
                 }
                 Spacer(modifier = Modifier.height(24.dp))
@@ -345,14 +346,14 @@ fun LoginScreen(
                         tint = Color.Unspecified // Preserve original colors
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("Đăng nhập với Google", fontWeight = FontWeight.Medium)
+                    Text(stringResource(R.string.sign_in_google), fontWeight = FontWeight.Medium)
                 }
                 
                 Spacer(modifier = Modifier.height(32.dp))
                 // Footer
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     TextButton(onClick = onLoginSuccess) {
-                         Text("Tiếp tục với tư cách khách", color = primaryColor, fontWeight = FontWeight.Medium)
+                         Text(stringResource(R.string.continue_as_guest), color = primaryColor, fontWeight = FontWeight.Medium)
                     }
                 }
             }

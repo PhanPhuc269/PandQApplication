@@ -1,5 +1,6 @@
 package com.group1.pandqapplication
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import com.group1.pandqapplication.ui.common.NetworkErrorScreen
+import com.group1.pandqapplication.util.LocaleManager
 import com.group1.pandqapplication.util.RequestNotificationPermission
 
 import com.group1.pandqapplication.shared.ui.theme.PandQApplicationTheme
@@ -25,6 +27,10 @@ import vn.zalopay.sdk.ZaloPaySDK
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleManager.applyLocale(newBase))
+    }
 
     private val mainViewModel: MainViewModel by viewModels()
     

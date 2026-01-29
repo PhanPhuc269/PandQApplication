@@ -89,7 +89,7 @@ fun SupportScreen(
                     Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Back", tint = textPrimary)
                 }
                 Text(
-                    "Hỗ trợ",
+                    androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.support_title),
                     color = textPrimary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
@@ -120,7 +120,7 @@ fun SupportScreen(
                         Icon(Icons.Default.Search, contentDescription = null, tint = textSecondary)
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            "Tìm kiếm câu hỏi...",
+                            androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.search_faq_placeholder),
                             color = textSecondary,
                             fontSize = 16.sp
                         )
@@ -131,7 +131,7 @@ fun SupportScreen(
             // FAQ Section
             item {
                 Text(
-                    "Câu hỏi thường gặp",
+                    androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.faq_title),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = textPrimary,
@@ -144,17 +144,33 @@ fun SupportScreen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    FAQItem("Tài khoản & Bảo mật", "This section contains answers to questions about login, password reset...", surfaceColor, textPrimary, textSecondary)
-                    FAQItem("Thanh toán & Khuyến mãi", "This section contains answers to questions about payment methods...", surfaceColor, textPrimary, textSecondary)
-                    FAQItem("Giao hàng & Vận chuyển", "This section contains answers to questions about shipping times...", surfaceColor, textPrimary, textSecondary)
-                    FAQItem("Bảo hành & Đổi trả", "This section contains answers to questions about the return process...", surfaceColor, textPrimary, textSecondary)
+                    FAQItem(
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.faq_account_title), 
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.faq_account_content), 
+                        surfaceColor, textPrimary, textSecondary
+                    )
+                    FAQItem(
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.faq_payment_title), 
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.faq_payment_content), 
+                        surfaceColor, textPrimary, textSecondary
+                    )
+                    FAQItem(
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.faq_shipping_title), 
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.faq_shipping_content), 
+                        surfaceColor, textPrimary, textSecondary
+                    )
+                    FAQItem(
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.faq_return_title), 
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.faq_return_content), 
+                        surfaceColor, textPrimary, textSecondary
+                    )
                 }
             }
             
             // Contact Section
             item {
                 Text(
-                    "Bạn cần thêm trợ giúp?",
+                    androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.need_help_title),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = textPrimary,
@@ -167,9 +183,24 @@ fun SupportScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    ContactItem(Icons.Default.ChatBubble, "Trò chuyện trực tiếp", "Get help right away", surfaceColor, textPrimary, textSecondary)
-                    ContactItem(Icons.Default.Mail, "Gửi Email", "We'll get back to you soon", surfaceColor, textPrimary, textSecondary)
-                    ContactItem(Icons.Default.Call, "Gọi tổng đài", "Available 8am - 10pm", surfaceColor, textPrimary, textSecondary)
+                    ContactItem(
+                        Icons.Default.ChatBubble, 
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.chat_live_title), 
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.chat_live_desc), 
+                        surfaceColor, textPrimary, textSecondary
+                    )
+                    ContactItem(
+                        Icons.Default.Mail, 
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.send_email_title), 
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.send_email_desc), 
+                        surfaceColor, textPrimary, textSecondary
+                    )
+                    ContactItem(
+                        Icons.Default.Call, 
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.call_hotline_title), 
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.call_hotline_desc), 
+                        surfaceColor, textPrimary, textSecondary
+                    )
                 }
             }
             
