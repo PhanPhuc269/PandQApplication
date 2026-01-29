@@ -443,10 +443,22 @@ class AdminActivity : FragmentActivity() {
                             )
                         }
                         composable(AdminScreen.ShippingManagement.route) {
-                            ShippingManagementScreen(onBackClick = { navController.popBackStack() })
+                            ShippingManagementScreen(
+                                onBackClick = { navController.popBackStack() },
+                                onOrderClick = { orderId ->
+                                    navController.navigate("order_detail/$orderId")
+                                }
+                            )
                         }
-                        composable(AdminScreen.OrderDetails.route) {
-                            AdminOrderDetailsScreen(onBackClick = { navController.popBackStack() })
+                        composable(
+                            route = "order_detail/{orderId}",
+                            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val orderId = backStackEntry.arguments?.getString("orderId")
+                            AdminOrderDetailsScreen(
+                                orderId = orderId,
+                                onBackClick = { navController.popBackStack() }
+                            )
                         }
                         composable(AdminScreen.Login.route) {
                             com.group1.pandqapplication.admin.ui.login.AdminLoginScreen(
