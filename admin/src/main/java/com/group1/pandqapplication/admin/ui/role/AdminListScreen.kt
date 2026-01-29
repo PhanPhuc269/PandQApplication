@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -44,16 +45,14 @@ fun AdminListScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var createdEmail by remember { mutableStateOf("") }
+
+    var showDemoteDialog by remember { mutableStateOf(false) }
+    var selectedAdminToDemote by remember { mutableStateOf<AdminUserDto?>(null) }
     
     // Handle create success
-    LaunchedEffect(createSuccess) {
-        if (createSuccess) {
-            showAddDialog = false
-            showSuccessDialog = true
-            viewModel.clearCreateSuccess()
-        }
-    }
-
+    
+    // Handle create success
+    
     Scaffold(
         containerColor = BackgroundLight,
         topBar = {
@@ -136,7 +135,11 @@ fun AdminListScreen(
                                 surfaceColor = SurfaceLight,
                                 textPrimary = TextPrimaryLight,
                                 textSecondary = TextSecondaryLight,
-                                borderColor = BorderLight
+                                borderColor = BorderLight,
+                                onDemoteClick = {
+                                    selectedAdminToDemote = user
+                                    showDemoteDialog = true
+                                }
                             )
                         }
                     }
@@ -192,6 +195,34 @@ fun AdminListScreen(
             }
         )
     }
+
+    // Demote Confirmation Dialog
+    if (showDemoteDialog && selectedAdminToDemote != null) {
+        AlertDialog(
+            onDismissRequest = { showDemoteDialog = false },
+            title = { Text("Hủy quyền Admin") },
+            text = {
+                Text("Bạn có chắc chắn muốn hủy quyền Admin của ${selectedAdminToDemote?.fullName} (${selectedAdminToDemote?.email})? \n\nTài khoản này sẽ trở về quyền Khách hàng (Customer).")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        selectedAdminToDemote?.let { viewModel.demoteUser(it.email) }
+                        showDemoteDialog = false
+                        selectedAdminToDemote = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+                ) {
+                    Text("Hủy quyền")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDemoteDialog = false }) {
+                    Text("Đóng")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -200,7 +231,8 @@ fun AdminUserItem(
     surfaceColor: Color,
     textPrimary: Color,
     textSecondary: Color,
-    borderColor: Color
+    borderColor: Color,
+    onDemoteClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -246,22 +278,36 @@ fun AdminUserItem(
                     color = textSecondary
                 )
             }
-            // Status badge
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(
-                        if (user.status == "ACTIVE") Color(0xFF10B981).copy(alpha = 0.1f)
-                        else Color(0xFFEF4444).copy(alpha = 0.1f)
+            // Actions
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Status badge
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(
+                            if (user.status == "ACTIVE") Color(0xFF10B981).copy(alpha = 0.1f)
+                            else Color(0xFFEF4444).copy(alpha = 0.1f)
+                        )
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = if (user.status == "ACTIVE") "Hoạt động" else "Đã khóa",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (user.status == "ACTIVE") Color(0xFF10B981) else Color(0xFFEF4444)
                     )
-                    .padding(horizontal = 10.dp, vertical = 6.dp)
-            ) {
-                Text(
-                    text = if (user.status == "ACTIVE") "Hoạt động" else "Đã khóa",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (user.status == "ACTIVE") Color(0xFF10B981) else Color(0xFFEF4444)
-                )
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                // Allow removing ONLY if it's not the seeded admin or self (simple check for now)
+                IconButton(onClick = onDemoteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Remove Admin",
+                        tint = Color(0xFFEF4444)
+                    )
+                }
             }
         }
     }

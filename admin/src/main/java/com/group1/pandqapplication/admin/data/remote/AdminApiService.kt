@@ -166,4 +166,6 @@ interface AdminApiService {
     suspend fun createUser(
         @Body request: com.group1.pandqapplication.admin.data.remote.dto.CreateAdminUserRequest
     ): com.group1.pandqapplication.admin.data.remote.dto.AdminUserDto
+    @POST("api/v1/auth/demote")
+    suspend fun demoteUser(@Body request: com.group1.pandqapplication.admin.data.remote.dto.DemoteRequest)
 }

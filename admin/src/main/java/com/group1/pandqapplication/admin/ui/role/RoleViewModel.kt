@@ -98,7 +98,27 @@ class RoleViewModel @Inject constructor(
                 // Reload users list
                 loadUsers()
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Failed to create user"
+                val errorMsg = try {
+                    if (e is retrofit2.HttpException) {
+                        // Try to parse standard Spring Boot error response
+                        // Format: {"code":"...", "message":"User already exists...", ...}
+                        val errorBody = e.response()?.errorBody()?.string()
+                        if (!errorBody.isNullOrEmpty() && errorBody.contains("\"message\":")) {
+                            // Simple regex extraction to avoid bringing in Gson/Moshi just for this if not already present
+                            // Or assuming Gson is available since Retrofit is used. 
+                            // Let's stick to simple string parsing to be safe and dependency-free here.
+                            val match = "\"message\":\"(.*?)\"".toRegex().find(errorBody)
+                            match?.groupValues?.get(1) ?: e.message()
+                        } else {
+                            e.message()
+                        }
+                    } else {
+                        e.message ?: "Failed to create user"
+                    }
+                } catch (parseEx: Exception) {
+                    e.message ?: "Failed to create user"
+                }
+                _errorMessage.value = errorMsg
             } finally {
                 _isCreating.value = false
             }
@@ -111,5 +131,35 @@ class RoleViewModel @Inject constructor(
     
     fun clearCreateSuccess() {
         _createSuccess.value = false
+    }
+
+    fun demoteUser(email: String) {
+        viewModelScope.launch {
+            _uiState.value = RoleUiState.Loading // Or show specific loading state
+            try {
+                apiService.demoteUser(
+                    com.group1.pandqapplication.admin.data.remote.dto.DemoteRequest(email)
+                )
+                // Reload list
+                loadUsers()
+            } catch (e: Exception) {
+                 val errorMsg = try {
+                    if (e is retrofit2.HttpException) {
+                        val errorBody = e.response()?.errorBody()?.string()
+                        if (!errorBody.isNullOrEmpty() && errorBody.contains("\"message\":")) {
+                            val match = "\"message\":\"(.*?)\"".toRegex().find(errorBody)
+                            match?.groupValues?.get(1) ?: e.message()
+                        } else {
+                            e.message()
+                        }
+                    } else {
+                        e.message ?: "Failed to demote user"
+                    }
+                } catch (parseEx: Exception) {
+                    e.message ?: "Failed to demote user"
+                }
+                _uiState.value = RoleUiState.Error(errorMsg)
+            }
+        }
     }
 }
