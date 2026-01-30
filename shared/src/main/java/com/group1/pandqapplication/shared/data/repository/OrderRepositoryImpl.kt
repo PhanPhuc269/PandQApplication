@@ -27,18 +27,6 @@ class OrderRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
-<<<<<<< Updated upstream
-    
-    override suspend fun confirmDelivery(orderId: String): Result<OrderDto> {
-        return try {
-            val response = apiService.confirmDelivery(orderId)
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Result.failure(Exception(response.message() ?: "Failed to confirm delivery"))
-            }
-=======
-
     override suspend fun confirmDelivery(orderId: String): Result<OrderDto> {
         return try {
             val order = apiService.confirmDelivery(orderId)
@@ -72,7 +60,6 @@ class OrderRepositoryImpl @Inject constructor(
             )
             val order = apiService.updateOrderStatus(orderId, request)
             Result.success(order)
->>>>>>> Stashed changes
         } catch (e: Exception) {
             Result.failure(e)
         }
