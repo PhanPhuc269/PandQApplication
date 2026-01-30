@@ -1,10 +1,12 @@
 package com.group1.pandqapplication.ui.search
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -33,13 +35,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.group1.pandqapplication.shared.data.repository.CategoryItem
@@ -68,6 +73,24 @@ fun SearchScreen(
     val uiState by viewModel.uiState.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            // Đặt màu trong suốt cho cả Status Bar và Navigation Bar
+            window.statusBarColor = Color.Transparent.toArgb()
+            window.navigationBarColor = Color.Transparent.toArgb()
+
+            // Cho phép vẽ tràn viền (Edge-to-Edge)
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+
+            // Cấu hình icon màu tối (đen) vì nền app sáng
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = true
+            insetsController.isAppearanceLightNavigationBars = true
+        }
+    }
+
     if (uiState.showFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { viewModel.onDismissFilterSheet() },
@@ -94,13 +117,15 @@ fun SearchScreen(
 
     Scaffold(
         containerColor = backgroundColor,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             Column(modifier = Modifier.background(backgroundColor)) {
                 // Top Navigation / Search Header
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 48.dp, bottom = 8.dp, start = 16.dp, end = 16.dp),
+                        .statusBarsPadding()
+                        .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -108,15 +133,22 @@ fun SearchScreen(
                     IconButton(
                         onClick = onBackClick,
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(25.dp)
                             .clip(CircleShape)
                             .background(Color.Transparent)
                     ) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF374151))
                     }
 
-                    // Search Bar
-                    Box(modifier = Modifier.weight(1f)) {
+                    // Search Bar using ExposedDropdownMenuBox
+                    @OptIn(ExperimentalMaterial3Api::class)
+                    ExposedDropdownMenuBox(
+                        expanded = uiState.showSuggestions,
+                        onExpandedChange = { expanded ->
+                             if (!expanded) viewModel.onHideSuggestions()
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
                         TextField(
                             value = uiState.searchQuery,
                             onValueChange = { viewModel.onSearchQueryChange(it) },
@@ -143,47 +175,140 @@ fun SearchScreen(
                                 unfocusedIndicatorColor = Color.Transparent
                             ),
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth().padding(0.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(0.dp)
+                                .menuAnchor() // Needed for ExposedDropdownMenu
+                                .onFocusChanged { focusState ->
+                                    viewModel.onSearchFocusChange(focusState.isFocused)
+                                },
                             textStyle = TextStyle(fontSize = 14.sp)
                         )
-                    }
-
-                    // Filter Button
-                    Box(modifier = Modifier.size(44.dp)) {
-                         IconButton(
-                            onClick = { viewModel.onShowFilterSheet() },
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(primaryColor)
+                        
+                        ExposedDropdownMenu(
+                            expanded = uiState.showSuggestions,
+                            onDismissRequest = { viewModel.onHideSuggestions() },
+                            modifier = Modifier.background(Color.White)
                         ) {
-                            Icon(Icons.Filled.Tune, contentDescription = "Filter", tint = Color.White)
-                        }
-                        // Badge - only show when there are active filters
-                        if (uiState.activeFilters.isNotEmpty()) {
-                            Box(modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .offset(x = 4.dp, y = (-4).dp)
-                                .size(20.dp)
-                                .clip(CircleShape)
-                                .background(Color.White)
-                                .padding(2.dp)) {
-                                    Box(modifier = Modifier.fillMaxSize().clip(CircleShape).background(primaryColor), contentAlignment = Alignment.Center) {
-                                         Text("${uiState.activeFilters.size}", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                    }
+                            val hasHistory = uiState.searchHistory.isNotEmpty()
+                            val hasTrending = uiState.trendingSearches.isNotEmpty()
+                            
+                            if (!hasHistory && !hasTrending) {
+                                // Loading state
+                                DropdownMenuItem(
+                                    text = { 
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                strokeWidth = 2.dp,
+                                                color = Color.Gray
+                                            )
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Text("Đang tải gợi ý...", fontSize = 14.sp, color = Color.Gray)
+                                        }
+                                    },
+                                    onClick = { },
+                                    enabled = false
+                                )
+                            }
+                            
+                            // Search History Section
+                            if (hasHistory) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    Icons.Filled.AccessTime,
+                                                    contentDescription = null,
+                                                    tint = Color(0xFF6B7280),
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text("Tìm kiếm gần đây", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151))
+                                            }
+                                            Text(
+                                                "Xóa tất cả",
+                                                fontSize = 12.sp,
+                                                color = primaryColor,
+                                                modifier = Modifier.clickable { viewModel.onClearSearchHistory() }
+                                            )
+                                        }
+                                    },
+                                    onClick = { },
+                                    enabled = false
+                                )
+                                
+                                uiState.searchHistory.take(5).forEach { query ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(Icons.Filled.Search, contentDescription = null, tint = Color(0xFF9CA3AF), modifier = Modifier.size(16.dp))
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Text(query, fontSize = 14.sp, color = Color(0xFF374151), modifier = Modifier.weight(1f))
+                                                IconButton(
+                                                    onClick = { viewModel.onRemoveHistoryItem(query) },
+                                                    modifier = Modifier.size(24.dp)
+                                                ) {
+                                                    Icon(Icons.Filled.Close, contentDescription = "Xóa", tint = Color(0xFF9CA3AF), modifier = Modifier.size(14.dp))
+                                                }
+                                            }
+                                        },
+                                        onClick = { viewModel.onSelectSuggestion(query) }
+                                    )
+                                }
+                                
+                                if (hasTrending) {
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color(0xFFE5E7EB))
+                                }
+                            }
+                            
+                            // Trending Section
+                            if (hasTrending) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp))
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Xu hướng tìm kiếm", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF374151))
+                                        }
+                                    },
+                                    onClick = { },
+                                    enabled = false
+                                )
+                                
+                                uiState.trendingSearches.forEach { trend ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = primaryColor, modifier = Modifier.size(14.dp))
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(trend, fontSize = 14.sp, color = Color(0xFF374151))
+                                            }
+                                        },
+                                        onClick = { viewModel.onSelectSuggestion(trend) }
+                                    )
+                                }
                             }
                         }
                     }
+
                 }
 
                 // Filters and Sort Bar
-                Column(modifier = Modifier.padding(bottom = 8.dp)) {
+                Column(modifier = Modifier.padding(bottom = 4.dp)) {
                     // Chips - only show when there are active filters
                     if (uiState.activeFilters.isNotEmpty()) {
                         LazyRow(
                             contentPadding = PaddingValues(horizontal = 16.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(vertical = 8.dp)
                         ) {
                             item {
                                 Text(
@@ -220,7 +345,7 @@ fun SearchScreen(
 
                     // Results Count & Sort
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -334,7 +459,31 @@ fun SearchScreen(
                                 }
                             }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Icon(Icons.Filled.GridView, contentDescription = null, tint = Color(0xFF4B5563))
+
+                            // Filter Button
+                            Box(modifier = Modifier.size(38.dp)) {
+                                IconButton(
+                                    onClick = { viewModel.onShowFilterSheet() },
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                ) {
+                                    Icon(Icons.Filled.Tune, contentDescription = "Filter")
+                                }
+                                // Badge - only show when there are active filters
+                                if (uiState.activeFilters.isNotEmpty()) {
+                                    Box(modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = 4.dp, y = (-4).dp)
+                                        .size(20.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White)
+                                        .padding(2.dp)) {
+                                        Box(modifier = Modifier.fillMaxSize().clip(CircleShape).background(primaryColor), contentAlignment = Alignment.Center) {
+                                            Text("${uiState.activeFilters.size}", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -425,11 +574,13 @@ fun SearchScreen(
                 }
                 // Success state with products
                 else -> {
+                    val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(horizontal = 16.dp),
+                        contentPadding = PaddingValues(bottom = bottomPadding + 16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {

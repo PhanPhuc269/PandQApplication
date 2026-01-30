@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.shared.data.remote.dto.ProductSearchDto
 import com.group1.pandqapplication.shared.data.repository.CategoryItem
 import com.group1.pandqapplication.shared.data.repository.ProductRepository
+import com.group1.pandqapplication.shared.data.repository.SearchHistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,13 +45,18 @@ data class SearchUiState(
     val totalResults: Long = 0,
     val hasMore: Boolean = true,
     // Sort
-    val sortBy: String = "newest"
+    val sortBy: String = "newest",
+    // Search history and trending
+    val searchHistory: List<String> = emptyList(),
+    val trendingSearches: List<String> = emptyList(),
+    val showSuggestions: Boolean = false // Only show when search field is focused
 )
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val productRepository: ProductRepository,
+    private val searchHistoryRepository: SearchHistoryRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -66,6 +72,9 @@ class SearchViewModel @Inject constructor(
         // Load categories
         loadCategories()
         
+        // Load search history and trending
+        loadSearchSuggestions()
+        
         // Set initial category from navigation if provided
         if (initialCategoryId != null) {
             _uiState.update { it.copy(selectedCategoryId = initialCategoryId) }
@@ -73,13 +82,35 @@ class SearchViewModel @Inject constructor(
         
         // Debounce search query changes
         _searchQueryFlow
-            .debounce(500)
+            .debounce(1000)
             .distinctUntilChanged()
-            .onEach { query -> performSearch() }
+            .onEach { query -> 
+                if (query.isNotBlank()) {
+                    saveToHistory(query)
+                }
+                performSearch() 
+            }
             .launchIn(viewModelScope)
         
         // Initial load
         performSearch()
+    }
+    
+    private fun loadSearchSuggestions() {
+        val history = searchHistoryRepository.getSearchHistory()
+        
+        viewModelScope.launch {
+            // Load history immediately
+            _uiState.update { it.copy(searchHistory = history) }
+            
+            try {
+                // Load trending searches asynchronously (simulated API)
+                val trending = searchHistoryRepository.getTrendingSearches()
+                _uiState.update { it.copy(trendingSearches = trending) }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
     }
     
     private fun loadCategories() {
@@ -104,12 +135,61 @@ class SearchViewModel @Inject constructor(
     }
 
     fun onSearchQueryChange(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
+        _uiState.update { 
+            it.copy(
+                searchQuery = query,
+                showSuggestions = query.isEmpty() // Show suggestions when search box is empty
+            ) 
+        }
         _searchQueryFlow.value = query
+    }
+    
+    fun onSearchFocusChange(hasFocus: Boolean) {
+        // Show suggestions when focused, hide when unfocused
+        _uiState.update { it.copy(showSuggestions = hasFocus) }
+    }
+    
+    fun onHideSuggestions() {
+        _uiState.update { it.copy(showSuggestions = false) }
+    }
+    
+    fun onSelectSuggestion(suggestion: String) {
+        _uiState.update { 
+            it.copy(
+                searchQuery = suggestion,
+                showSuggestions = false
+            ) 
+        }
+        _searchQueryFlow.value = suggestion
+        // Save to history when user selects a suggestion
+        saveToHistory(suggestion)
+    }
+    
+    fun onSearchSubmit() {
+        val query = _uiState.value.searchQuery
+        if (query.isNotBlank()) {
+            saveToHistory(query)
+            _uiState.update { it.copy(showSuggestions = false) }
+        }
+    }
+    
+    private fun saveToHistory(query: String) {
+        searchHistoryRepository.addSearchQuery(query)
+        loadSearchSuggestions() // Refresh history list
+    }
+    
+    fun onRemoveHistoryItem(query: String) {
+        searchHistoryRepository.removeSearchQuery(query)
+        loadSearchSuggestions() // Refresh history list
+    }
+    
+    fun onClearSearchHistory() {
+        searchHistoryRepository.clearSearchHistory()
+        loadSearchSuggestions() // Refresh history list
     }
 
     fun onClearSearch() {
-        _uiState.update { it.copy(searchQuery = "") }
+        _uiState.update { it.copy(searchQuery = "", showSuggestions = true) }
         _searchQueryFlow.value = ""
     }
 

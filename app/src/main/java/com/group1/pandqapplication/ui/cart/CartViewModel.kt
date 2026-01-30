@@ -99,6 +99,7 @@ class CartViewModel @Inject constructor(
                         paymentMethod = null,
                         status = "PENDING",
                         shippingAddress = null,
+                        shippingProvider = null,
                         createdAt = null,
                         items = items
                     )
@@ -121,6 +122,7 @@ class CartViewModel @Inject constructor(
                             paymentMethod = null,
                             status = "PENDING",
                             shippingAddress = null,
+                            shippingProvider = null,
                             createdAt = null,
                             items = emptyList()
                         ),

@@ -168,9 +168,13 @@ val CustomerAvatarTextPurple = Color(0xFF9333EA) // purple-600
 
 // Category Management Colors
 val CategoryBackground = Color(0xFF221411)
+val CategoryBackgroundLight = Color(0xFFF6F7F8)
 val CategorySurface = Color(0xFF482923)
+val CategorySurfaceLight = Color(0xFFFFFFFF)
 val CategoryTextPrimary = Color(0xFFFFFFFF)
+val CategoryTextPrimaryLight = Color(0xFF0F172A)
 val CategoryTextSecondary = Color(0xFFC99B92)
+val CategoryTextSecondaryLight = Color(0xFF64748B)
 
 // User Guide Colors
 val GuideTextPrimaryLight = Color(0xFF111827) // gray-900

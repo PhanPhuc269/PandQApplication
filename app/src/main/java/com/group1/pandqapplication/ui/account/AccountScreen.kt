@@ -1,5 +1,6 @@
 package com.group1.pandqapplication.ui.account
 
+import android.app.Activity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,23 +15,39 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import com.group1.pandqapplication.R
+import com.group1.pandqapplication.ui.components.LanguagePickerDialog
+import com.group1.pandqapplication.util.LocaleManager
+import kotlinx.coroutines.launch
+import com.group1.pandqapplication.ui.notification.NotificationSettingsDialog
+import com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +63,13 @@ fun AccountScreen(
     val uiState by viewModel.uiState.collectAsState()
     val backgroundColor = Color(0xFFF8F6F6)
     val primaryColor = Color(0xFFec3713)
+    
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var currentLanguage by remember { mutableStateOf(LocaleManager.getCurrentLanguage(context)) }
+    var showNotificationSettings by remember { mutableStateOf(false) }
+    var showCloseAccountDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = backgroundColor,
@@ -54,25 +78,27 @@ fun AccountScreen(
                 color = backgroundColor,
                 shadowElevation = 1.dp
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                     IconButton(onClick = {}) {
-                         Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = Color(0xFF1F2937))
+                Column {
+                    Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                         IconButton(onClick = {}) {
+                             Icon(Icons.Filled.ArrowBackIosNew, contentDescription = stringResource(R.string.back), tint = Color(0xFF1F2937))
+                        }
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                             Text(
+                                 stringResource(R.string.personal_profile), 
+                                 fontWeight = FontWeight.Bold, 
+                                 fontSize = 18.sp, 
+                                 color = Color(0xFF111827)
+                             ) 
+                        }
                     }
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                         Text(
-                             "Hồ sơ cá nhân", 
-                             fontWeight = FontWeight.Bold, 
-                             fontSize = 18.sp, 
-                             color = Color(0xFF111827)
-                         ) 
-                    }
-                    Spacer(modifier = Modifier.size(48.dp)) // Balance right side
                 }
             }
         }
@@ -94,7 +120,7 @@ fun AccountScreen(
                 if (uiState.photoUrl != null) {
                     AsyncImage(
                         model = uiState.photoUrl,
-                        contentDescription = "Avatar",
+                        contentDescription = stringResource(R.string.avatar),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .size(128.dp)
@@ -111,7 +137,7 @@ fun AccountScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Person,
-                            contentDescription = "Default Avatar",
+                            contentDescription = stringResource(R.string.default_avatar),
                             modifier = Modifier.size(64.dp),
                             tint = Color(0xFF9CA3AF)
                         )
@@ -154,14 +180,14 @@ fun AccountScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                "Email chưa được xác thực",
+                                stringResource(R.string.email_not_verified),
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF92400E) // amber-800
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Vui lòng xác thực email để sử dụng đầy đủ tính năng.",
+                            stringResource(R.string.email_verify_prompt),
                             fontSize = 14.sp,
                             color = Color(0xFFB45309) // amber-700
                         )
@@ -183,7 +209,7 @@ fun AccountScreen(
                                         strokeWidth = 2.dp
                                     )
                                 } else {
-                                    Text("Gửi lại email", color = Color(0xFFD97706), fontSize = 13.sp)
+                                    Text(stringResource(R.string.resend_email), color = Color(0xFFD97706), fontSize = 13.sp)
                                 }
                             }
                             OutlinedButton(
@@ -192,7 +218,7 @@ fun AccountScreen(
                                 shape = RoundedCornerShape(8.dp),
                                 border = BorderStroke(1.dp, Color(0xFFD97706))
                             ) {
-                                Text("Đã xác thực", color = Color(0xFFD97706), fontSize = 13.sp)
+                                Text(stringResource(R.string.already_verified), color = Color(0xFFD97706), fontSize = 13.sp)
                             }
                         }
                     }
@@ -200,29 +226,55 @@ fun AccountScreen(
             }
             
             Spacer(modifier = Modifier.height(20.dp))
-            SectionHeader(title = "Tài khoản")
+            SectionHeader(title = stringResource(R.string.section_account))
             SectionContainer {
                 SectionItem(
                     icon = Icons.Outlined.Person, 
-                    label = "Thông tin cá nhân", 
+                    label = stringResource(R.string.personal_info), 
                     primaryColor = primaryColor,
                     onClick = onNavigateToPersonalInfo
                 )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 SectionItem(
                     icon = Icons.Outlined.Home, 
-                    label = "Sổ địa chỉ", 
+                    label = stringResource(R.string.address_book), 
                     primaryColor = primaryColor,
                     onClick = onNavigateToAddressList
                 )
             }
             
             // Settings Section
-            SectionHeader(title = "Cài đặt")
+            SectionHeader(title = stringResource(R.string.section_settings))
             SectionContainer {
-                SectionItem(icon = Icons.Outlined.Notifications, label = "Cài đặt thông báo", primaryColor = primaryColor)
+                SectionItem(
+                    icon = Icons.Outlined.Notifications, 
+                    label = stringResource(R.string.notification_settings), 
+                    primaryColor = primaryColor,
+                    onClick = { showNotificationSettings = true }
+                )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
-                SectionItem(icon = Icons.Outlined.Settings, label = "Cài đặt ứng dụng", primaryColor = primaryColor)
+                SectionItem(
+                    icon = Icons.Outlined.Settings, 
+                    label = stringResource(R.string.app_settings), 
+                    primaryColor = primaryColor
+                )
+                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                // Language Settings
+                SectionItemWithSubtitle(
+                    icon = Icons.Outlined.Language,
+                    label = stringResource(R.string.language_settings),
+                    subtitle = LocaleManager.getLanguageDisplayName(currentLanguage),
+                    primaryColor = primaryColor,
+                    onClick = { showLanguageDialog = true }
+                )
+                HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
+                SectionItem(
+                    icon = Icons.Outlined.DeleteForever, 
+                    label = stringResource(R.string.close_account), 
+                    isDestructive = true,
+                    primaryColor = primaryColor,
+                    onClick = { showCloseAccountDialog = true }
+                )
             }
             
             // Support Section
@@ -230,28 +282,28 @@ fun AccountScreen(
             SectionContainer {
                 SectionItem(
                     icon = Icons.Outlined.HelpOutline, 
-                    label = "Hỗ trợ", 
+                    label = stringResource(R.string.support), 
                     primaryColor = primaryColor,
                     onClick = onNavigateToSupport
                 )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 SectionItem(
                     icon = Icons.Outlined.Info, 
-                    label = "Hướng dẫn sử dụng", 
+                    label = stringResource(R.string.user_guide), 
                     primaryColor = primaryColor,
                     onClick = onNavigateToUserGuide
                 )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 SectionItem(
                     icon = Icons.Outlined.Description, 
-                    label = "Chính sách & Điều khoản", 
+                    label = stringResource(R.string.policy_terms), 
                     primaryColor = primaryColor,
                     onClick = onNavigateToPolicy
                 )
                 HorizontalDivider(color = Color(0xFFE5E7EB), modifier = Modifier.padding(horizontal = 16.dp))
                 SectionItem(
                     icon = Icons.Filled.Logout, 
-                    label = "Đăng xuất", 
+                    label = stringResource(R.string.logout), 
                     isDestructive = true, 
                     primaryColor = primaryColor,
                     onClick = onLogout
@@ -259,6 +311,47 @@ fun AccountScreen(
             }
             
             Spacer(modifier = Modifier.height(40.dp))
+        }
+    }
+    
+    // Language Picker Dialog
+    if (showLanguageDialog) {
+        LanguagePickerDialog(
+            currentLanguage = currentLanguage,
+            onLanguageSelected = { newLanguage ->
+                coroutineScope.launch {
+                    LocaleManager.setLanguage(context, newLanguage)
+                    currentLanguage = newLanguage
+                    showLanguageDialog = false
+                    // Recreate activity to apply new locale
+                    (context as? Activity)?.recreate()
+                }
+            },
+            onDismiss = { showLanguageDialog = false }
+        )
+    }
+
+    if (showNotificationSettings) {
+        NotificationSettingsDialog(
+            preferences = uiState.preferences,
+            onDismiss = { showNotificationSettings = false },
+            onUpdate = { request -> viewModel.updatePreference(request) }
+        )
+    }
+
+    if (showCloseAccountDialog) {
+        CloseAccountDialog(
+            isLoading = uiState.isClosingAccount,
+            onDismiss = { showCloseAccountDialog = false },
+            onConfirm = { reason -> viewModel.closeAccount(reason) }
+        )
+    }
+
+    // Handle close account success
+    LaunchedEffect(uiState.closeAccountSuccess) {
+        if (uiState.closeAccountSuccess) {
+            showCloseAccountDialog = false
+            onLogout() // Logout user after successful closure
         }
     }
 }
@@ -331,6 +424,57 @@ fun SectionItem(
                  tint = Color(0xFF9CA3AF)
              )
          }
+    }
+}
+
+@Composable
+fun SectionItemWithSubtitle(
+    icon: ImageVector, 
+    label: String,
+    subtitle: String,
+    primaryColor: Color,
+    onClick: () -> Unit = {}
+) {
+    val iconBgColor = primaryColor.copy(alpha = 0.1f)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+         Box(
+             modifier = Modifier
+                 .size(40.dp)
+                 .clip(RoundedCornerShape(8.dp))
+                 .background(iconBgColor),
+             contentAlignment = Alignment.Center
+         ) {
+             Icon(imageVector = icon, contentDescription = null, tint = primaryColor, modifier = Modifier.size(24.dp))
+         }
+         Column(
+             modifier = Modifier
+                 .weight(1f)
+                 .padding(start = 16.dp)
+         ) {
+             Text(
+                 text = label,
+                 fontSize = 16.sp,
+                 color = Color(0xFF1F2937)
+             )
+             Text(
+                 text = subtitle,
+                 fontSize = 13.sp,
+                 color = Color(0xFF6B7280)
+             )
+         }
+         Icon(
+             Icons.Filled.ChevronRight, 
+             contentDescription = null, 
+             tint = Color(0xFF9CA3AF)
+         )
     }
 }
 

@@ -1,47 +1,24 @@
 package com.group1.pandqapplication.admin.ui.setting
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Contrast
-import androidx.compose.material.icons.filled.Inventory2
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Update
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.Wallpaper
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -50,38 +27,157 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
-import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundDark
-import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundLight
-import com.group1.pandqapplication.shared.ui.theme.SettingsIconBgDark
-import com.group1.pandqapplication.shared.ui.theme.SettingsIconBgLight
-import com.group1.pandqapplication.shared.ui.theme.SettingsSurfaceDark
-import com.group1.pandqapplication.shared.ui.theme.SettingsSurfaceLight
-import com.group1.pandqapplication.shared.ui.theme.SettingsTextPrimaryDark
-import com.group1.pandqapplication.shared.ui.theme.SettingsTextPrimaryLight
-import com.group1.pandqapplication.shared.ui.theme.SettingsTextSecondaryDark
-import com.group1.pandqapplication.shared.ui.theme.SettingsTextSecondaryLight
+import com.group1.pandqapplication.shared.ui.theme.PandQApplicationTheme
 
 @Composable
 fun AdminSettingsScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onEditProfile: () -> Unit = {},
+    onChangePassword: () -> Unit = {},
+    userName: String = "Admin",
+    userRole: String = "Administrator",
+    avatarUrl: String? = null,
+    onLogout: () -> Unit = {},
+    viewModel: AdminSettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
-    val isDarkTheme = false
+    val uiState by viewModel.uiState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
     
-    val backgroundColor = if (isDarkTheme) RoleBackgroundDark else RoleBackgroundLight
-    val surfaceColor = if (isDarkTheme) SettingsSurfaceDark else SettingsSurfaceLight
-    val textPrimary = if (isDarkTheme) SettingsTextPrimaryDark else SettingsTextPrimaryLight
-    val textSecondary = if (isDarkTheme) SettingsTextSecondaryDark else SettingsTextSecondaryLight
-    val iconBgColor = if (isDarkTheme) SettingsIconBgDark else SettingsIconBgLight
+    // Check biometric availability
+    val biometricManager = remember { androidx.biometric.BiometricManager.from(context) }
+    val isBiometricAvailable = remember {
+        biometricManager.canAuthenticate(
+            androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG or
+            androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
+        ) == androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
+    }
 
-    Scaffold(
-        containerColor = backgroundColor,
-        topBar = {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F9FA))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+        ) {
+            // Top Spacer for Status Bar + Top Bar + Padding
+            Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+            Spacer(modifier = Modifier.height(56.dp + 16.dp))
+            
+            // Profile Card
+            SettingsProfileCard(
+                userName = userName,
+                userRole = userRole,
+                avatarUrl = avatarUrl,
+                onEditProfile = onEditProfile
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // All Settings
+            SettingsCard {
+                SettingsItem(
+                    icon = Icons.Outlined.Lock,
+                    iconColor = Color(0xFFec3713),
+                    title = "Đổi mật khẩu",
+                    subtitle = "Cập nhật bảo mật",
+                    onClick = onChangePassword
+                )
+                
+                // Biometric Toggle - only show if device supports biometrics
+                if (isBiometricAvailable) {
+                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.1f))
+                    SettingsSwitchItem(
+                        icon = Icons.Outlined.Fingerprint,
+                        iconColor = Color(0xFF10B981),
+                        title = "Xác thực sinh trắc học",
+                        checked = uiState.isBiometricEnabled,
+                        onCheckedChange = { viewModel.toggleBiometric(it) }
+                    )
+                }
+                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.1f))
+                
+                // Push Notification Toggle
+                SettingsSwitchItem(
+                    icon = Icons.Outlined.NotificationsActive,
+                    iconColor = Color(0xFFF59E0B),
+                    title = "Thông báo đẩy",
+                    checked = uiState.isPushNotificationEnabled,
+                    onCheckedChange = { viewModel.togglePushNotification(it) }
+                )
+                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.1f))
+                
+                // Return Screen Toggle
+                SettingsSwitchItem(
+                    icon = Icons.Outlined.Wallpaper,
+                    iconColor = Color(0xFF8B5CF6),
+                    title = "Màn hình chờ",
+                    checked = uiState.isReturnScreenEnabled,
+                    onCheckedChange = { viewModel.toggleReturnScreen(it) }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Logout Button
+            // Logout Button
+            Button(
+                onClick = onLogout,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .shadow(4.dp, RoundedCornerShape(12.dp)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Color(0xFFEF4444)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Logout,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Đăng xuất",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Bottom Spacer for Navigation Bar
+            Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        SettingsTopBar(
+             onBackClick = onBackClick,
+             modifier = Modifier.align(Alignment.TopCenter)
+        )
+    }
+}
+
+@Composable
+fun SettingsTopBar(onBackClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        color = Color.White,
+        shadowElevation = 2.dp,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column {
+            // Spacer to avoid covering status bar content
+            Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+            
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(backgroundColor)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .height(56.dp) // Compact height
+                    .padding(horizontal = 8.dp)
             ) {
                 IconButton(
                     onClick = onBackClick,
@@ -89,144 +185,103 @@ fun AdminSettingsScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.ArrowBackIosNew,
-                        contentDescription = "Back",
-                        tint = textPrimary
+                        contentDescription = "Quay lại",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 Text(
                     text = "Cài đặt",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = textPrimary,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.Black,
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Profile Header
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        AsyncImage(
-                            model = "https://lh3.googleusercontent.com/aida-public/AB6AXuDhseOwGn5wt-Qonlzclmbg28_VixzFNtwWAIhSZIxrQ73UUZrBDLnVGbUuNFYaG5UW1T97UL3IpUWvCi4-NMC-erB4TxllxJAOIJB_cj2IRUwiFuz-bHePG_J0IzdV8muPa2vo8FFER6x7DXodYdAXHR0DqidNzUhEmlLxG9ALJE7V7KoKmW3kQIfvQ0Z5rcsTOte7RAXf_9vjgUAeuOAkaPh3ekjCBgFXPACv9nsWq9upP2YcAMe24g59p0rqvt4Yys_1KdHhEs0",
-                            contentDescription = "Avatar",
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(CircleShape)
-                                .background(Color.Gray),
-                            contentScale = ContentScale.Crop
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text(
-                                "Nguyen Van A",
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = textPrimary
-                            )
-                            Text(
-                                "Administrator",
-                                fontSize = 16.sp,
-                                color = textSecondary
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(iconBgColor) // Using icon bg for button bg as per HTML (stone-200/800)
-                        .clickable { },
-                    contentAlignment = Alignment.Center
-                ) {
-                     Text("Edit Profile", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textPrimary)
-                }
-            }
-
-            // Account Security
-            SettingsGroup("Account Security", surfaceColor, textPrimary) {
-                SettingsItem(Icons.Default.Lock, "Change Password", textPrimary, textSecondary, iconBgColor)
-                SettingsItem(Icons.Default.Shield, "Two-Factor Authentication", textPrimary, textSecondary, iconBgColor)
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Notification Settings
-            SettingsGroup("Notification Settings", surfaceColor, textPrimary) {
-                var newOrders by remember { mutableStateOf(true) }
-                var lowStock by remember { mutableStateOf(true) }
-                var sysUpdates by remember { mutableStateOf(false) }
-
-                ToggleItem(Icons.Default.Notifications, "New Order Notifications", newOrders, { newOrders = it }, textPrimary, iconBgColor)
-                ToggleItem(Icons.Default.Inventory2, "Low Stock Alerts", lowStock, { lowStock = it }, textPrimary, iconBgColor)
-                ToggleItem(Icons.Default.Update, "System Updates", sysUpdates, { sysUpdates = it }, textPrimary, iconBgColor)
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Application
-            SettingsGroup("Application", surfaceColor, textPrimary) {
-                InfoItem(Icons.Default.Contrast, "Appearance", "Dark", textPrimary, textSecondary, iconBgColor)
-                InfoItem(Icons.Default.Language, "Language", "English", textPrimary, textSecondary, iconBgColor)
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Logout
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(surfaceColor)
-                    .clickable { }
-                    .padding(vertical = 14.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                 Text("Log Out", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.Red)
-            }
-            
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
-fun SettingsGroup(
-    title: String,
-    surfaceColor: Color,
-    titleColor: Color,
-    content: @Composable () -> Unit
+fun SettingsSectionTitle(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+        color = Color.Gray,
+        modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)
+    )
+}
+
+@Composable
+fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        color = Color.White,
+        shape = RoundedCornerShape(16.dp),
+        shadowElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 4.dp),
+            content = content
+        )
+    }
+}
+
+@Composable
+fun SettingsProfileCard(
+    userName: String,
+    userRole: String,
+    avatarUrl: String?,
+    onEditProfile: () -> Unit
 ) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(surfaceColor)
+    Surface(
+        color = Color.White,
+        shape = RoundedCornerShape(20.dp),
+        shadowElevation = 2.dp,
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onEditProfile
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            AsyncImage(
+                model = avatarUrl ?: "https://ui-avatars.com/api/?name=${userName.replace(" ", "+")}&size=128&background=ec3713&color=fff",
+                contentDescription = "Avatar",
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, Color(0xFFF3F4F6), CircleShape),
+                contentScale = ContentScale.Crop
+            )
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = title,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = titleColor,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
+                    text = userName,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = Color.Black
                 )
-                content()
+                Text(
+                    text = userRole,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            }
+            
+            Surface(
+                color = Color(0xFFF3F4F6),
+                shape = CircleShape,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = Color.Gray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }
@@ -235,107 +290,120 @@ fun SettingsGroup(
 @Composable
 fun SettingsItem(
     icon: ImageVector,
+    iconColor: Color,
     title: String,
-    textPrimary: Color,
-    textSecondary: Color,
-    iconBgColor: Color
+    subtitle: String? = null,
+    rightContent: @Composable (() -> Unit)? = null,
+    onClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
-            .padding(horizontal = 16.dp, vertical = 12.dp), // min-h-[56px] ~ 14dp padding vertical effectively
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(iconBgColor),
-            contentAlignment = Alignment.Center
+        // Icon Container
+        Surface(
+            color = iconColor.copy(alpha = 0.1f),
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.size(40.dp)
         ) {
-            Icon(icon, contentDescription = null, tint = textPrimary, modifier = Modifier.size(24.dp))
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconColor,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
         }
+        
         Spacer(modifier = Modifier.width(16.dp))
-        Text(title, fontSize = 16.sp, color = textPrimary, modifier = Modifier.weight(1f))
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = textSecondary, modifier = Modifier.size(24.dp))
+        
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                color = Color.Black
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+        }
+        
+        if (rightContent != null) {
+            rightContent()
+        } else {
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color.LightGray,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
 
 @Composable
-fun ToggleItem(
+fun SettingsSwitchItem(
     icon: ImageVector,
+    iconColor: Color,
     title: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    textPrimary: Color,
-    iconBgColor: Color
+    onCheckedChange: (Boolean) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(iconBgColor),
-            contentAlignment = Alignment.Center
+        Surface(
+            color = iconColor.copy(alpha = 0.1f),
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.size(40.dp)
         ) {
-            Icon(icon, contentDescription = null, tint = textPrimary, modifier = Modifier.size(24.dp))
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconColor,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
         }
+        
         Spacer(modifier = Modifier.width(16.dp))
-        Text(title, fontSize = 16.sp, color = textPrimary, modifier = Modifier.weight(1f))
+        
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+            color = Color.Black,
+            modifier = Modifier.weight(1f)
+        )
+        
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = ProductPrimary,
+                checkedTrackColor = Color(0xFFec3713),
                 uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = iconBgColor
+                uncheckedTrackColor = Color.LightGray.copy(alpha = 0.5f)
             )
         )
-    }
-}
-
-@Composable
-fun InfoItem(
-    icon: ImageVector,
-    title: String,
-    value: String,
-    textPrimary: Color,
-    textSecondary: Color,
-    iconBgColor: Color
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(iconBgColor),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = textPrimary, modifier = Modifier.size(24.dp))
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(title, fontSize = 16.sp, color = textPrimary, modifier = Modifier.weight(1f))
-        Text(value, fontSize = 16.sp, color = textSecondary)
-        Spacer(modifier = Modifier.width(8.dp))
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = textSecondary, modifier = Modifier.size(24.dp))
     }
 }
 
 @Preview
 @Composable
 fun PreviewAdminSettingsScreen() {
-    AdminSettingsScreen()
+    PandQApplicationTheme {
+        AdminSettingsScreen()
+    }
 }

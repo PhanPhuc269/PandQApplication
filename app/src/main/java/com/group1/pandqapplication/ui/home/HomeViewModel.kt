@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.group1.pandqapplication.data.repository.HomeRepository
 import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
 import com.group1.pandqapplication.shared.data.remote.dto.ProductDto
+import com.group1.pandqapplication.shared.data.remote.dto.PromotionDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ data class HomeUiState(
     val isLoadingMore: Boolean = false,
     val categories: List<CategoryDto> = emptyList(),
     val products: List<ProductDto> = emptyList(),
+    val promotions: List<PromotionDto> = emptyList(),
     val selectedCategoryId: String? = null,
     val selectedCategoryName: String? = null,
     val currentPage: Int = 0,
@@ -48,6 +50,13 @@ class HomeViewModel @Inject constructor(
             val categoriesResult = repository.getCategories()
             val categories = categoriesResult.getOrNull() ?: emptyList()
 
+            // Load promotions
+            val promotionsResult = repository.getPromotions()
+            val promotions = promotionsResult.getOrNull()
+                ?.filter { it.status == "ACTIVE" }
+                ?.take(5) // Only show top 5 on home
+                ?: emptyList()
+
             // Load first page of products
             val productsResult = repository.searchProducts(
                 page = 0,
@@ -68,6 +77,7 @@ class HomeViewModel @Inject constructor(
                 isLoading = false,
                 categories = categories,
                 products = products,
+                promotions = promotions,
                 currentPage = 0,
                 hasMore = hasMore,
                 error = error

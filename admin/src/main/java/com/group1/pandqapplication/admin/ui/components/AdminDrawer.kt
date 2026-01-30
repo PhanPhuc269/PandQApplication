@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,7 +29,10 @@ import com.group1.pandqapplication.admin.ui.navigation.AdminScreen
 fun AdminDrawerContent(
     currentRoute: String,
     onNavigate: (String) -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    userName: String = "Admin",
+    userRole: String = "Administrator",
+    avatarUrl: String? = null
 ) {
     val scrollState = rememberScrollState()
     val primaryColor = Color(0xFFec3713) // From HTML config
@@ -43,12 +47,18 @@ fun AdminDrawerContent(
         // --- Header Section ---
         Column(
             modifier = Modifier
-                .padding(top = 56.dp, bottom = 24.dp, start = 24.dp, end = 24.dp)
+                .padding(top = 16.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { onNavigate(AdminScreen.Profile.route) }
+                    .padding(4.dp)
+            ) {
                 Box {
                     AsyncImage(
-                        model = "https://lh3.googleusercontent.com/aida-public/AB6AXuAJojKOb2GiyE7j2Lwb7WD_s4z-h8qk2nv9TOdIMcjcfrKhCzZM8EpcwCzjXaR5EiJLbusTxLLWjWg0QHpzBeA4vi6pkC8jxTh67LFqIyBZELE3YLPzcuNX5WEoI4JZrAQDPCSeCkNmdeVC9oLRNQin9pr4qFEZouMgzFKlMFcMqqoXRuUg2JbsZA-iSypNb5iKTtHa7E3EkNbPzAFaqY5pNFWwRwPbroeQcy6VO7Je3NGAQytitl8yHwZl16ku8acOvon5bPJhnQY",
+                        model = avatarUrl ?: "https://ui-avatars.com/api/?name=${userName.replace(" ", "+")}&size=128&background=ec3713&color=fff",
                         contentDescription = "Profile",
                         modifier = Modifier
                             .size(48.dp)
@@ -67,7 +77,7 @@ fun AdminDrawerContent(
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
                     Text(
-                        text = "Nguyen Van A",
+                        text = userName,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -77,7 +87,7 @@ fun AdminDrawerContent(
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         Text(
-                            text = "Store Manager",
+                            text = userRole,
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             color = Color.Gray
@@ -94,6 +104,7 @@ fun AdminDrawerContent(
             modifier = Modifier
                 .padding(horizontal = 12.dp, vertical = 16.dp)
                 .weight(1f) // Push footer down
+                .verticalScroll(rememberScrollState())
         ) {
             
             // Primary Modules
@@ -112,17 +123,10 @@ fun AdminDrawerContent(
                 onClick = { onNavigate(AdminScreen.Inventory.route) },
                 primaryColor = primaryColor
             )
-            DrawerItem(
-                label = "Order Management",
-                icon = Icons.Default.ShoppingCart, // shopping_bag
-                isSelected = currentRoute == AdminScreen.Orders.route,
-                onClick = { onNavigate(AdminScreen.Orders.route) },
-                primaryColor = primaryColor,
-                badgeCount = 3
-            )
+
 
             // Operations Modules
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             DrawerSectionHeader("Operations")
             DrawerItem(
                 label = "Category Management",
@@ -131,20 +135,7 @@ fun AdminDrawerContent(
                 onClick = { onNavigate(AdminScreen.CategoryManagement.route) },
                 primaryColor = primaryColor
             )
-            DrawerItem(
-                label = "Branch Management",
-                icon = Icons.Default.Storefront,
-                isSelected = currentRoute == AdminScreen.BranchManagement.route,
-                onClick = { onNavigate(AdminScreen.BranchManagement.route) },
-                primaryColor = primaryColor
-            )
-            DrawerItem(
-                label = "Supplier Management",
-                icon = Icons.Default.Inventory,
-                isSelected = currentRoute == AdminScreen.SupplierManagement.route,
-                onClick = { onNavigate(AdminScreen.SupplierManagement.route) },
-                 primaryColor = primaryColor
-            )
+
             DrawerItem(
                 label = "Auditor/Roles",
                 icon = Icons.Default.ManageAccounts,
@@ -160,6 +151,13 @@ fun AdminDrawerContent(
                 primaryColor = primaryColor
             )
             DrawerItem(
+                label = "Customer Chats",
+                icon = Icons.Default.Chat,
+                isSelected = currentRoute == AdminScreen.Chats.route,
+                onClick = { onNavigate(AdminScreen.Chats.route) },
+                primaryColor = primaryColor
+            )
+            DrawerItem(
                 label = "Shipping Management",
                 icon = Icons.Default.LocalShipping,
                 isSelected = currentRoute == AdminScreen.ShippingManagement.route,
@@ -167,8 +165,16 @@ fun AdminDrawerContent(
                 primaryColor = primaryColor
             )
 
+            DrawerItem(
+                label = "Inbox",
+                icon = Icons.Default.Notifications,
+                isSelected = currentRoute == AdminScreen.NotificationList.route,
+                onClick = { onNavigate(AdminScreen.NotificationList.route) },
+                primaryColor = primaryColor
+            )
+
             // Marketing
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             DrawerSectionHeader("Marketing")
             DrawerItem(
                 label = "Promotions",
@@ -177,9 +183,16 @@ fun AdminDrawerContent(
                 onClick = { onNavigate(AdminScreen.Promotions.route) },
                 primaryColor = primaryColor
             )
+            DrawerItem(
+                label = "Push Campaigns",
+                icon = Icons.Default.Email,
+                isSelected = currentRoute == AdminScreen.NotificationTemplates.route,
+                onClick = { onNavigate(AdminScreen.NotificationTemplates.route) },
+                primaryColor = primaryColor
+            )
 
             // Analytics
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             DrawerSectionHeader("Insights")
             DrawerItem(
                 label = "Reports & Analytics",
@@ -194,7 +207,7 @@ fun AdminDrawerContent(
         Column(
             modifier = Modifier
                 .background(Color.Gray.copy(alpha = 0.05f))
-                .padding(12.dp)
+                .padding(4.dp)
         ) {
             DrawerItem(
                 label = "System Settings",
@@ -239,15 +252,7 @@ fun AdminDrawerContent(
                 }
             }
             
-            Text(
-                text = "v2.4.0 (Build 204)",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
+
         }
     }
 }
@@ -255,9 +260,9 @@ fun AdminDrawerContent(
 @Composable
 fun DrawerSectionHeader(title: String) {
     Text(
-        text = title.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-        color = Color.Gray,
+        text = title,
+        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     )
 }
@@ -282,7 +287,7 @@ fun DrawerItem(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

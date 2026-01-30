@@ -5,6 +5,7 @@ import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
 import com.group1.pandqapplication.shared.data.remote.dto.CreateReviewDto
 import com.group1.pandqapplication.shared.data.remote.dto.CreateAddressRequest
 import com.group1.pandqapplication.shared.data.remote.dto.InitConfigDto
+import com.group1.pandqapplication.shared.data.remote.dto.InventoryStatsDto
 import com.group1.pandqapplication.shared.data.remote.dto.LocationDto
 import com.group1.pandqapplication.shared.data.remote.dto.PaymentDetailsDto
 import com.group1.pandqapplication.shared.data.remote.dto.PaginationResponseDto
@@ -58,6 +59,8 @@ interface AppApiService {
     @DELETE("api/v1/products/{id}")
     suspend fun deleteProduct(@Path("id") id: String)
 
+    @GET("api/v1/inventory/stats")
+    suspend fun getInventoryStats(): InventoryStatsDto
 
     @GET("api/v1/reviews/product/{productId}")
     suspend fun getReviewsByProductId(
@@ -93,6 +96,10 @@ interface AppApiService {
         @Query("size") size: Int? = 20
     ): PaginationResponseDto<ProductSearchDto>
 
+    @GET("api/v1/products/trending-searches")
+    suspend fun getTrendingSearches(): List<String>
+
+
     @retrofit2.http.Multipart
     @POST("api/v1/upload")
     suspend fun uploadImage(@retrofit2.http.Part file: okhttp3.MultipartBody.Part): okhttp3.ResponseBody
@@ -118,6 +125,12 @@ interface AppApiService {
     suspend fun getSepayStatus(
         @Path("transactionId") transactionId: String
     ): SepayStatusResponse
+
+    // COD (Cash on Delivery) Payment
+    @PUT("api/v1/orders/{orderId}/confirm-cod")
+    suspend fun confirmCODOrder(
+        @Path("orderId") orderId: String
+    ): OrderDto
 
     // Payment Details - Get order information for checkout
     @GET("api/v1/payments/details/{orderId}")
@@ -166,6 +179,114 @@ interface AppApiService {
 
     @GET("api/v1/orders/{id}")
     suspend fun getOrderById(@Path("id") orderId: String): OrderDto
+    
+    // Confirm delivery - user marks DELIVERED order as COMPLETED
+    @POST("api/v1/orders/{orderId}/confirm-delivery")
+    suspend fun confirmDelivery(@Path("orderId") orderId: String): OrderDto
+
+    // Apply promotion to order before payment
+    @PUT("api/v1/orders/{id}/apply-promotion")
+    suspend fun applyPromotion(
+        @Path("id") orderId: String,
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.ApplyPromotionRequest
+    ): OrderDto
+
+    // Admin Order Management
+    @PUT("api/v1/orders/{id}/assign-carrier")
+    suspend fun assignCarrier(
+        @Path("id") id: String,
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.AssignCarrierRequest
+    ): OrderDto
+
+    @PUT("api/v1/orders/{id}/status")
+    suspend fun updateOrderStatus(
+        @Path("id") id: String,
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.UpdateStatusRequest
+    ): OrderDto
+
+    // Promotion validation
+    @POST("api/v1/promotions/validate")
+    suspend fun validatePromotion(
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionRequest
+    ): com.group1.pandqapplication.shared.data.remote.dto.ValidatePromotionResponse
+
+    // Voucher endpoints
+    @GET("api/v1/vouchers/available")
+    suspend fun getAvailableVouchers(
+        @Query("userId") userId: String? = null
+    ): com.group1.pandqapplication.shared.data.remote.dto.VoucherListResponseDto
+
+    @GET("api/v1/vouchers/my-wallet")
+    suspend fun getMyVouchers(
+        @Query("userId") userId: String
+    ): com.group1.pandqapplication.shared.data.remote.dto.VoucherListResponseDto
+
+    @POST("api/v1/vouchers/claim")
+    suspend fun claimVoucher(
+        @Query("userId") userId: String,
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.ClaimVoucherRequest
+    ): com.group1.pandqapplication.shared.data.remote.dto.ClaimVoucherResponse
+
+    // Get all promotions for voucher selection
+    @GET("api/v1/promotions")
+    suspend fun getAllPromotions(): List<com.group1.pandqapplication.shared.data.remote.dto.PromotionDto>
+
+    // Admin Auth endpoints
+    @GET("api/v1/auth/verify-admin")
+    suspend fun verifyAdmin(): VerifyAdminResponse
+
+    @GET("api/v1/auth/me")
+    suspend fun getCurrentAuthUser(): AdminUserInfo
+    @GET("api/v1/notifications/user/{userId}")
+    suspend fun getNotificationsByUserId(
+        @Path("userId") userId: String,
+        @Query("type") type: String? = null
+    ): List<com.group1.pandqapplication.shared.data.remote.dto.NotificationDto>
+
+    @GET("api/v1/notifications/preferences/{userId}")
+    suspend fun getNotificationPreferences(
+        @Path("userId") userId: String
+    ): com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceResponse
+
+    @PUT("api/v1/notifications/preferences/{userId}")
+    suspend fun updateNotificationPreferences(
+        @Path("userId") userId: String,
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.NotificationPreferenceRequest
+    ): retrofit2.Response<Void>
+
+    @PUT("api/v1/notifications/{id}/read")
+    suspend fun markNotificationAsRead(@Path("id") id: String)
+
+    @POST("api/v1/users/close-account")
+    suspend fun closeAccount(
+        @Body request: com.group1.pandqapplication.shared.data.remote.dto.CloseAccountRequest
+    ): retrofit2.Response<Void>
 }
 
+/**
+ * Response from admin verification endpoint.
+ */
+data class VerifyAdminResponse(
+    @com.google.gson.annotations.SerializedName("isAdmin")
+    val isAdmin: Boolean = false,
+    @com.google.gson.annotations.SerializedName("message")
+    val message: String = "",
+    @com.google.gson.annotations.SerializedName("user")
+    val user: AdminUserInfo? = null
+)
 
+/**
+ * Admin user info from backend.
+ */
+data class AdminUserInfo(
+    @com.google.gson.annotations.SerializedName("id")
+    val id: String = "",
+    @com.google.gson.annotations.SerializedName("email")
+    val email: String = "",
+    @com.google.gson.annotations.SerializedName("fullName")
+    val fullName: String? = null,
+    @com.google.gson.annotations.SerializedName("avatarUrl")
+    val avatarUrl: String? = null,
+    @com.google.gson.annotations.SerializedName("role")
+    val role: String = ""
+)

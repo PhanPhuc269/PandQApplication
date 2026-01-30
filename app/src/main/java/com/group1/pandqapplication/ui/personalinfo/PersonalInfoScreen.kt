@@ -35,6 +35,8 @@ import android.widget.Toast
 import com.group1.pandqapplication.util.CloudinaryHelper
 import java.io.File
 import java.io.FileOutputStream
+import com.group1.pandqapplication.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,7 +133,7 @@ fun PersonalInfoScreen(
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        "Thông tin cá nhân",
+                        stringResource(R.string.personal_info_title),
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         color = Color(0xFF111827)
@@ -233,7 +235,7 @@ fun PersonalInfoScreen(
                     ) {
                         // Full Name Field
                         FormField(
-                            label = "Họ và tên",
+                            label = stringResource(R.string.full_name),
                             value = uiState.fullName,
                             onValueChange = { viewModel.updateFullName(it) },
                             icon = Icons.Filled.Person,
@@ -244,7 +246,7 @@ fun PersonalInfoScreen(
 
                         // Email Field (Read-only)
                         FormField(
-                            label = "Email",
+                            label = stringResource(R.string.email),
                             value = uiState.user?.email ?: "",
                             onValueChange = {},
                             icon = Icons.Filled.Email,
@@ -256,7 +258,7 @@ fun PersonalInfoScreen(
 
                         // Phone Field
                         FormField(
-                            label = "Số điện thoại",
+                            label = stringResource(R.string.phone_number),
                             value = uiState.phone,
                             onValueChange = { viewModel.updatePhone(it) },
                             icon = Icons.Filled.Phone,
@@ -307,7 +309,7 @@ fun PersonalInfoScreen(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            "Lưu thay đổi",
+                                            stringResource(R.string.save_changes),
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 16.sp
                                         )

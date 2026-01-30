@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 private const val TAG = "CloudinaryHelper"
 
 /**
- * Cloudinary unsigned upload helper.
+ * Cloudinary unsigned upload helper for admin module.
  * Credentials are loaded from local.properties via BuildConfig.
  */
 object CloudinaryHelper {

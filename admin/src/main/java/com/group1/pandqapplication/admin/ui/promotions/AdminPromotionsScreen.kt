@@ -9,15 +9,20 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TimerOff
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,17 +36,52 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.group1.pandqapplication.admin.data.remote.dto.PromotionDto
+import com.group1.pandqapplication.admin.data.remote.dto.DiscountType as DtoDiscountType
+import com.group1.pandqapplication.admin.data.remote.dto.PromotionStatus as DtoPromotionStatus
 import com.group1.pandqapplication.shared.ui.theme.PandQApplicationTheme
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
-fun AdminPromotionsScreen(onNavigateToCreatePromotion: () -> Unit = {}) {
-    val promotions = remember { dummyPromotions }
+fun AdminPromotionsScreen(
+    onNavigateToCreatePromotion: () -> Unit = {},
+    onNavigateToEditPromotion: (String) -> Unit = {},
+    onBackClick: () -> Unit = {},
+    viewModel: PromotionViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Reactive filtered list - tự động cập nhật khi uiState thay đổi
+    val filteredPromotions by remember(uiState.promotions, uiState.searchQuery, uiState.selectedFilter) {
+        derivedStateOf { viewModel.getFilteredPromotions() }
+    }
+    
     var selectedFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Active", "Scheduled", "Expired")
+    
+    // Delete confirmation dialog state
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var promotionToDelete by remember { mutableStateOf<PromotionDto?>(null) }
+
+    // Map filter string to enum
+    LaunchedEffect(selectedFilter) {
+        val filter = when (selectedFilter) {
+            "Active" -> PromotionFilter.ACTIVE
+            "Scheduled" -> PromotionFilter.SCHEDULED
+            "Expired" -> PromotionFilter.EXPIRED
+            else -> PromotionFilter.ALL
+        }
+        viewModel.setFilter(filter)
+    }
 
     Scaffold(
         topBar = {
-            PromotionTopBar(onAddClick = onNavigateToCreatePromotion)
+            PromotionTopBar(
+                onBackClick = onBackClick,
+                onAddClick = onNavigateToCreatePromotion
+            )
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
@@ -51,6 +91,41 @@ fun AdminPromotionsScreen(onNavigateToCreatePromotion: () -> Unit = {}) {
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
         ) {
+            // Stats Cards Section
+            val activeCount = uiState.promotions.count { promotion ->
+                promotion.status == com.group1.pandqapplication.admin.data.remote.dto.PromotionStatus.ACTIVE
+            }
+            val usedTodayCount = uiState.promotions.sumOf { it.usageCount ?: 0 }
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Active promotions card
+                StatsCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.LocalActivity,
+                    iconBackgroundColor = Color(0xFF2196F3),
+                    title = "Đang chạy",
+                    value = activeCount.toString(),
+                    change = "+5% tuần này",
+                    changeColor = Color(0xFF4CAF50)
+                )
+                
+                // Used today card
+                StatsCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.CalendarMonth,
+                    iconBackgroundColor = Color(0xFFFF9800),
+                    title = "Đã dùng hôm nay",
+                    value = usedTodayCount.toString(),
+                    change = "+12% hôm qua",
+                    changeColor = Color(0xFF4CAF50)
+                )
+            }
+            
             // Search and Chips Section
             Column(
                 modifier = Modifier
@@ -60,15 +135,27 @@ fun AdminPromotionsScreen(onNavigateToCreatePromotion: () -> Unit = {}) {
             ) {
                 // Search Bar
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = uiState.searchQuery,
+                    onValueChange = { viewModel.setSearchQuery(it) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
                     shape = RoundedCornerShape(12.dp),
                     placeholder = { Text("Search by code or name...", color = Color.Gray) },
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = "Search", tint = Color.Gray)
+                    },
+                    trailingIcon = {
+                        if (uiState.searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.setSearchQuery("") }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Clear",
+                                    tint = Color.Gray
+                                )
+                            }
+                        }
                     },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -76,7 +163,11 @@ fun AdminPromotionsScreen(onNavigateToCreatePromotion: () -> Unit = {}) {
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    singleLine = true
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(
+                        onSearch = { /* Search is live, no action needed */ }
+                    )
                 )
 
                 // Chips
@@ -95,39 +186,194 @@ fun AdminPromotionsScreen(onNavigateToCreatePromotion: () -> Unit = {}) {
                 }
             }
 
+            // Loading indicator
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFFec3713))
+                }
+            }
+
+            // Error message
+            uiState.error?.let { error ->
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
             // Promotions List
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(promotions) { promotion ->
-                    PromotionCard(promotion)
+                items(filteredPromotions) { promotionDto ->
+                    val promotion = promotionDto.toUiModel()
+                    PromotionCard(
+                        promotion = promotion,
+                        onEditClick = { onNavigateToEditPromotion(promotionDto.id) },
+                        onDeleteClick = {
+                            promotionToDelete = promotionDto
+                            showDeleteDialog = true
+                        }
+                    )
                 }
             }
         }
     }
+    
+    // Delete Confirmation Dialog
+    if (showDeleteDialog && promotionToDelete != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { 
+                showDeleteDialog = false
+                promotionToDelete = null
+            },
+            title = { Text("Xác nhận xóa", fontWeight = FontWeight.Bold) },
+            text = { 
+                Text("Bạn có chắc chắn muốn xóa khuyến mãi \"${promotionToDelete?.name}\"?\n\nHành động này không thể hoàn tác.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        promotionToDelete?.let { viewModel.deletePromotion(it.id) }
+                        showDeleteDialog = false
+                        promotionToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFDC2626)
+                    )
+                ) {
+                    Text("Xóa")
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        promotionToDelete = null
+                    }
+                ) {
+                    Text("Hủy")
+                }
+            }
+        )
+    }
+}
+
+/**
+ * Convert PromotionDto từ API sang UI model
+ */
+private fun PromotionDto.toUiModel(): Promotion {
+    val uiStatus = when {
+        status == DtoPromotionStatus.INACTIVE -> PromotionStatus.EXPIRED
+        startDate != null && isDateInFuture(startDate) -> PromotionStatus.SCHEDULED
+        status == DtoPromotionStatus.ACTIVE -> PromotionStatus.ACTIVE
+        else -> PromotionStatus.DRAFT
+    }
+
+    val discountText = when (type) {
+        DtoDiscountType.PERCENTAGE -> "${value?.toInt() ?: 0}% OFF"
+        DtoDiscountType.FIXED_AMOUNT -> "${formatCurrency(value)} OFF"
+        DtoDiscountType.FREE_SHIPPING -> "Free Shipping"
+    }
+
+    val extraInfo = when (uiStatus) {
+        PromotionStatus.ACTIVE -> endDate?.let { "Ends ${formatDate(it)}" } ?: ""
+        PromotionStatus.SCHEDULED -> startDate?.let { "Starts ${formatDate(it)}" } ?: ""
+        else -> ""
+    }
+
+    val usageLabel = when (uiStatus) {
+        PromotionStatus.ACTIVE -> "Used:"
+        PromotionStatus.SCHEDULED -> "Limit:"
+        PromotionStatus.EXPIRED -> "Total Used:"
+        else -> ""
+    }
+
+    val usageValue = if (quantityLimit != null && quantityLimit > 0) {
+        "${usageCount ?: 0}/$quantityLimit"
+    } else {
+        "${usageCount ?: 0}"
+    }
+
+    return Promotion(
+        title = name,
+        description = description ?: "Created recently",
+        status = uiStatus,
+        discountText = discountText,
+        code = code,
+        extraInfo = extraInfo,
+        usageLabel = usageLabel,
+        usageValue = usageValue
+    )
+}
+
+private fun isDateInFuture(dateStr: String): Boolean {
+    return try {
+        val date = LocalDateTime.parse(dateStr)
+        date.isAfter(LocalDateTime.now())
+    } catch (e: Exception) {
+        false
+    }
+}
+
+private fun formatDate(dateStr: String): String {
+    return try {
+        val date = LocalDateTime.parse(dateStr)
+        date.format(DateTimeFormatter.ofPattern("MMM dd"))
+    } catch (e: Exception) {
+        dateStr
+    }
+}
+
+private fun formatCurrency(value: java.math.BigDecimal?): String {
+    return value?.let { "$${it.toInt()}" } ?: "$0"
 }
 
 @Composable
-fun PromotionTopBar(onAddClick: () -> Unit) {
-    Row(
+fun PromotionTopBar(
+    onBackClick: () -> Unit,
+    onAddClick: () -> Unit
+) {
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
+        // Back button - left
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier.align(Alignment.CenterStart)
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBackIosNew,
+                contentDescription = "Back",
+                tint = Color(0xFFec3713),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        
+        // Title - center
         Text(
             text = "Promotions",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.align(Alignment.Center)
         )
+        
+        // Add button - right
         IconButton(
             onClick = onAddClick,
             modifier = Modifier
+                .align(Alignment.CenterEnd)
                 .size(40.dp)
-                .background(Color(0xFFec3713), CircleShape) // Primary color
+                .background(Color(0xFFec3713), CircleShape)
         ) {
             Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White)
         }
@@ -158,7 +404,13 @@ fun PromotionFilterChip(text: String, isSelected: Boolean, onClick: () -> Unit) 
 }
 
 @Composable
-fun PromotionCard(promotion: Promotion) {
+fun PromotionCard(
+    promotion: Promotion,
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {}
+) {
+    var showMenu by remember { mutableStateOf(false) }
+    
     val icon = when (promotion.status) {
         PromotionStatus.ACTIVE -> Icons.Default.LocalActivity
         PromotionStatus.SCHEDULED -> Icons.Default.CalendarMonth
@@ -188,7 +440,7 @@ fun PromotionCard(promotion: Promotion) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.weight(1f)) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -210,7 +462,38 @@ fun PromotionCard(promotion: Promotion) {
                     )
                 }
             }
-            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Gray)
+            
+            // Dropdown Menu
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.Gray)
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Sửa") },
+                        onClick = {
+                            showMenu = false
+                            onEditClick()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Edit, contentDescription = null, tint = Color(0xFF2563EB))
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Xóa", color = Color(0xFFDC2626)) },
+                        onClick = {
+                            showMenu = false
+                            onDeleteClick()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Delete, contentDescription = null, tint = Color(0xFFDC2626))
+                        }
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -316,6 +599,75 @@ fun PromotionCard(promotion: Promotion) {
                      color = Color.Gray
                  )
             }
+        }
+    }
+}
+
+@Composable
+fun StatsCard(
+    modifier: Modifier = Modifier,
+    icon: ImageVector,
+    iconBackgroundColor: Color,
+    title: String,
+    value: String,
+    change: String,
+    changeColor: Color
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Icon
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(iconBackgroundColor.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconBackgroundColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Title
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Value
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Change indicator
+            Text(
+                text = change,
+                style = MaterialTheme.typography.bodySmall,
+                color = changeColor
+            )
         }
     }
 }

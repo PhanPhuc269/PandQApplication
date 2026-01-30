@@ -45,4 +45,21 @@ class UserRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun closeAccount(email: String, reason: String?): Result<Unit> {
+        return try {
+            val request = com.group1.pandqapplication.shared.data.remote.dto.CloseAccountRequest(
+                email = email,
+                reason = reason
+            )
+            val response = apiService.closeAccount(request)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Failed to close account: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

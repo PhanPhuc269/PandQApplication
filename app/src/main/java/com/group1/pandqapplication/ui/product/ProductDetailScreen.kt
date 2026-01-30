@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +39,13 @@ import com.group1.pandqapplication.shared.data.remote.dto.RelatedProductDto
 import com.group1.pandqapplication.shared.data.remote.dto.ReviewDto
 import java.text.NumberFormat
 import java.util.Locale
+import android.app.Activity
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import com.group1.pandqapplication.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -45,6 +54,7 @@ fun ProductDetailScreen(
     onCartClick: () -> Unit,
     onProductClick: (String) -> Unit = {},
     userId: String = "",
+    navController: androidx.navigation.NavController? = null,
     viewModel: ProductDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -52,34 +62,55 @@ fun ProductDetailScreen(
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val tabs = listOf("Description", "Specifications", "Reviews")
+    // Localized tab titles
+    val tabDescription = stringResource(R.string.description)
+    val tabSpecifications = stringResource(R.string.specifications)
+    val tabReviews = stringResource(R.string.reviews)
+    val tabs = listOf(tabDescription, tabSpecifications, tabReviews)
+
+    // Localized messages for snackbar
+    val addedToCartMsg = stringResource(R.string.added_to_cart_success)
+    val errorMsg = stringResource(R.string.error_occurred)
+    val reviewSubmittedMsg = stringResource(R.string.review_submitted)
 
     // Handle add to cart success/error
     LaunchedEffect(uiState.addToCartSuccess, uiState.addToCartError) {
         if (uiState.addToCartSuccess) {
-            snackbarHostState.showSnackbar("Đã thêm vào giỏ hàng thành công!")
+            snackbarHostState.showSnackbar(addedToCartMsg)
             viewModel.clearAddToCartState()
         }
         if (uiState.addToCartError != null) {
-            snackbarHostState.showSnackbar(uiState.addToCartError ?: "Có lỗi xảy ra")
+            snackbarHostState.showSnackbar(uiState.addToCartError ?: errorMsg)
             viewModel.clearAddToCartState()
         }
     }
 
-    // Handle review submission success - error is handled by AlertDialog in WriteReviewScreen
+    // Handle review submission success
     LaunchedEffect(uiState.reviewSubmitSuccess) {
         if (uiState.reviewSubmitSuccess) {
-            snackbarHostState.showSnackbar("Đánh giá của bạn đã được gửi thành công!")
+            snackbarHostState.showSnackbar(reviewSubmittedMsg)
             viewModel.clearReviewSubmitState()
         }
     }
 
 
 
+    // Configure status bar for this screen (transparent with white icons)
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = Color.Transparent.toArgb()
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            // White icons for dark image header
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+        }
+    }
 
     // Main Content
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
+            contentWindowInsets = WindowInsets(0.dp),
             bottomBar = {
                 if (!uiState.isLoading && uiState.product != null) {
                     BottomCartBar(
@@ -89,7 +120,11 @@ fun ProductDetailScreen(
                         onDecrease = { viewModel.decreaseQuantity() },
                         primaryColor = primaryColor,
                         onCartClick = onCartClick,
-                        onAddToCart = { viewModel.addToCart(userId) }
+                        onAddToCart = { viewModel.addToCart(userId) },
+                        onChatClick = { 
+                            viewModel.prepareForChat()
+                            navController?.navigate("chat_screen/${uiState.product!!.id}") 
+                        }
                     )
                 }
             }
@@ -146,7 +181,7 @@ fun ProductDetailScreen(
                                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF22C55E).copy(alpha = 0.2f))
                                 ) {
                                     Text(
-                                        text = if (product.status == "ACTIVE") "Còn hàng" else "Hết hàng",
+                                        text = if (product.status == "ACTIVE") stringResource(R.string.in_stock) else stringResource(R.string.out_of_stock),
                                         color = Color(0xFF16A34A),
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Medium,
@@ -167,12 +202,12 @@ fun ProductDetailScreen(
                                     modifier = Modifier.padding(horizontal = 4.dp)
                                 )
                                 Text(
-                                    text = "(${product.reviewCount ?: 0} đánh giá)",
+                                    text = stringResource(R.string.n_reviews, product.reviewCount ?: 0),
                                     color = Color.Gray,
                                     fontSize = 14.sp
                                 )
                                 Text(
-                                    text = "Xem tất cả",
+                                    text = stringResource(R.string.see_all),
                                     color = primaryColor,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium,
@@ -308,7 +343,8 @@ fun ProductImageHeader(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.5f), Color.Transparent)))
-                .padding(start = 16.dp, end = 16.dp, top = 32.dp, bottom = 12.dp),
+                .statusBarsPadding()
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -355,9 +391,9 @@ fun ProductImageHeader(
 }
 
 private fun shareProduct(context: android.content.Context, productId: String, productName: String) {
-    // Use https scheme so links are recognized as clickable in Messenger/Zalo
-    val deepLink = "https://pandq.com/products/$productId"
-    val shareText = "Xem sản phẩm $productName tại TechShop: $deepLink"
+    // Use centralized config for deep link domain (from local.properties)
+    val deepLink = com.group1.pandqapplication.util.AppConfig.getProductDeepLink(productId)
+    val shareText = "Xem sản phẩm $productName tại ${com.group1.pandqapplication.util.AppConfig.APP_NAME}: $deepLink"
     
     val sendIntent = android.content.Intent().apply {
         action = android.content.Intent.ACTION_SEND
@@ -371,8 +407,9 @@ private fun shareProduct(context: android.content.Context, productId: String, pr
 
 @Composable
 fun DescriptionSection(description: String?) {
+    val noDescText = stringResource(R.string.no_description)
     Text(
-        text = description ?: "Chưa có mô tả cho sản phẩm này.",
+        text = description ?: noDescText,
         color = Color(0xFF52525B),
         fontSize = 14.sp,
         lineHeight = 22.sp
@@ -383,7 +420,7 @@ fun DescriptionSection(description: String?) {
 fun SpecificationsSection(specifications: List<ProductSpecificationDto>) {
     if (specifications.isEmpty()) {
         Text(
-            text = "Chưa có thông số kỹ thuật.",
+            text = stringResource(R.string.no_specifications),
             color = Color(0xFF52525B),
             fontSize = 14.sp
         )
@@ -460,7 +497,7 @@ fun ReviewsSection(
     Column(modifier = Modifier.fillMaxWidth()) {
          // Header
         Text(
-            "Đánh giá & Xếp hạng",
+            stringResource(R.string.ratings_reviews),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF18181B),
@@ -504,7 +541,7 @@ fun ReviewsSection(
                     }
                 }
                 Text(
-                    "${reviewCount ?: 0} đánh giá", 
+                    stringResource(R.string.n_reviews, reviewCount ?: 0), 
                     fontSize = 14.sp, 
                     color = Color(0xFF71717A),
                     fontWeight = FontWeight.Medium
@@ -539,14 +576,14 @@ fun ReviewsSection(
                 item {
                     FilterChipPill(
                         selected = filterByRating == null,
-                        label = "Tất cả",
+                        label = stringResource(R.string.filter_all),
                         onClick = { onFilterChange(null) }
                     )
                 }
                 items(listOf(5, 4, 3, 2, 1)) { rating ->
                     FilterChipPill(
                         selected = filterByRating == rating,
-                        label = "$rating sao",
+                        label = stringResource(R.string.stars, rating),
                         onClick = { onFilterChange(rating) }
                     )
                 }
@@ -562,7 +599,7 @@ fun ReviewsSection(
                 ) {
                     Icon(Icons.Filled.Sort, contentDescription = null, tint = Color(0xFF18181B))
                     Text(
-                        "Lọc", 
+                        stringResource(R.string.filter), 
                         fontSize = 14.sp, 
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF18181B),
@@ -574,9 +611,9 @@ fun ReviewsSection(
                     onDismissRequest = { showSortMenu = false },
                     modifier = Modifier.background(Color.White)
                 ) {
-                    DropdownMenuItem(text = { Text("Mới nhất") }, onClick = { onSortChange("newest"); showSortMenu = false })
-                    DropdownMenuItem(text = { Text("Cao nhất") }, onClick = { onSortChange("highest"); showSortMenu = false })
-                    DropdownMenuItem(text = { Text("Thấp nhất") }, onClick = { onSortChange("lowest"); showSortMenu = false })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.sort_newest)) }, onClick = { onSortChange("newest"); showSortMenu = false })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.sort_highest)) }, onClick = { onSortChange("highest"); showSortMenu = false })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.sort_lowest)) }, onClick = { onSortChange("lowest"); showSortMenu = false })
                 }
             }
         }
@@ -590,7 +627,7 @@ fun ReviewsSection(
             }
             reviews.isEmpty() -> {
                 Text(
-                    text = "Chưa có đánh giá nào.",
+                    text = stringResource(R.string.no_reviews),
                     color = Color(0xFF71717A),
                     fontSize = 14.sp,
                     modifier = Modifier.fillMaxWidth().padding(32.dp),
@@ -702,8 +739,8 @@ fun ReviewItem(review: ReviewDto) {
             
             Column(modifier = Modifier.padding(start = 12.dp)) {
                 Text(
-                    text = review.userName ?: "Người dùng",
-                    fontWeight = FontWeight.Bold, // Medium -> Bold per design
+                    text = review.userName ?: stringResource(R.string.user),
+                    fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = Color(0xFF18181B)
                 )
@@ -799,7 +836,7 @@ fun RelatedProductsSection(
 ) {
     Column {
         Text(
-            text = "Sản phẩm liên quan",
+            text = stringResource(R.string.related_products),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF111827)
@@ -852,6 +889,7 @@ fun BottomCartBar(
     primaryColor: Color,
     onCartClick: () -> Unit = {},
     onAddToCart: () -> Unit = {},
+    onChatClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -898,7 +936,18 @@ fun BottomCartBar(
                 colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
             ) {
                 Icon(Icons.Filled.ShoppingBag, contentDescription = null, modifier = Modifier.size(20.dp))
-                Text("Thêm vào giỏ", modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.add_to_cart), modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1)
+            }
+
+            // Chat Button
+            Button(
+                onClick = onChatClick,
+                modifier = Modifier.height(48.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEC3713))
+            ) {
+                Icon(Icons.Filled.Chat, contentDescription = null, modifier = Modifier.size(20.dp))
+                Text(stringResource(R.string.chat), modifier = Modifier.padding(start = 8.dp), fontWeight = FontWeight.Bold)
             }
         }
     }

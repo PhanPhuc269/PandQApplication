@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddBox
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.LocalOffer
@@ -14,6 +15,9 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class AdminScreen(val route: String, val title: String, val icon: ImageVector) {
@@ -21,6 +25,7 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object Orders : AdminScreen("orders", "Orders", Icons.Default.ShoppingCart)
     object Promotions : AdminScreen("promotions", "Promotions", Icons.Default.LocalOffer)
     object Analytics : AdminScreen("analytics", "Analytics", Icons.Default.BarChart)
+    object Chats : AdminScreen("chats", "Chats", Icons.Default.Chat)
     
     // Sub-screens (hidden from bottom bar usually, or just part of navigation graph)
     object CategoryManagement : AdminScreen("category_management", "Category", Icons.Default.Widgets)
@@ -31,11 +36,21 @@ sealed class AdminScreen(val route: String, val title: String, val icon: ImageVe
     object AddProduct : AdminScreen("add_product?productId={productId}", "Add Product", Icons.Default.AddBox)
 
     object OrderDetails : AdminScreen("order_details", "Order Details", Icons.Default.Receipt)
+    object ChatDetails : AdminScreen("chat_details/{chatId}", "Chat Details", Icons.Default.Chat)
     object CreatePromotion : AdminScreen("create_promotion", "Create Promotion", Icons.Default.Add)
+    object EditPromotion : AdminScreen("edit_promotion/{promotionId}", "Edit Promotion", Icons.Default.LocalOffer)
     object Profile : AdminScreen("profile", "Profile", Icons.Default.ManageAccounts)
     object Settings : AdminScreen("settings", "Settings", Icons.Default.Inventory) // Icon placeholder
     object SalesAnalysis : AdminScreen("sales_analysis", "Sales Analysis", Icons.Default.BarChart)
     object CustomerList : AdminScreen("customer_list", "Customer List", Icons.Default.ManageAccounts)
     object ShippingManagement : AdminScreen("shipping_management", "Shipping Management", Icons.Default.LocalShipping)
     object Login : AdminScreen("login", "Login", Icons.Default.Login)
+    object ChangePassword : AdminScreen("change_password", "Change Password", Icons.Default.ManageAccounts)
+    object NotificationTemplates : AdminScreen("notification_templates", "Push Campaigns", Icons.Default.Email)
+    object NotificationList : AdminScreen("notification_list", "Inbox", Icons.Default.Notifications)
+    object AnalyticsDetail : AdminScreen("analytics_detail?reportType={reportType}&range={range}", "Analytics Detail", Icons.Default.BarChart)
+    object DailyAnalyticsDetail : AdminScreen("daily_analytics_detail/{date}", "Daily Analytics", Icons.Default.BarChart)
+    object CustomerDetail : AdminScreen("customer_detail/{customerId}", "Customer Detail", Icons.Default.ManageAccounts)
+    object AdminList : AdminScreen("admin_list", "Admin List", Icons.Default.ManageAccounts)
+    object TierConfig : AdminScreen("tier_config", "Tier Config", Icons.Default.Tune)
 }

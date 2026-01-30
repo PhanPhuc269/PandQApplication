@@ -33,7 +33,9 @@ fun MainScreen(
     onUserGuideClick: () -> Unit = {}, // Added param
     onNavigateToOrder: (String?) -> Unit = { orderId -> orderId?.let { onOrderClick(it) } }, // Navigate to order with orderId
     onNavigateToProduct: (String?) -> Unit = { id -> id?.let { onProductClick(it) } }, // Navigate to product with optional productId
-    onNavigateToPromotion: (String?) -> Unit = { _ -> } // Navigate to promotion
+    onNavigateToPromotion: (String?) -> Unit = { _ -> }, // Navigate to promotion
+    onChatClick: () -> Unit = {},
+    onVoucherClick: () -> Unit = {} // Added voucher click handler
 ) {
     val navController = rememberNavController()
 
@@ -42,7 +44,7 @@ fun MainScreen(
             BottomNavigationBar(navController = navController)
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
             NavHost(
                 navController = navController,
                 startDestination = BottomNavItem.Home.route
@@ -53,7 +55,9 @@ fun MainScreen(
                         onProductClick = onProductClick,
                         onSearchClick = onSearchClick,
                         onCategoryClick = onCategoryClick,
-                        onCartClick = onCartClick
+                        onCartClick = onCartClick,
+                        onChatClick = onChatClick,
+                        onVoucherClick = onVoucherClick
                     )
                 }
                 composable(BottomNavItem.Orders.route) { 
@@ -84,8 +88,12 @@ fun MainScreen(
                                     onNavigateToProduct(productId)
                                 }
                                 targetUrl.contains("promotions") || targetUrl.contains("coupons") || targetUrl.contains("flash-sale") -> {
-                                    val promoId = targetUrl.substringAfterLast("/")
-                                    onNavigateToPromotion(promoId)
+                                    // Navigate to voucher center for promotion links
+                                    onVoucherClick()
+                                }
+                                targetUrl.contains("chat") -> {
+                                    // Navigate to chat screen
+                                    onChatClick()
                                 }
                             }
                         }

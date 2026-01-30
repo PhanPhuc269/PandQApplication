@@ -5,8 +5,11 @@ import com.group1.pandqapplication.shared.util.Constants
 import com.group1.pandqapplication.shared.data.remote.ApiService
 import com.group1.pandqapplication.shared.data.remote.AppApiService
 import com.group1.pandqapplication.shared.data.remote.LocationIQService
+import com.group1.pandqapplication.shared.data.remote.api.ChatApiService
+import com.group1.pandqapplication.shared.data.remote.service.CloudinaryService
 import com.group1.pandqapplication.shared.data.repository.AddressRepository
 import com.group1.pandqapplication.shared.data.repository.AddressRepositoryImpl
+import com.group1.pandqapplication.shared.data.repository.ChatRepository
 import com.group1.pandqapplication.shared.data.remote.AuthInterceptor
 import com.group1.pandqapplication.shared.data.repository.ProductRepository
 import com.group1.pandqapplication.shared.data.repository.ProductRepositoryImpl
@@ -118,6 +121,18 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideChatApiService(retrofit: Retrofit): ChatApiService {
+        return retrofit.create(ChatApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideChatRepository(chatApiService: ChatApiService): ChatRepository {
+        return ChatRepository(chatApiService)
+    }
+
+    @Provides
+    @Singleton
     fun provideLocationIQService(): LocationIQService {
         // Simple OkHttpClient without auth for external LocationIQ API
         val simpleClient = OkHttpClient.Builder()
@@ -134,5 +149,16 @@ object NetworkModule {
             .client(simpleClient)
             .build()
             .create(LocationIQService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCloudinaryService(): CloudinaryService {
+        // CloudinaryService for unsigned uploads
+        // Configuration from BuildConfig or hardcoded values
+        val cloudName = "dz8u6d4pr"  // From local.properties
+        val uploadPreset = "uppaedmp"  // From local.properties
+        
+        return CloudinaryService(cloudName, uploadPreset)
     }
 }

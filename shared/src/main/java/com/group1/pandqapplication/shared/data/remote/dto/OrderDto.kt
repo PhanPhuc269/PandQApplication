@@ -12,6 +12,7 @@ data class OrderDto(
     val paymentMethod: String?,
     val status: String,
     val shippingAddress: String?,
+    val shippingProvider: String?,
     val createdAt: String?,
     val items: List<OrderItemDto> = emptyList()
 )
@@ -29,4 +30,18 @@ data class AddToCartRequest(
     val userId: String,
     val productId: String,
     val quantity: Int
+)
+
+data class AssignCarrierRequest(
+    val shippingProvider: String,
+    val trackingNumber: String? = null
+)
+
+data class UpdateStatusRequest(
+    val status: String
+)
+
+data class ApplyPromotionRequest(
+    val userId: String,
+    val promotionId: String
 )

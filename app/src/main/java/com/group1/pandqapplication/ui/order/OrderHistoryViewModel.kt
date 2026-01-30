@@ -66,6 +66,26 @@ class OrderHistoryViewModel @Inject constructor(
     fun refresh() {
         loadOrders()
     }
+    
+    fun confirmDelivery(orderId: String) {
+        viewModelScope.launch {
+            orderRepository.confirmDelivery(orderId)
+                .onSuccess { updatedOrder ->
+                    // Update the order in the list
+                    val currentOrders = _uiState.value.orders.toMutableList()
+                    val index = currentOrders.indexOfFirst { it.id == orderId }
+                    if (index >= 0) {
+                        currentOrders[index] = updatedOrder
+                        _uiState.value = _uiState.value.copy(orders = currentOrders)
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        error = error.message ?: "Không thể xác nhận đơn hàng"
+                    )
+                }
+        }
+    }
 
     companion object {
         // Map backend status to Vietnamese labels

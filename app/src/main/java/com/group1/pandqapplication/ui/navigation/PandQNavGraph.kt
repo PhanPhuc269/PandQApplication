@@ -48,6 +48,17 @@ fun PandQNavGraph(
                         navController.navigate(Screen.ProductDetail.createRoute(productId))
                     }
                 }
+                deepLink.contains("chat/") -> {
+                    // Handle chat deep link - navigate to chat screen
+                    // Format: chat/{chatId}
+                    android.util.Log.d("DeepLink", "Navigating to chat")
+                    navController.navigate(Screen.ChatScreen.createRoute("general"))
+                }
+                deepLink.contains("promotions") || deepLink.contains("coupons") || deepLink.contains("vouchers") -> {
+                    // Navigate to voucher center for promotion links
+                    android.util.Log.d("DeepLink", "Navigating to voucher center")
+                    navController.navigate(Screen.VoucherCenter.route)
+                }
                 deepLink.contains("home") -> {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(navController.graph.startDestinationId)
@@ -67,7 +78,14 @@ fun PandQNavGraph(
             com.group1.pandqapplication.ui.splash.SplashScreen(
                 navController = navController,
                 onInitializationComplete = { isFirstLaunch ->
-                    val targetDestination = if (isFirstLaunch) Screen.Onboarding.route else Screen.Login.route
+                    // If first launch -> Onboarding
+                    // If already logged in -> Home (from destinationAfterSplash)
+                    // Otherwise -> Login
+                    val targetDestination = when {
+                        isFirstLaunch -> Screen.Onboarding.route
+                        destinationAfterSplash == Screen.Home.route -> Screen.Home.route
+                        else -> Screen.Login.route
+                    }
                     navController.navigate(targetDestination) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
@@ -140,6 +158,13 @@ fun PandQNavGraph(
                 },
                 onUserGuideClick = {
                     navController.navigate(Screen.UserGuide.route)
+                },
+                onChatClick = {
+                    // Navigate directly to chat screen with "general" as productId for support chat
+                    navController.navigate(Screen.ChatScreen.createRoute("general"))
+                },
+                onVoucherClick = {
+                    navController.navigate(Screen.VoucherCenter.route)
                 }
             )
         }
@@ -176,7 +201,8 @@ fun PandQNavGraph(
                 onProductClick = { productId ->
                     navController.navigate(Screen.ProductDetail.createRoute(productId))
                 },
-                userId = mainViewModel.getCurrentUserId()
+                userId = mainViewModel.getCurrentUserId(),
+                navController = navController
             )
         }
         composable(Screen.Cart.route) {
@@ -382,7 +408,43 @@ fun PandQNavGraph(
                 }
             )
         }
-
+        composable(
+            route = Screen.ChatScreen.route,
+            arguments = listOf(
+                navArgument("productId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId") ?: ""
+            
+            com.group1.pandqapplication.ui.chat.screen.ChatScreen(
+                productId = productId,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                userId = mainViewModel.getCurrentUserId(),
+                onProductClick = { clickedProductId ->
+                    navController.navigate(Screen.ProductDetail.createRoute(clickedProductId))
+                }
+            )
+        }
+        composable(Screen.ChatList.route) {
+            com.group1.pandqapplication.ui.chat.ChatListScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onChatClick = { productId, productName, productImage, productPrice ->
+                    // Product context is already set in ChatListScreen before navigation
+                    navController.navigate(Screen.ChatScreen.createRoute(productId))
+                }
+            )
+        }
+        composable(Screen.VoucherCenter.route) {
+            com.group1.pandqapplication.ui.voucher.VoucherCenterScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                userId = mainViewModel.getCurrentUserId()
+            )
+        }
     }
 }
-

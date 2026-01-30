@@ -1,6 +1,7 @@
 package com.group1.pandqapplication.shared.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.group1.pandqapplication.shared.util.Result
 import kotlinx.coroutines.channels.awaitClose
@@ -11,6 +12,28 @@ import javax.inject.Inject
 class AuthRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth
 ) : AuthRepository {
+
+    /**
+     * Chuyển đổi mã lỗi Firebase sang thông báo tiếng Việt
+     */
+    private fun getVietnameseErrorMessage(exception: Exception?): String {
+        if (exception is FirebaseAuthException) {
+            return when (exception.errorCode) {
+                "ERROR_INVALID_EMAIL" -> "Email không hợp lệ"
+                "ERROR_WRONG_PASSWORD" -> "Email hoặc mật khẩu không đúng"
+                "ERROR_USER_NOT_FOUND" -> "Email hoặc mật khẩu không đúng"
+                "ERROR_USER_DISABLED" -> "Tài khoản đã bị vô hiệu hóa"
+                "ERROR_TOO_MANY_REQUESTS" -> "Quá nhiều lần thử. Vui lòng thử lại sau"
+                "ERROR_EMAIL_ALREADY_IN_USE" -> "Email đã được sử dụng"
+                "ERROR_WEAK_PASSWORD" -> "Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn"
+                "ERROR_OPERATION_NOT_ALLOWED" -> "Đăng nhập bằng email chưa được kích hoạt"
+                "ERROR_INVALID_CREDENTIAL" -> "Email hoặc mật khẩu không đúng"
+                else -> exception.message ?: "Đã xảy ra lỗi"
+            }
+        }
+        return exception?.message ?: "Đã xảy ra lỗi"
+    }
+
     override suspend fun login(email: String, password: String): Flow<Result<Boolean>> = callbackFlow {
         trySend(Result.Loading)
         auth.signInWithEmailAndPassword(email, password)
@@ -18,7 +41,7 @@ class AuthRepositoryImpl @Inject constructor(
                 if (task.isSuccessful) {
                     trySend(Result.Success(true))
                 } else {
-                    trySend(Result.Error(task.exception?.message ?: "Login failed"))
+                    trySend(Result.Error(getVietnameseErrorMessage(task.exception)))
                 }
                 close()
             }
@@ -32,7 +55,7 @@ class AuthRepositoryImpl @Inject constructor(
                 if (task.isSuccessful) {
                     trySend(Result.Success(true))
                 } else {
-                    trySend(Result.Error(task.exception?.message ?: "Registration failed"))
+                    trySend(Result.Error(getVietnameseErrorMessage(task.exception)))
                 }
                 close()
             }
@@ -47,7 +70,7 @@ class AuthRepositoryImpl @Inject constructor(
                 if (task.isSuccessful) {
                     trySend(Result.Success(true))
                 } else {
-                    trySend(Result.Error(task.exception?.message ?: "Google Sign-In failed"))
+                    trySend(Result.Error(getVietnameseErrorMessage(task.exception)))
                 }
                 close()
             }

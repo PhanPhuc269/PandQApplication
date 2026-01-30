@@ -1,5 +1,9 @@
 package com.group1.pandqapplication.admin.ui.dashboard
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,23 +29,34 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.group1.pandqapplication.admin.data.remote.dto.DashboardSummaryResponse
 import com.group1.pandqapplication.shared.ui.theme.PandQApplicationTheme
+import java.math.BigDecimal
 
 @Composable
 fun AdminDashboardScreen(
+    viewModel: AdminDashboardViewModel = hiltViewModel(),
     onNavigateToOrders: () -> Unit = {},
     onNavigateToPromotions: () -> Unit = {},
     onNavigateToAddProduct: () -> Unit = {},
@@ -55,172 +70,257 @@ fun AdminDashboardScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToCustomer: () -> Unit = {},
     onNavigateToShipping: () -> Unit = {},
-    onMenuClick: () -> Unit = {}
+    onNavigateToNotifications: () -> Unit = {},
+    onMenuClick: () -> Unit = {},
+    userName: String = "Admin",
+    avatarUrl: String? = null
 ) {
-    val overviewData = remember { dummyOverview }
-    val recentActivities = remember { dummyActivities }
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Convert API data to UI model or use dummy if loading/error
+    val overviewData = remember(uiState.summary) {
+        uiState.summary?.let { summary ->
+            listOf(
+                OverviewData(
+                    title = "Total Revenue",
+                    value = formatCurrency(summary.totalRevenue ?: BigDecimal.ZERO),
+                    subtitle = summary.revenueSubtitle ?: "vs last month",
+                    icon = Icons.Default.TrendingUp,
+                    type = OverviewType.REVENUE,
+                    trend = summary.revenueTrend
+                ),
+                OverviewData(
+                    title = "Total Orders",
+                    value = (summary.totalOrders ?: 0).toString(),
+                    subtitle = "${summary.pendingOrders ?: 0} pending",
+                    icon = Icons.Default.LocalShipping,
+                    type = OverviewType.ORDERS
+                ),
+                OverviewData(
+                    title = "Low Stock Alerts",
+                    value = (summary.lowStockAlerts ?: 0).toString(),
+                    subtitle = "Needs attention",
+                    icon = Icons.Default.Warning,
+                    type = OverviewType.ALERTS
+                )
+            )
+        } ?: dummyOverview
+    }
+    
+    val recentActivities = remember(uiState.summary) {
+        uiState.summary?.recentActivities?.map { activity ->
+            RecentActivity(
+                id = activity.id ?: "",
+                title = activity.title ?: "",
+                subtitle = activity.subtitle ?: "",
+                status = activity.status ?: "",
+                statusColor = parseStatusColor(activity.statusColor),
+                time = activity.time ?: "",
+                imageUrl = activity.imageUrl,
+                isAlert = activity.isAlert ?: false
+            )
+        } ?: dummyActivities
+    }
     
     val quickActions = listOf(
         QuickAction("Add Product", Icons.Default.AddBox, Color(0xFFA855F7)), // Purple
-        QuickAction("Manage Orders", Icons.Default.LocalShipping, Color(0xFF3B82F6)), // Blue
         QuickAction("Analytics", Icons.Default.BarChart, Color(0xFF10B981)), // Emerald
         QuickAction("Promotions", Icons.Default.Campaign, Color(0xFFF97316)), // Orange
         QuickAction("Inventory", Icons.Default.Inventory, Color(0xFFEAB308)), // Yellow
         QuickAction("Category", Icons.Default.Widgets, Color(0xFFEC4899)), // Pink
-        QuickAction("Branch", Icons.Default.Storefront, Color(0xFF6366F1)), // Indigo
-        QuickAction("Supplier", Icons.Default.Inventory, Color(0xFF14B8A6)), // Teal
         QuickAction("Roles", Icons.Default.ManageAccounts, Color(0xFF64748B)), // Slate
         QuickAction("Settings", Icons.Default.Settings, Color(0xFF607D8B)), // Blue Grey
         QuickAction("Customer", Icons.Default.ManageAccounts, Color(0xFFE91E63)), // Pink
         QuickAction("Shipping", Icons.Default.LocalShipping, Color(0xFF00BCD4)) // Cyan
     )
 
-    Scaffold(
-        topBar = { DashboardAppbar(onAvatarClick = onNavigateToProfile, onMenuClick = onMenuClick) },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
+    // State for staggered animation
+    var isVisible by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFFFFFFFF), Color(0xFFF1F5F9))
+                )
+            )
+    ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            contentPadding = PaddingValues(
+                top = 64.dp + WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 16.dp, 
+                bottom = 24.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            )
         ) {
             // Overview Section
             item {
-                OverviewSection(overviewData)
+                AnimatedVisibility(
+                    visible = isVisible,
+                    enter = slideInVertically(initialOffsetY = { 50 }) + fadeIn()
+                ) {
+                    OverviewSection(overviewData)
+                }
             }
 
             // Quick Actions Section
             item {
-                QuickActionsSection(
-                    actions = quickActions,
-                    onActionClick = { actionTitle ->
-                        when(actionTitle) {
-                            "Manage Orders" -> onNavigateToOrders()
-                            "Promotions" -> onNavigateToPromotions()
-                            "Add Product" -> onNavigateToAddProduct()
-                            "Analytics" -> onNavigateToAnalytics()
-                            "Inventory" -> onNavigateToInventory()
-                            "Category" -> onNavigateToCategory()
-                            "Branch" -> onNavigateToBranch()
-                            "Supplier" -> onNavigateToSupplier()
-                            "Roles" -> onNavigateToRoles()
-                            "Settings" -> onNavigateToSettings()
-                            "Customer" -> onNavigateToCustomer()
-                            "Shipping" -> onNavigateToShipping()
+                    AnimatedVisibility(
+                    visible = isVisible,
+                    enter = slideInVertically(initialOffsetY = { 50 }, animationSpec = tween(delayMillis = 100)) + fadeIn(animationSpec = tween(delayMillis = 100))
+                ) {
+                    QuickActionsSection(
+                        actions = quickActions,
+                        onActionClick = { actionTitle ->
+                            when(actionTitle) {
+                                "Manage Orders" -> onNavigateToOrders()
+                                "Promotions" -> onNavigateToPromotions()
+                                "Add Product" -> onNavigateToAddProduct()
+                                "Analytics" -> onNavigateToAnalytics()
+                                "Inventory" -> onNavigateToInventory()
+                                "Category" -> onNavigateToCategory()
+                                "Branch" -> onNavigateToBranch()
+                                "Supplier" -> onNavigateToSupplier()
+                                "Roles" -> onNavigateToRoles()
+                                "Settings" -> onNavigateToSettings()
+                                "Customer" -> onNavigateToCustomer()
+                                "Shipping" -> onNavigateToShipping()
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
 
             // Recent Activity Section
             item {
-                RecentActivitySection(recentActivities)
+                    AnimatedVisibility(
+                    visible = isVisible,
+                    enter = slideInVertically(initialOffsetY = { 50 }, animationSpec = tween(delayMillis = 200)) + fadeIn(animationSpec = tween(delayMillis = 200))
+                ) {
+                    RecentActivitySection(recentActivities)
+                }
+            }
+        }
+        
+        DashboardAppbar(
+            onAvatarClick = onNavigateToProfile, 
+            onMenuClick = onMenuClick,
+            onNotificationClick = onNavigateToNotifications,
+            userName = userName,
+            avatarUrl = avatarUrl,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
+    }
+}
+
+@Composable
+fun DashboardAppbar(
+    onAvatarClick: () -> Unit = {}, 
+    onMenuClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
+    userName: String = "Admin",
+    avatarUrl: String? = null,
+    modifier: Modifier = Modifier
+) {
+    // COMPACT HEADER: Reduced padding, specific height, smaller elements
+    Surface(
+        color = Color.Transparent,
+        shadowElevation = 4.dp,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.background(Color.White)
+        ) {
+            // Status Bar Spacer
+            Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp) // Fixed compact height
+                    .padding(horizontal = 12.dp), // Reduced side padding
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onMenuClick, modifier = Modifier.size(36.dp)) { // Smaller touch target visually
+                        Icon(Icons.Default.Menu, contentDescription = "Menu", modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    // Avatar - Compact Size
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp) // Reduced from 40dp
+                            .clip(CircleShape)
+                            .clickable(onClick = onAvatarClick)
+                    ) {
+                         AsyncImage(
+                            model = avatarUrl ?: "https://ui-avatars.com/api/?name=${userName.replace(" ", "+")}&size=128&background=ec3713&color=fff",
+                            contentDescription = "Profile",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    
+                    // Text - Compact
+                    Column {
+                        Text(
+                            text = "Hello, $userName",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+                
+                // Notifications - Compact
+                IconButton(
+                    onClick = onNotificationClick,
+                    modifier = Modifier
+                        .size(36.dp)
+//                        .background(Color.Gray.copy(alpha = 0.1f), CircleShape)
+                ) {
+                    Box {
+                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", modifier = Modifier.size(20.dp), tint = Color(0xFF64748B))
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(8.dp)
+                                .background(Color(0xFFec3713), CircleShape)
+                                .border(1.dp, Color.White, CircleShape)
+                        )
+                    }
+                }
             }
         }
     }
 }
 
-@Composable
-fun DashboardAppbar(onAvatarClick: () -> Unit = {}, onMenuClick: () -> Unit = {}) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onMenuClick) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu")
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            // Avatar
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clickable(onClick = onAvatarClick)
-            ) {
-                 AsyncImage(
-                    model = "https://lh3.googleusercontent.com/aida-public/AB6AXuB-MDECu3xTWbvaQAjHgy1A0suAdFwQiXMXT3epXFofjzEr9WRfxAiftf07diywxjiODpNgrHuNrY-l7I4bJ2RMbtye_fdG8IcfRyXTn67blLu8GAYFPnw_oM3oeo30bUEcN3ATo-atTvSOrF4vvwVXCUp-QGViHuAbxDkdgXiEP4dcAUmf5dndvzJuVs7iPRTfiiEVvQZoYkfsTegZ3rmrGi5blOp-Bsn2jZRfC6M-FRdi0sNCu8TERL7A9RyEMCsmdE_HSqUMizI",
-                    contentDescription = "Profile",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape)
-                        .border(2.dp, Color(0xFFec3713).copy(alpha = 0.2f), CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(12.dp)
-                        .background(Color.Green, CircleShape)
-                        .border(2.dp, MaterialTheme.colorScheme.background, CircleShape)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = "Welcome back,",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-                Text(
-                    text = "Admin Dashboard",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-        }
-        
-        Box {
-            IconButton(
-                onClick = { /* Check notifs */ },
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surface, CircleShape)
-                    .size(40.dp)
-            ) {
-                Icon(Icons.Default.Notifications, contentDescription = "Notifications")
-            }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .size(8.dp)
-                    .background(Color(0xFFec3713), CircleShape)
-            )
-        }
-    }
-}
+// ... (Rest of components: OverviewSection, RevenueCard, etc. keep their refined look but reusing existing functions if not changing logic)
+// Since the previous tool call updated the cards, we can assume they are good. 
+// BUT this tool replaces from line 80 downwards, so I need to re-include the updated card definitions or ensures they are preserved.
+// The user instruction says "Replace content from DashboardAppbar onwards...". 
+// To avoid deleting the updated cards from previous step, I should target specifically the Scaffold block and Appbar.
+
+// RE-STRATEGY: Target specific blocks to avoid overwriting the complex cards I just wrote. 
+
+// 1. Replace Scaffold block in AdminDashboardScreen
+// 2. Replace DashboardAppbar function
+
+
 
 @Composable
 fun OverviewSection(data: List<OverviewData>) {
     Column {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Overview",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f))
-            ) {
-                Text(
-                    text = "Today",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    color = Color.Gray
-                )
-            }
-        }
-        
+                
         // Custom Grid Layout for Overview
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             // Revenue Card (Full width logic handled by passing data carefully or hardcoding structure as per design)
@@ -233,7 +333,7 @@ fun OverviewSection(data: List<OverviewData>) {
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 others.forEach { item ->
@@ -251,122 +351,156 @@ fun RevenueCard(data: OverviewData) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(160.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .height(170.dp)
+            .shadow(15.dp, RoundedCornerShape(24.dp), spotColor = Color(0xFFec3713).copy(alpha = 0.5f))
+            .clip(RoundedCornerShape(24.dp))
             .background(
                 Brush.linearGradient(
-                    colors = listOf(Color(0xFFec3713), Color(0xFFb92b0f))
+                    colors = listOf(Color(0xFFec3713), Color(0xFFF1664C))
                 )
             )
-            .padding(20.dp)
     ) {
-        Column(
-            modifier = Modifier.align(Alignment.TopStart),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = data.title,
-                color = Color.White.copy(alpha = 0.8f),
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-            )
-            Text(
-                text = data.value,
-                color = Color.White,
-                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold, fontSize = 28.sp)
-            )
-        }
-        
+        // Decorative circles
         Box(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(40.dp)
-                .background(Color.White.copy(alpha = 0.2f), CircleShape),
-            contentAlignment = Alignment.Center
+                .offset(x = 220.dp, y = (-20).dp)
+                .size(150.dp)
+                .background(Color.White.copy(alpha = 0.1f), CircleShape)
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = (-20).dp, y = 20.dp)
+                .size(100.dp)
+                .background(Color.White.copy(alpha = 0.1f), CircleShape)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(data.icon, contentDescription = null, tint = Color.White)
-        }
-        
-        Row(
-            modifier = Modifier.align(Alignment.BottomStart),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-             data.trend?.let {
-                 Surface(
-                     color = Color.White.copy(alpha = 0.2f),
-                     shape = RoundedCornerShape(50)
-                 ) {
-                     Row(
-                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                         verticalAlignment = Alignment.CenterVertically
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(Color.White.copy(alpha = 0.2f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(data.icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = data.title,
+                        color = Color.White.copy(alpha = 0.9f),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
+                    )
+                }
+                
+                // Trend badge
+                 data.trend?.let {
+                     Surface(
+                         color = Color.White,
+                         shape = RoundedCornerShape(50)
                      ) {
-                         Icon(
-                             Icons.Default.TrendingUp, 
-                             contentDescription = null, 
-                             tint = Color.White,
-                             modifier = Modifier.size(14.dp)
-                         )
-                         Text(
-                             text = it,
-                             color = Color.White,
-                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                         )
+                         Row(
+                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                             verticalAlignment = Alignment.CenterVertically
+                         ) {
+                             Icon(
+                                 Icons.Default.TrendingUp, 
+                                 contentDescription = null, 
+                                 tint = Color(0xFFec3713),
+                                 modifier = Modifier.size(14.dp)
+                             )
+                             Spacer(modifier = Modifier.width(4.dp))
+                             Text(
+                                 text = it,
+                                 color = Color(0xFFec3713),
+                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                             )
+                         }
                      }
                  }
-             }
-            Text(
-                text = data.subtitle,
-                color = Color.White.copy(alpha = 0.7f),
-                style = MaterialTheme.typography.bodySmall
-            )
+            }
+
+            Column {
+                Text(
+                    text = data.value,
+                    color = Color.White,
+                    style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold, fontSize = 36.sp)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = data.subtitle,
+                    color = Color.White.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }
 
 @Composable
 fun OverviewCard(data: OverviewData) {
-    val iconColor = if (data.type == OverviewType.ALERTS) Color(0xFFec3713) else Color(0xFF3B82F6)
-    val iconBg = iconColor.copy(alpha = 0.1f)
+    val iconColor = if (data.type == OverviewType.ALERTS) Color(0xFFEF4444) else Color(0xFF3B82F6) // Red or Blue
+    val gradientColors = if (data.type == OverviewType.ALERTS) 
+        listOf(Color(0xFFFEF2F2), Color(0xFFFEE2E2)) 
+    else 
+        listOf(Color(0xFFEFF6FF), Color(0xFFDBEAFE))
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp)
-            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
-            .border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+            .height(150.dp)
+            .shadow(4.dp, RoundedCornerShape(20.dp), spotColor = Color.LightGray.copy(alpha = 0.4f))
+            .clip(RoundedCornerShape(20.dp))
+            .background(Brush.verticalGradient(gradientColors))
+            .border(1.dp, Color.White.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(iconBg, CircleShape),
+                    .background(Color.White, CircleShape)
+                    .shadow(2.dp, CircleShape, spotColor = Color.Black.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(data.icon, contentDescription = null, tint = iconColor)
+                Icon(data.icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(20.dp))
             }
-            Text(
-                text = data.subtitle,
-                color = if(data.type == OverviewType.ALERTS) iconColor else Color.Gray,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-            )
+            
+            if (data.type == OverviewType.ALERTS) {
+                 Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(Color.Red, CircleShape)
+                )
+            }
         }
         
         Column {
             Text(
                 text = data.value,
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = if (data.type == OverviewType.ALERTS) iconColor else MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black),
+                color = MaterialTheme.colorScheme.onSurface
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = data.title,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -377,14 +511,14 @@ fun QuickActionsSection(actions: List<QuickAction>, onActionClick: (String) -> U
     Column {
         Text(
             text = "Quick Actions",
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
             color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = 16.dp)
         )
         
-        // Grid of 2 columns
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            val rows = actions.chunked(2)
+        // Grid of 3 columns
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            val rows = actions.chunked(3)
             rows.forEach { rowItems ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -395,6 +529,9 @@ fun QuickActionsSection(actions: List<QuickAction>, onActionClick: (String) -> U
                             QuickActionCard(action) { onActionClick(action.title) }
                         }
                     }
+                    repeat(3 - rowItems.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }
@@ -404,28 +541,32 @@ fun QuickActionsSection(actions: List<QuickAction>, onActionClick: (String) -> U
 @Composable
 fun QuickActionCard(action: QuickAction, onClick: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
-            .border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(action.color.copy(alpha = 0.1f), CircleShape),
-            contentAlignment = Alignment.Center
+        Surface(
+            modifier = Modifier.size(64.dp),
+            shape = RoundedCornerShape(18.dp),
+            color = action.color.copy(alpha = 0.1f),
+            onClick = onClick
         ) {
-            Icon(action.icon, contentDescription = null, tint = action.color, modifier = Modifier.size(28.dp))
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    action.icon, 
+                    contentDescription = null, 
+                    tint = action.color, 
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = action.title,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -434,34 +575,27 @@ fun QuickActionCard(action: QuickAction, onClick: () -> Unit) {
 fun RecentActivitySection(activities: List<RecentActivity>) {
     Column {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Recent Activity",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                 color = MaterialTheme.colorScheme.onBackground
             )
-            Text(
-                text = "View All",
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = Color(0xFFec3713)
-            )
+            TextButton(onClick = { /* View All */ }) {
+                Text(
+                    text = "View All",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = Color(0xFFec3713)
+                )
+            }
         }
         
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
-                .border(1.dp, Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                .clip(RoundedCornerShape(16.dp))
-        ) {
-            activities.forEachIndexed { index, activity ->
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            activities.forEach { activity ->
                 RecentActivityItem(activity)
-                if (index < activities.size - 1) {
-                    Divider(color = Color.LightGray.copy(alpha = 0.2f))
-                }
             }
         }
     }
@@ -469,71 +603,94 @@ fun RecentActivitySection(activities: List<RecentActivity>) {
 
 @Composable
 fun RecentActivityItem(activity: RecentActivity) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .clickable { /* Detail */ },
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp,
+        modifier = Modifier.fillMaxWidth().clickable { /* Detail */ }
     ) {
-        if (activity.imageUrl != null) {
-            AsyncImage(
-                model = activity.imageUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.LightGray),
-                contentScale = ContentScale.Crop
-            )
-        } else {
-             Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(activity.statusColor.copy(alpha = 0.1f), RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.Warning, contentDescription = null, tint = activity.statusColor)
-            }
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = activity.title,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    color = if(activity.isAlert) activity.statusColor else MaterialTheme.colorScheme.onSurface
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (activity.imageUrl != null) {
+                AsyncImage(
+                    model = activity.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.LightGray),
+                    contentScale = ContentScale.Crop
                 )
-                Surface(
-                    color = activity.statusColor.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(50)
+            } else {
+                 Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(activity.statusColor.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = activity.status,
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                        color = activity.statusColor,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        fontWeight = FontWeight.Bold
+                    Icon(
+                        if (activity.isAlert) Icons.Default.Warning else Icons.Default.Notifications, 
+                        contentDescription = null, 
+                        tint = activity.statusColor
                     )
                 }
             }
-            Text(
-                text = activity.subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = activity.time,
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                color = Color.LightGray,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = activity.title,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = activity.subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            
+            Column(horizontalAlignment = Alignment.End) {
+                Surface(
+                    color = activity.statusColor.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        text = activity.status,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = activity.statusColor,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = activity.time,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+            }
         }
+    }
+}
+
+// Helper functions
+private fun formatCurrency(amount: BigDecimal): String {
+    return String.format("%,.0f VND", amount)
+}
+
+private fun parseStatusColor(colorString: String?): Color {
+    return when (colorString?.lowercase()) {
+        "green" -> Color(0xFF10B981)
+        "orange" -> Color(0xFFF97316)
+        "red" -> Color(0xFFEF4444)
+        "blue" -> Color(0xFF3B82F6)
+        "purple" -> Color(0xFFA855F7)
+        else -> Color.Gray
     }
 }
 

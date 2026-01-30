@@ -58,9 +58,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.group1.pandqapplication.shared.data.remote.dto.CategoryDto
 import com.group1.pandqapplication.shared.ui.theme.CategoryBackground
+import com.group1.pandqapplication.shared.ui.theme.CategoryBackgroundLight
 import com.group1.pandqapplication.shared.ui.theme.CategorySurface
+import com.group1.pandqapplication.shared.ui.theme.CategorySurfaceLight
 import com.group1.pandqapplication.shared.ui.theme.CategoryTextPrimary
+import com.group1.pandqapplication.shared.ui.theme.CategoryTextPrimaryLight
 import com.group1.pandqapplication.shared.ui.theme.CategoryTextSecondary
+import com.group1.pandqapplication.shared.ui.theme.CategoryTextSecondaryLight
 import java.util.UUID
 
 @Composable
@@ -73,6 +77,13 @@ fun CategoryManagementScreen(
     val error by viewModel.error.observeAsState()
     val successMessage by viewModel.operationSuccess.observeAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Use light theme
+    val isDarkTheme = false
+    val backgroundColor = if (isDarkTheme) CategoryBackground else CategoryBackgroundLight
+    val surfaceColor = if (isDarkTheme) CategorySurface else CategorySurfaceLight
+    val textPrimary = if (isDarkTheme) CategoryTextPrimary else CategoryTextPrimaryLight
+    val textSecondary = if (isDarkTheme) CategoryTextSecondary else CategoryTextSecondaryLight
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -97,10 +108,10 @@ fun CategoryManagementScreen(
     }
 
     Scaffold(
-        containerColor = CategoryBackground,
+        containerColor = backgroundColor,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            Column(modifier = Modifier.background(CategoryBackground)) {
+            Column(modifier = Modifier.background(backgroundColor)) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -113,14 +124,14 @@ fun CategoryManagementScreen(
                         Icon(
                             imageVector = Icons.Default.ArrowBackIosNew,
                             contentDescription = "Back",
-                            tint = CategoryTextPrimary
+                            tint = textPrimary
                         )
                     }
                     Text(
                         text = "Quản lý danh mục",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = CategoryTextPrimary,
+                        color = textPrimary,
                         modifier = Modifier.align(Alignment.Center)
                     )
                     IconButton(
@@ -130,7 +141,7 @@ fun CategoryManagementScreen(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Add",
-                            tint = CategoryTextPrimary
+                            tint = textPrimary
                         )
                     }
                 }
@@ -163,7 +174,7 @@ fun CategoryManagementScreen(
                             .fillMaxWidth()
                             .height(48.dp)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(CategorySurface),
+                            .background(surfaceColor),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
@@ -175,7 +186,7 @@ fun CategoryManagementScreen(
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = null,
-                                tint = CategoryTextSecondary
+                                tint = textSecondary
                             )
                         }
                         BasicTextField(
@@ -187,14 +198,14 @@ fun CategoryManagementScreen(
                             modifier = Modifier.weight(1f),
                             singleLine = true,
                             textStyle = androidx.compose.ui.text.TextStyle(
-                                color = CategoryTextPrimary,
+                                color = textPrimary,
                                 fontSize = 16.sp
                             ),
                             decorationBox = { innerTextField ->
                                 if (searchQuery.isEmpty()) {
                                     Text(
                                         text = "Tìm kiếm danh mục",
-                                        color = CategoryTextSecondary,
+                                        color = textSecondary,
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Normal
                                     )
@@ -205,7 +216,7 @@ fun CategoryManagementScreen(
                     }
                 }
 
-                Divider(color = CategoryBackground, thickness = 1.dp)
+                Divider(color = Color(0xFFE0E0E0), thickness = 1.dp)
 
                 // Category List
                 if (categories.isEmpty()) {
@@ -217,7 +228,7 @@ fun CategoryManagementScreen(
                     ) {
                         Text(
                             text = "Không có danh mục nào",
-                            color = CategoryTextSecondary,
+                            color = textSecondary,
                             fontSize = 14.sp
                         )
                     }
@@ -228,6 +239,9 @@ fun CategoryManagementScreen(
                             CategoryItemWithMenu(
                                 category = treeItem.category,
                                 level = treeItem.level,
+                                textPrimary = textPrimary,
+                                textSecondary = textSecondary,
+                                surfaceColor = surfaceColor,
                                 onEdit = {
                                     selectedCategoryToEdit = treeItem.category
                                     showAddDialog = true
@@ -287,6 +301,9 @@ fun CategoryManagementScreen(
 fun CategoryItemWithMenu(
     category: CategoryDto,
     level: Int = 0,
+    textPrimary: Color = CategoryTextPrimary,
+    textSecondary: Color = CategoryTextSecondary,
+    surfaceColor: Color = CategorySurface,
     onEdit: () -> Unit = {},
     onDelete: () -> Unit = {}
 ) {
@@ -307,7 +324,7 @@ fun CategoryItemWithMenu(
                     modifier = Modifier
                         .width(4.dp)
                         .height(40.dp)
-                        .background(CategoryTextSecondary.copy(alpha = 0.3f))
+                        .background(textSecondary.copy(alpha = 0.3f))
                 )
                 Spacer(modifier = Modifier.width(12.dp))
             }
@@ -320,13 +337,13 @@ fun CategoryItemWithMenu(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(CategorySurface),
+                        .background(surfaceColor),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (level == 0) Icons.Default.Folder else Icons.Default.FolderOpen,
                         contentDescription = null,
-                        tint = CategoryTextPrimary,
+                        tint = textPrimary,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -336,14 +353,14 @@ fun CategoryItemWithMenu(
                         text = category.name,
                         fontSize = 16.sp,
                         fontWeight = if (level == 0) FontWeight.Normal else FontWeight.Light,
-                        color = CategoryTextPrimary
+                        color = textPrimary
                     )
                     category.description?.let { description ->
                         if (description.isNotEmpty()) {
                             Text(
                                 text = description,
                                 fontSize = 12.sp,
-                                color = CategoryTextSecondary,
+                                color = textSecondary,
                                 maxLines = 1
                             )
                         }
@@ -360,7 +377,7 @@ fun CategoryItemWithMenu(
                         Icon(
                             imageVector = Icons.Default.MoreHoriz,
                             contentDescription = null,
-                            tint = CategoryTextPrimary,
+                            tint = textPrimary,
                             modifier = Modifier.size(20.dp)
                         )
                     }

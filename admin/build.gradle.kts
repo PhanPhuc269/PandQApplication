@@ -10,6 +10,13 @@ plugins {
     alias(libs.plugins.realm.kotlin)
 }
 
+// Load local.properties for Cloudinary config
+val localPropertiesFile = rootProject.file("local.properties")
+val localProperties = Properties()
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+
 android {
     namespace = "com.group1.pandqapplication.admin"
     compileSdk = 35
@@ -23,23 +30,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
-        // Cloudinary credentials from local.properties
-        val localPropertiesFile = rootProject.file("local.properties")
-        val localProperties = Properties()
-        if (localPropertiesFile.exists()) {
-            localProperties.load(localPropertiesFile.inputStream())
-        }
-        
-        val cloudinaryCloudName = localProperties.getProperty("CLOUDINARY_CLOUD_NAME", "")
-        val cloudinaryUploadPreset = localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", "")
-        
-        println("=== Cloudinary Config ===")
-        println("CloudName: $cloudinaryCloudName")
-        println("UploadPreset: $cloudinaryUploadPreset")
-        println("========================")
-        
-        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"$cloudinaryCloudName\"")
-        buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"$cloudinaryUploadPreset\"")
+        // Cloudinary config from local.properties
+        buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${localProperties.getProperty("CLOUDINARY_CLOUD_NAME", "")}\"")
+        buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"${localProperties.getProperty("CLOUDINARY_UPLOAD_PRESET", "")}\"")
     }
 
     buildTypes {
@@ -70,6 +63,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation("androidx.lifecycle:lifecycle-process:2.8.7")
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -103,6 +97,21 @@ dependencies {
 
     // Biometric
     implementation(libs.androidx.biometric)
+
+    // Firebase (needed for AdminAuth and FCM)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.messaging)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.android)
+    
+    // OkHttp for Cloudinary upload
+    implementation(libs.okhttp)
+    
+    // Retrofit & Gson for AdminApiService
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

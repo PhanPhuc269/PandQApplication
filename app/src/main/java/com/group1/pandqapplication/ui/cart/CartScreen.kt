@@ -71,7 +71,7 @@ fun CartScreen(
             TopAppBar(
                 title = { 
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                         Text("Giỏ hàng", fontWeight = FontWeight.Bold, fontSize = 18.sp) 
+                         Text(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.cart_title), fontWeight = FontWeight.Bold, fontSize = 18.sp) 
                     }
                 },
                 navigationIcon = {
@@ -103,11 +103,11 @@ fun CartScreen(
                            modifier = Modifier.fillMaxWidth(),
                            horizontalArrangement = Arrangement.SpaceBetween
                        ) {
-                           Text("Tạm tính", color = Color.Gray, fontSize = 14.sp)
+                           Text(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.cart_subtotal), color = Color.Gray, fontSize = 14.sp)
                            Text("${formatCurrency(totalPrice)}đ", fontWeight = FontWeight.Medium, fontSize = 14.sp)
                        }
                        Text(
-                           "Phí vận chuyển sẽ được tính ở bước tiếp theo.", 
+                           androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.cart_shipping_note), 
                            color = Color.Gray, 
                            fontSize = 12.sp,
                            modifier = Modifier.padding(top = 4.dp)
@@ -117,7 +117,7 @@ fun CartScreen(
                            modifier = Modifier.fillMaxWidth(),
                            horizontalArrangement = Arrangement.SpaceBetween
                        ) {
-                           Text("Thành tiền", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                           Text(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.cart_total), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                            Text("${formatCurrency(totalPrice)}đ", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                        }
                        Spacer(modifier = Modifier.height(16.dp))
@@ -136,7 +136,7 @@ fun CartScreen(
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = primaryColor)
                         ) {
-                            Text("Tiến hành Thanh toán", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.cart_checkout_btn), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
                    } 
                 }
@@ -162,10 +162,10 @@ fun CartScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Lỗi: ${uiState.error}", color = Color.Red)
+                        Text(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.error_generic, uiState.error ?: ""), color = Color.Red)
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { viewModel.loadCart(userId) }) {
-                            Text("Thử lại")
+                            Text(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.refresh))
                         }
                     }
                 }
@@ -177,7 +177,7 @@ fun CartScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Giỏ hàng trống", fontSize = 16.sp, color = Color.Gray)
+                    Text(androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.cart_empty_msg), fontSize = 16.sp, color = Color.Gray)
                 }
             }
             else -> {
@@ -245,7 +245,7 @@ fun CartScreen(
 
                     // Title
                     Text(
-                        "Yêu cầu đăng nhập",
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.login_req_title),
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
@@ -256,7 +256,7 @@ fun CartScreen(
 
                     // Message
                     Text(
-                        "Vui lòng đăng nhập để tiếp tục thanh toán và bảo vệ đơn hàng của bạn",
+                        androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.login_req_msg),
                         fontSize = 14.sp,
                         color = Color(0xFF666666),
                         textAlign = TextAlign.Center,
@@ -293,7 +293,7 @@ fun CartScreen(
                         )
                     ) {
                         Text(
-                            "Đăng nhập",
+                            androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.login_btn),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp,
                             color = Color.White
@@ -312,7 +312,7 @@ fun CartScreen(
                         border = BorderStroke(1.5.dp, primaryColor)
                     ) {
                         Text(
-                            "Hủy",
+                            androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.cancel),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp,
                             color = primaryColor

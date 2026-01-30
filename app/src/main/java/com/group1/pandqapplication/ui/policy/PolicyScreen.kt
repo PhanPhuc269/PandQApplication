@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +29,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +60,7 @@ import com.group1.pandqapplication.shared.ui.theme.ProductPrimary
 import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundDark
 import com.group1.pandqapplication.shared.ui.theme.RoleBackgroundLight
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PolicyScreen(
     onBackClick: () -> Unit = {}
@@ -70,150 +74,151 @@ fun PolicyScreen(
     val textPrimary = if (isDarkTheme) PolicyTextPrimaryDark else PolicyTextPrimaryLight
     val textSecondary = if (isDarkTheme) PolicyTextSecondaryDark else PolicyTextSecondaryLight
 
+    var selectedTab by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+
     Scaffold(
         containerColor = backgroundColor,
         topBar = {
             Column(modifier = Modifier.background(componentColor).statusBarsPadding()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    IconButton(
-                        onClick = onBackClick,
-                        modifier = Modifier.align(Alignment.CenterStart)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBackIosNew,
-                            contentDescription = "Back",
-                            tint = ProductPrimary
-                        )
-                    }
-                    Text(
-                        text = "Chính sách & Điều khoản",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimary,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+                TopAppBar(
+                    title = {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                             Text(
+                                 text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_screen_title),
+                                 fontWeight = FontWeight.Bold,
+                                 fontSize = 18.sp,
+                                 color = textPrimary
+                             )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(Icons.Filled.ArrowBackIosNew, contentDescription = "Back", tint = ProductPrimary)
+                        }
+                    },
+                    actions = {
+                        Spacer(modifier = Modifier.width(48.dp))
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = componentColor)
+                )
                 HorizontalDivider(color = borderColor)
             }
-        }
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
+                .background(backgroundColor)
         ) {
-            // Segmented Control
-            Box(
+            val privacyTitle = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.tab_privacy_policy)
+            val termsTitle = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.tab_terms_service)
+
+            // Custom Tab Row
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(componentColor)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(segmentColor)
+                    .padding(4.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(segmentColor)
-                        .padding(4.dp),
-                ) {
-                    var selectedIndex by remember { mutableStateOf(0) }
-                    val options = listOf("Chính sách Bảo mật", "Điều khoản Dịch vụ")
-                    
-                    options.forEachIndexed { index, text ->
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(if (selectedIndex == index) ProductPrimary else Color.Transparent)
-                                .clickable { selectedIndex = index },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = text,
-                                color = if (selectedIndex == index) Color.White else textPrimary,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 14.sp
-                            )
-                        }
+                val options = listOf(privacyTitle, termsTitle)
+                options.forEachIndexed { index, title ->
+                    val isSelected = selectedTab == index
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(if (isSelected) ProductPrimary else Color.Transparent)
+                            .clickable { selectedTab = index }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = title,
+                            color = if (isSelected) Color.White else textPrimary,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 14.sp
+                        )
                     }
                 }
             }
 
-            // Meta Text
-            Text(
-                text = "Cập nhật lần cuối: 24 Tháng 10, 2024",
-                fontSize = 14.sp,
-                color = textSecondary,
-                modifier = Modifier.padding(16.dp)
-            )
-
-            // Accordions
             Column(
-                 modifier = Modifier
-                     .padding(horizontal = 16.dp)
-                     .clip(RoundedCornerShape(12.dp))
-                     .background(componentColor)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                AccordionItem(
-                    title = "1. Giới thiệu & Phạm vi chính sách",
-                    content = "Chúng tôi thu thập nhiều loại thông tin khác nhau liên quan đến các dịch vụ chúng tôi cung cấp...",
-                    textPrimary = textPrimary,
-                    textSecondary = textSecondary,
-                    borderColor = borderColor
+                 // Meta info
+                Text(
+                    text = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.last_updated_fmt, "24/10/2024"),
+                    color = textSecondary,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
-                AccordionItem(
-                    title = "2. Thông tin chúng tôi thu thập",
-                    content = "Thông tin chúng tôi thu thập có thể bao gồm, nhưng không giới hạn ở: dữ liệu cá nhân như tên, địa chỉ email...",
-                    isOpenDefault = true,
-                    textPrimary = textPrimary,
-                    textSecondary = textSecondary,
-                    borderColor = borderColor
-                )
-                AccordionItem(
-                    title = "3. Cách chúng tôi sử dụng thông tin",
-                    content = "Thông tin của bạn được sử dụng để xử lý đơn hàng, cá nhân hóa trải nghiệm của bạn...",
-                    textPrimary = textPrimary,
-                    textSecondary = textSecondary,
-                    borderColor = borderColor
-                )
-                AccordionItem(
-                    title = "4. Chia sẻ & Tiết lộ thông tin",
-                    content = "Chúng tôi có thể chia sẻ thông tin của bạn với các đối tác dịch vụ, chẳng hạn như các công ty vận chuyển...",
-                    textPrimary = textPrimary,
-                    textSecondary = textSecondary,
-                    borderColor = borderColor
-                )
-                AccordionItem(
-                    title = "5. Biện pháp bảo mật dữ liệu",
-                    content = "Chúng tôi thực hiện các biện pháp kỹ thuật và tổ chức để bảo vệ dữ liệu của bạn...",
-                    textPrimary = textPrimary,
-                    textSecondary = textSecondary,
-                    borderColor = borderColor
-                )
-                AccordionItem(
-                    title = "6. Quyền & Lựa chọn của người dùng",
-                    content = "Bạn có quyền truy cập, sửa đổi hoặc xóa thông tin cá nhân của mình...",
-                    textPrimary = textPrimary,
-                    textSecondary = textSecondary,
-                    borderColor = borderColor
-                )
-                AccordionItem(
-                    title = "7. Thông tin liên hệ",
-                    content = "Nếu bạn có bất kỳ câu hỏi nào về chính sách bảo mật này, vui lòng liên hệ với chúng tôi...",
-                    textPrimary = textPrimary,
-                    textSecondary = textSecondary,
-                    borderColor = Color.Transparent
-                )
+
+                if (selectedTab == 0) {
+                    // Privacy Policy
+                    AccordionItem(
+                        title = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_section_1),
+                        content = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_content_1),
+                        isOpenDefault = true,
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        borderColor = borderColor
+                    )
+                     AccordionItem(
+                        title = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_section_2),
+                        content = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_content_2),
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        borderColor = borderColor
+                    )
+                     AccordionItem(
+                        title = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_section_3),
+                        content = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_content_3),
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        borderColor = borderColor
+                    )
+                     AccordionItem(
+                        title = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_section_4),
+                        content = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_content_4),
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        borderColor = borderColor
+                    )
+                } else {
+                    // Terms
+                     AccordionItem(
+                        title = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_section_5),
+                        content = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_content_5),
+                        isOpenDefault = true,
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        borderColor = borderColor
+                    )
+                     AccordionItem(
+                        title = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_section_6),
+                        content = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_content_6),
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        borderColor = borderColor
+                    )
+                     AccordionItem(
+                        title = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_section_7),
+                        content = androidx.compose.ui.res.stringResource(com.group1.pandqapplication.R.string.policy_content_7),
+                        textPrimary = textPrimary,
+                        textSecondary = textSecondary,
+                        borderColor = Color.Transparent
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(40.dp))
             }
-            
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

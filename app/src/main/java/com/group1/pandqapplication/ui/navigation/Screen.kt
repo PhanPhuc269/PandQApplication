@@ -51,6 +51,19 @@ sealed class Screen(val route: String) {
         fun createRoute(productId: String) = "write_review/$productId"
     }
     data object UserGuide : Screen("user_guide")
+    data object ChatScreen : Screen("chat_screen/{productId}") {
+        fun createRoute(productId: String, productName: String = "", productImage: String = "", productPrice: String = ""): String {
+            // Store product info temporarily in a way that doesn't break routing
+            // For now, just use productId - product info will be fetched from API
+            return "chat_screen/$productId"
+        }
+        
+        fun createRouteWithProduct(productId: String, productName: String, productImage: String, productPrice: String): String {
+            return "chat_screen/$productId?name=${java.net.URLEncoder.encode(productName, "UTF-8")}&image=${java.net.URLEncoder.encode(productImage, "UTF-8")}&price=${java.net.URLEncoder.encode(productPrice, "UTF-8")}"
+        }
+    }
+    data object ChatList : Screen("chat_list")
+    data object VoucherCenter : Screen("voucher_center")
 
     data object Policy : Screen("policy")
     data object ProductManagement : Screen("product_management")
