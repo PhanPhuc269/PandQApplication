@@ -387,7 +387,8 @@ fun CreatePromotionScreen(
                      textPrimary = textPrimary,
                      textSecondary = textSecondary,
                      borderColor = borderColor,
-                     showDivider = true
+                     showDivider = true,
+                     showArrow = false
                  )
                  
                  // Min Order Value - connected to ViewModel
@@ -439,13 +440,14 @@ fun CreatePromotionScreen(
                 }
                 HorizontalDivider(color = borderColor)
                 
-                NavRow(
+                 NavRow(
                      label = "Đối tượng khách hàng",
                      value = "Tất cả",
                      textPrimary = textPrimary,
                      textSecondary = textSecondary,
                      borderColor = borderColor,
-                     showDivider = true
+                     showDivider = true,
+                     showArrow = false
                  )
                  
                  // Quantity Limit - Số lượng voucher
@@ -810,7 +812,8 @@ fun NavRow(
     textPrimary: Color,
     textSecondary: Color,
     borderColor: Color,
-    showDivider: Boolean
+    showDivider: Boolean,
+    showArrow: Boolean = true
 ) {
     Row(
         modifier = Modifier
@@ -831,12 +834,14 @@ fun NavRow(
             color = textSecondary,
             modifier = Modifier.padding(end = 8.dp)
         )
-        Icon(
-            imageVector = Icons.Default.ArrowForwardIos,
-            contentDescription = null,
-            tint = textSecondary,
-            modifier = Modifier.size(16.dp)
-        )
+        if (showArrow) {
+            Icon(
+                imageVector = Icons.Default.ArrowForwardIos,
+                contentDescription = null,
+                tint = textSecondary,
+                modifier = Modifier.size(16.dp)
+            )
+        }
     }
     if (showDivider) {
         HorizontalDivider(color = borderColor)
