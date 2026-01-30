@@ -15,6 +15,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -369,67 +372,75 @@ private fun AdminChatHeaderBar(
     onBackClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp),
-        color = Color(0xFFF0F0F0),
-        shadowElevation = 2.dp
+        color = Color(0xFFF0F0F0), // Keep original background color
+        shadowElevation = 2.dp,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF1C1C1E)
-                )
-            }
-
-            // Customer Avatar - show image if available, otherwise first letter
-            if (!customerAvatar.isNullOrEmpty()) {
-                AsyncImage(
-                    model = customerAvatar,
-                    contentDescription = "Customer Avatar",
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFEC6B45)),
-                    contentAlignment = Alignment.Center
+        Column {
+            Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp) // Keep original height or close to it (was 64dp, AdminSettings is 56dp. 64dp is better for chat header with avatar)
+                    .padding(horizontal = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        customerName.take(1).uppercase(),
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color(0xFF1C1C1E) // Keep original tint
+                        )
+                    }
 
-            Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-                Text(
-                    customerName,
-                    color = Color(0xFF1C1C1E),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
-                )
-                Text(
-                    "Đang hoạt động",
-                    color = Color(0xFF4CAF50),
-                    fontSize = 12.sp,
-                    maxLines = 1
-                )
+                    // Customer Avatar - show image if available, otherwise first letter
+                    if (!customerAvatar.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = customerAvatar,
+                            contentDescription = "Customer Avatar",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEC6B45)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                customerName.take(1).uppercase(),
+                                color = Color.White,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Column(modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 12.dp)) {
+                        Text(
+                            customerName,
+                            color = Color(0xFF1C1C1E), // Keep original text color
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
+                        Text(
+                            "Đang hoạt động",
+                            color = Color(0xFF4CAF50), // Keep original status color
+                            fontSize = 12.sp,
+                            maxLines = 1
+                        )
+                    }
+                }
             }
         }
     }
